@@ -1,0 +1,51 @@
+{
+    "permissions": {
+        "allow": ["Skill", "Bash(echo:*)", "Bash(pwd:*)", "mcp__serena__*", "Bash(agent-browser:*)"]
+    },
+    "outputStyle": "Concise",
+    "attribution": {
+        "commits": true,
+        "pullRequests": true
+    },
+    "hooks": {
+        "PostToolUse": [
+            {
+                "matcher": "mcp__*",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": ".claude/hooks/log-mcp-usage.sh",
+                        "async": true
+                    }
+                ]
+            },
+            {
+                "matcher": "Skill",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": ".claude/hooks/log-skill-usage.sh",
+                        "async": true
+                    }
+                ]
+            },
+            {
+                "matcher": "Edit|Write|MultiEdit",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": ".claude/hooks/run-biome.sh"
+                    }
+                ]
+            }
+        ]
+    },
+    "extraKnownMarketplaces": {
+        "rapportlabs-marketplace": {
+            "source": {
+                "source": "github",
+                "repo": "rapportlabs/r3p9l2s1"
+            }
+        }
+    }
+}

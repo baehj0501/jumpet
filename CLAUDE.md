@@ -1,0 +1,85 @@
+# CLAUDE.md
+
+이 파일은 Claude Code (claude.ai/code)가 이 레포지토리에서 작업할 때 참고할 가이드를 제공합니다.
+
+## 개발 컨벤션
+
+### 코드 수정 원칙
+
+- 무엇이든 수정하기 전에, 호출/참조 경로를 포함하여 관련 파일을 처음부터 끝까지 읽는다.
+- 작업, 커밋, PR을 작게 유지한다.
+- 가정을 했다면 Issue/PR/ADR에 기록한다.
+- 비밀값을 커밋하거나 로그에 남기지 않는다; 모든 입력을 검증하고 출력은 인코딩/정규화한다.
+- 섣부른 추상화를 피하고 의도를 드러내는 이름을 사용한다.
+- 결정하기 전에 최소 두 가지 대안을 비교한다.
+
+### 워크트리 환경에서의 개발 서버
+
+- **워크트리 여부 확인**: 세션 시작 메시지의 `Worktree:` 항목으로 현재 워크트리인지 확인한다.
+- **각 워크트리는 독립된 서버를 실행해야 한다**: 다른 워크트리나 메인에서 실행 중인 서버를 사용하지 않는다. 코드 상태가 다르므로 반드시 현재 워크트리에서 서버를 시작한다.
+- **브라우저 검증/스크린샷 요청 시**: 현재 워크트리의 dev server가 실행 중인지 먼저 확인하고, 미실행이면 의존성 설치 → 서버 시작 순서로 진행한다.
+
+## 네이밍 컨벤션
+
+### 기본 원칙
+
+- **명확하고 읽기 쉬운 네이밍**: 누구나 이해할 수 있는 명확한 이름 사용
+- **축약어 금지**: 약어 대신 완전한 단어 사용 (`btn` → `button`, `usr` → `user`)
+- **복수/단수 명확히 구분**: 배열/리스트는 복수형, 단일 객체는 단수형
+
+### 상수명 네이밍
+
+- **글로벌 상수**: 대문자 스네이크케이스 (`BANNER_STATUS`, `API_ENDPOINTS`)
+- **로컬 상수**: camelCase (`bannerStatus`, `userInfo`)
+- **enum 타입**: PascalCase (`BannerStatus`, `UserRole`)
+- **enum 값**: 대문자 스네이크케이스 (`PUBLISHED`, `DRAFT`)
+
+### 금지 사항
+
+- 축약어 사용
+- 모호한 이름 (`data`, `info`, `temp`)
+- 복수/단수 혼용
+- 일관성 없는 네이밍
+
+## 컨텍스트 원장 관리
+
+- TodoWrite로 실시간 상태 추적:
+  - **발견된 모든 에러/경고 (하나씩 TodoWrite에 등록하고 순차적으로 해결)**
+  - 수락/거부된 결정사항
+  - 다음 마이크로 태스크
+- 해결 즉시 삭제/보관 처리
+
+## 개발 가이드라인
+
+### Frontend 기본 원칙 및 패턴
+
+- **Frontend Fundamentals (코드 품질 4원칙)**: [docs/frontend-fundamentals/README.md](docs/frontend-fundamentals/README.md)
+
+## Skill 사용 가이드
+
+### 🚨 절대 규칙: 직접 명령어 실행 금지
+
+아래 명령어는 **직접 실행 금지**, 반드시 Skill 도구로 호출:
+
+| ❌ 금지 (직접 실행)         | ✅ 대신 사용 (Skill)     |
+| --------------------------- | ------------------------ |
+| `git commit ...`            | `/commit`                |
+| `git push` + `gh pr create` | `/pr-description-simple` |
+
+### Skill 목록
+
+아래 작업 요청 시 반드시 해당 skill을 먼저 호출할 것:
+
+| 작업           | Skill                    | 설명                                      |
+| -------------- | ------------------------ | ----------------------------------------- |
+| 커밋           | `/commit`                | 변경사항 분석 기반 커밋 메시지 생성       |
+| PR 생성        | `/pr-description-simple` | PR 분석 및 템플릿 생성 (기본)             |
+| PR 생성 (상세) | `/pr-description`        | 멀티 에이전트 병렬 분석 및 PR 템플릿 생성 |
+| PR 리뷰        | `/pr-review`             | PR 전체 리뷰                              |
+| 배포           | `/deploy`                | Preview 환경 배포                         |
+| 새 화면 생성   | `/generate-screen`       | Screen, Page, Route 생성                  |
+| 이벤트 추가    | `/add-event`             | 분석 이벤트 추가                          |
+| Feature Flag   | `/add-feature-flag`      | Feature Flag 추가                         |
+| API 분석       | `/analyze-api`           | damoa-api PR 분석 (rapportlabs-fe plugin) |
+| API 구현       | `/implement-api`         | 분석 결과 기반 ApiCaller 생성             |
+| 코드 리뷰      | `/review-with-git`       | Git 변경사항 기반 코드 리뷰               |

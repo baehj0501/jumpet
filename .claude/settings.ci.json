@@ -1,0 +1,26 @@
+{
+    "enabledPlugins": {
+        "rapportlabs-fe@rapportlabs-marketplace": true
+    },
+    "extraKnownMarketplaces": {
+        "rapportlabs-marketplace": {
+            "source": {
+                "source": "github",
+                "repo": "rapportlabs/damoa-fe-platform"
+            }
+        }
+    },
+    "hooks": {
+        "PostToolUse": [
+            {
+                "matcher": "Bash(git push:*)",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/ci-auto-pr.sh"
+                    }
+                ]
+            }
+        ]
+    }
+}
