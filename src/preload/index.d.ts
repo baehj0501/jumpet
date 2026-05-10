@@ -4,7 +4,10 @@ declare global {
   interface Window {
     electron: ElectronAPI
     api: {
-      ping: () => Promise<string>
+      startWindowDrag: (mouseX: number, mouseY: number) => void
+      dragWindowTo: (mouseX: number, mouseY: number) => void
+      endWindowDrag: () => void
+      showContextMenu: () => void
     }
   }
 }

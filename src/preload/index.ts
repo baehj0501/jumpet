@@ -2,7 +2,18 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
 const api = {
-  ping: (): Promise<string> => ipcRenderer.invoke('app:ping')
+  startWindowDrag: (mouseX: number, mouseY: number): void => {
+    ipcRenderer.send('window:startDrag', mouseX, mouseY)
+  },
+  dragWindowTo: (mouseX: number, mouseY: number): void => {
+    ipcRenderer.send('window:dragTo', mouseX, mouseY)
+  },
+  endWindowDrag: (): void => {
+    ipcRenderer.send('window:endDrag')
+  },
+  showContextMenu: (): void => {
+    ipcRenderer.send('window:showContextMenu')
+  }
 }
 
 if (process.contextIsolated) {
