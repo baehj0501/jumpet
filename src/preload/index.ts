@@ -11,6 +11,13 @@ const api = {
   endWindowDrag: (): void => {
     ipcRenderer.send('window:endDrag')
   },
+  moveWindowTo: (x: number, y: number): void => {
+    ipcRenderer.send('window:moveTo', x, y)
+  },
+  getWindowBounds: (): Promise<{ x: number; y: number; width: number; height: number } | null> =>
+    ipcRenderer.invoke('window:getBounds'),
+  getDisplayWorkArea: (): Promise<{ x: number; y: number; width: number; height: number }> =>
+    ipcRenderer.invoke('window:getDisplayWorkArea'),
   showContextMenu: (): void => {
     ipcRenderer.send('window:showContextMenu')
   }

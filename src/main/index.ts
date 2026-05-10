@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, Menu } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Menu, screen } from 'electron'
 import { join } from 'node:path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 
@@ -15,8 +15,8 @@ const dragOrigins = new WeakMap<BrowserWindow, DragOrigin>()
 
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
-    width: 200,
-    height: 200,
+    width: 300,
+    height: 300,
     show: false,
     frame: false,
     transparent: true,
@@ -91,6 +91,37 @@ app.whenReady().then(() => {
       return
     }
     dragOrigins.delete(win)
+  })
+
+  // 자율 이동(walking 등) 용 절대 좌표 이동.
+  // 드래그용 dragTo와 분리해 두는 이유: dragTo는 dragOrigin 기반 델타 계산이고,
+  // 자율 이동은 매 프레임 절대 좌표로 갱신하는 게 자연스럽기 때문.
+  ipcMain.on('window:moveTo', (event, x: number, y: number) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    if (!win) {
+      return
+    }
+    win.setPosition(Math.round(x), Math.round(y))
+  })
+
+  ipcMain.handle('window:getBounds', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    if (!win) {
+      return null
+    }
+    const [x, y] = win.getPosition()
+    const [width, height] = win.getSize()
+    return { x, y, width, height }
+  })
+
+  // 강아지가 돌아다닐 수 있는 모니터 영역(메뉴바/독 제외).
+  // 다중 모니터에서도 현재 윈도우가 속한 모니터를 기준으로 반환한다.
+  ipcMain.handle('window:getDisplayWorkArea', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    const targetDisplay = win
+      ? screen.getDisplayMatching(win.getBounds())
+      : screen.getPrimaryDisplay()
+    return targetDisplay.workArea
   })
 
   ipcMain.on('window:showContextMenu', (event) => {
