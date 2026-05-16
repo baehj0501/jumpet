@@ -1,6 +1,7 @@
-import { app, shell, BrowserWindow, ipcMain, Menu, screen } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, screen } from 'electron'
 import { join } from 'node:path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { showCharacterContextMenu } from './menu/characterContextMenu'
 
 type DragOrigin = {
     startWinX: number
@@ -141,8 +142,7 @@ app.whenReady().then(() => {
         if (!win) {
             return
         }
-        const menu = Menu.buildFromTemplate([{ label: '종료', click: () => app.quit() }])
-        menu.popup({ window: win })
+        showCharacterContextMenu(win)
     })
 
     createWindow()
