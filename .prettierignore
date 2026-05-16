@@ -1,0 +1,12 @@
+node_modules
+dist
+out
+release
+
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+*.log
+stats.html
+.cache
