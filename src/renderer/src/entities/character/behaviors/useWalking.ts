@@ -1,12 +1,15 @@
 import { useEffect } from 'react'
-import type { RefObject } from 'react'
 import type { CharacterState } from '../model/CharacterState'
 import { WALK_SPEED_PX_PER_SEC } from '../model/constants'
+
+// 자율 상태 전환 신호를 전달하기 위한 읽기 전용 ref.
+// behaviors hook은 신호만 받고, write 권한은 features 계층(드래그 등)에 둔다.
+type ReadonlyBooleanRef = { readonly current: boolean }
 
 // walking 상태 동안 윈도우를 자율 이동시킨다.
 // walking 진입 시 랜덤 방향을 정한 뒤, 작업 영역 경계에서 반사된다.
 // 드래그 중에는 ref 신호로 이동을 일시 정지한다.
-export const useWalking = (state: CharacterState, isDraggingRef: RefObject<boolean>) => {
+export const useWalking = (state: CharacterState, isDraggingRef: ReadonlyBooleanRef) => {
   useEffect(() => {
     if (state !== 'walking') {
       return

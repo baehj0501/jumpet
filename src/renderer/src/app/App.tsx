@@ -17,14 +17,16 @@ export const App = () => {
   // 드래그와 자율 이동(walking) 사이의 경합을 막기 위한 공유 신호.
   // entities가 features를 import할 수 없으므로, 두 layer 모두를 참조 가능한
   // app 레이어에서 ref를 만들어 양쪽에 주입한다.
+  // features/drag만 write 권한을 가지고, entities/character는 read-only로 받는다.
   const isDraggingRef = useRef(false)
 
-  const [characterState, setCharacterState] = useStateMachine(isDraggingRef)
+  const [characterState, { interrupt: interruptAutonomousState }] =
+    useStateMachine(isDraggingRef)
   useWalking(characterState, isDraggingRef)
 
   const { handleMouseDown } = useWindowDrag({
     isDraggingRef,
-    onDragStart: () => setCharacterState('idle')
+    onDragStart: interruptAutonomousState
   })
   const { handleContextMenu } = useContextMenu()
 
