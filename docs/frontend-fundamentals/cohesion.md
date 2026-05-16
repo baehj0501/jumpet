@@ -28,10 +28,12 @@ src/components/LikeButton/
 ```
 
 ### 매직 넘버 제거
+
 - 의미 있는 상수명으로 추출
 - 변경 시 한 곳만 수정하도록
 
 ### Form 관련 응집도
+
 - 유효성 검사 로직을 Form 가까이에 배치
 
 ---
@@ -43,6 +45,7 @@ src/components/LikeButton/
 관련 코드가 분산되면 변경 시 여러 파일을 수정해야 합니다.
 
 #### Before: 관련 코드 분산
+
 ```
 src/
 ├── constants/
@@ -60,6 +63,7 @@ src/
 ```
 
 #### After: Feature 기반 구조
+
 ```
 src/features/
 ├── like/
@@ -83,20 +87,22 @@ src/features/
 폼과 유효성 검사 로직은 함께 있어야 합니다.
 
 #### Before: 유효성 검사 분리
+
 ```typescript
 // validators/userValidator.ts (폼과 멀리 떨어짐)
 export const userValidators = {
-  name: (value: string) => value.length > 0 && value.length < 20,
-  email: (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
-  age: (value: number) => value >= 18 && value <= 99,
-};
+    name: (value: string) => value.length > 0 && value.length < 20,
+    email: (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+    age: (value: number) => value >= 18 && value <= 99,
+}
 
 // components/UserForm.tsx
-import { userValidators } from '../validators/userValidator';
+import { userValidators } from '../validators/userValidator'
 // 유효성 검사 규칙을 보려면 다른 파일로 이동해야 함
 ```
 
 #### After: 폼과 함께 배치
+
 ```typescript
 // features/user/UserForm.tsx
 const VALIDATION_RULES = {
@@ -141,26 +147,28 @@ export function UserForm() {
 컴포넌트에서만 사용하는 상수는 컴포넌트 파일에 둡니다.
 
 #### Before
+
 ```typescript
 // constants/productCard.ts
-export const PRODUCT_CARD_WIDTH = 200;
-export const PRODUCT_CARD_HEIGHT = 300;
-export const PRODUCT_IMAGE_RATIO = 0.6;
+export const PRODUCT_CARD_WIDTH = 200
+export const PRODUCT_CARD_HEIGHT = 300
+export const PRODUCT_IMAGE_RATIO = 0.6
 
 // components/ProductCard.tsx
-import { PRODUCT_CARD_WIDTH, PRODUCT_CARD_HEIGHT, PRODUCT_IMAGE_RATIO } from '../constants/productCard';
+import { PRODUCT_CARD_WIDTH, PRODUCT_CARD_HEIGHT, PRODUCT_IMAGE_RATIO } from '../constants/productCard'
 ```
 
 #### After
+
 ```typescript
 // components/ProductCard.tsx
-const CARD_WIDTH = 200;
-const CARD_HEIGHT = 300;
-const IMAGE_RATIO = 0.6;
+const CARD_WIDTH = 200
+const CARD_HEIGHT = 300
+const IMAGE_RATIO = 0.6
 
 export function ProductCard({ product }: Props) {
-  const imageHeight = CARD_HEIGHT * IMAGE_RATIO;
-  // ...
+    const imageHeight = CARD_HEIGHT * IMAGE_RATIO
+    // ...
 }
 ```
 

@@ -36,16 +36,16 @@ git log origin/develop..HEAD --oneline
 
 변경사항을 분석하여 아래 prefix 중 적절한 것을 선택합니다:
 
-| Prefix | 용도 | 예시 |
-|--------|------|------|
-| feat | 새로운 기능 추가 | feat: 사용자 로그인 기능 추가 |
-| fix | 버그 수정 | fix: 로그인 예외 처리 버그 수정 |
-| hotfix | 긴급 버그 수정 | hotfix: 긴급 보안 패치 |
-| chore | 잡무나 유지보수 작업 | chore: 라이브러리 업데이트 |
-| docs | 문서 수정 | docs: README 업데이트 |
-| style | 코드 스타일 수정 | style: 코드 포맷팅 수정 |
-| refactor | 코드 구조 개선 | refactor: 쿼리 최적화 |
-| test | 테스트 추가/수정 | test: 유닛 테스트 추가 |
+| Prefix   | 용도                 | 예시                            |
+| -------- | -------------------- | ------------------------------- |
+| feat     | 새로운 기능 추가     | feat: 사용자 로그인 기능 추가   |
+| fix      | 버그 수정            | fix: 로그인 예외 처리 버그 수정 |
+| hotfix   | 긴급 버그 수정       | hotfix: 긴급 보안 패치          |
+| chore    | 잡무나 유지보수 작업 | chore: 라이브러리 업데이트      |
+| docs     | 문서 수정            | docs: README 업데이트           |
+| style    | 코드 스타일 수정     | style: 코드 포맷팅 수정         |
+| refactor | 코드 구조 개선       | refactor: 쿼리 최적화           |
+| test     | 테스트 추가/수정     | test: 유닛 테스트 추가          |
 
 - **Prefix**: 변경사항(신규 기능/버그 수정/문서 등) 분석하여 자동 결정
 - **메시지**: 2단계에서 파악한 스타일(있으면)에 맞춰 작성
@@ -77,6 +77,7 @@ git commit -m "prefix: 제목"
 ```
 
 > **Note**: pre-commit hook이 자동 실행되어 lint 검사를 수행합니다.
+>
 > - Lint 에러 발견 시: 자동 수정 후 `git add`로 재staging 필요
 > - Hook 실패 시: 에러 메시지 확인 후 수정
 

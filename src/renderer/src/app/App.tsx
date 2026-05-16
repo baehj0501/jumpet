@@ -1,9 +1,5 @@
 import { useRef } from 'react'
-import {
-  CharacterView,
-  useStateMachine,
-  useWalking
-} from '@renderer/entities/character'
+import { CharacterView, useStateMachine, useWalking } from '@renderer/entities/character'
 import type { CharacterId, Mood } from '@renderer/entities/character'
 import { useWindowDrag } from '@renderer/features/drag'
 import { useContextMenu } from '@renderer/features/context-menu'
@@ -14,29 +10,28 @@ const CURRENT_CHARACTER_ID: CharacterId = 'dog'
 const CURRENT_MOOD: Mood = 'default'
 
 export const App = () => {
-  // 드래그와 자율 이동(walking) 사이의 경합을 막기 위한 공유 신호.
-  // entities가 features를 import할 수 없으므로, 두 layer 모두를 참조 가능한
-  // app 레이어에서 ref를 만들어 양쪽에 주입한다.
-  // features/drag만 write 권한을 가지고, entities/character는 read-only로 받는다.
-  const isDraggingRef = useRef(false)
+    // 드래그와 자율 이동(walking) 사이의 경합을 막기 위한 공유 신호.
+    const isDraggingRef = useRef(false)
 
-  const [characterState, { interrupt: interruptAutonomousState }] =
-    useStateMachine(isDraggingRef)
-  useWalking(characterState, isDraggingRef)
+    // 캐릭터의 상태 머신을 초기화하고 현재 상태를 가져온다.
+    const [characterState, { interrupt: interruptAutonomousState }] = useStateMachine(isDraggingRef)
 
-  const { handleMouseDown } = useWindowDrag({
-    isDraggingRef,
-    onDragStart: interruptAutonomousState
-  })
-  const { handleContextMenu } = useContextMenu()
+    // 캐릭터의 현재 상태에 따라 걷기 애니메이션을 적용한다.
+    useWalking(characterState, isDraggingRef)
 
-  return (
-    <CharacterView
-      characterId={CURRENT_CHARACTER_ID}
-      mood={CURRENT_MOOD}
-      state={characterState}
-      onMouseDown={handleMouseDown}
-      onContextMenu={handleContextMenu}
-    />
-  )
+    const { handleMouseDown } = useWindowDrag({
+        isDraggingRef,
+        onDragStart: interruptAutonomousState,
+    })
+    const { handleContextMenu } = useContextMenu()
+
+    return (
+        <CharacterView
+            characterId={CURRENT_CHARACTER_ID}
+            mood={CURRENT_MOOD}
+            state={characterState}
+            onMouseDown={handleMouseDown}
+            onContextMenu={handleContextMenu}
+        />
+    )
 }

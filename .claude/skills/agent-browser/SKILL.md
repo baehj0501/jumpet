@@ -1,6 +1,6 @@
 ---
 name: agent-browser
-description: "agent-browser CLI로 브라우저 자동화 (스크린샷, 네비게이션, 클릭, 입력). Use when: 화면 확인, 스크린샷, UI 테스트, 브라우저 디버깅이 필요할 때"
+description: 'agent-browser CLI로 브라우저 자동화 (스크린샷, 네비게이션, 클릭, 입력). Use when: 화면 확인, 스크린샷, UI 테스트, 브라우저 디버깅이 필요할 때'
 ---
 
 # agent-browser CLI
@@ -48,6 +48,7 @@ agent-browser open "http://localhost:{port}/"
 ```
 
 이동 후 스크린샷:
+
 ```bash
 agent-browser open "http://localhost:{port}/" && sleep 2 && agent-browser screenshot /tmp/page.png
 ```
@@ -55,9 +56,10 @@ agent-browser open "http://localhost:{port}/" && sleep 2 && agent-browser screen
 ### Screenshot (화면 캡처)
 
 **스크린샷 저장 규칙**: `{프로젝트루트}/tmp/{구분자}/` 경로에 저장합니다.
+
 - 프로젝트 루트: `/Users/kangho/rapportlabs/damoa-customer-web`
 - 구분자: `{작업목적}-{MMDD-HHmm}` 형식 (예: `sort-bottomsheet-0305-1712`)
-  - 실행마다 타임스탬프가 달라지므로 이전 결과와 충돌하지 않음
+    - 실행마다 타임스탬프가 달라지므로 이전 결과와 충돌하지 않음
 - 디렉토리가 없으면 `mkdir -p`로 생성
 
 ```bash
@@ -73,6 +75,7 @@ agent-browser screenshot --full "$SCREENSHOT_DIR/full-page.png"
 ```
 
 스크린샷 파일을 확인하려면 Read tool 사용:
+
 ```
 Read: {SCREENSHOT_DIR}/before-open.png
 ```
@@ -94,11 +97,13 @@ agent-browser snapshot -s ".product-detail"
 ```
 
 특정 요소만 필터링:
+
 ```bash
 agent-browser snapshot -i 2>&1 | grep -E "장바구니|구매|버튼"
 ```
 
 **출력 예시**:
+
 ```
 - button "장바구니 담기" [ref=e49]
 - button "바로 구매" [ref=e53]
@@ -116,6 +121,7 @@ agent-browser click "button:has-text('장바구니 담기')"
 ```
 
 클릭 후 스크린샷:
+
 ```bash
 agent-browser click @e49 && sleep 1 && agent-browser screenshot /tmp/after-click.png
 ```
@@ -254,7 +260,7 @@ agent-browser tab 2   # 2번 탭으로 전환
 
 ### 프롬프트 템플릿
 
-```
+````
 agent-browser CLI를 사용하여 [화면명]에서 [기능]이 제대로 동작하는지 테스트해주세요.
 
 ## 사전 준비
@@ -268,35 +274,40 @@ agent-browser CLI를 사용하여 [화면명]에서 [기능]이 제대로 동작
    agent-browser --profile ~/.agent-browser/queenit-customer eval "[서버 전환 명령어]"
    agent-browser --profile ~/.agent-browser/queenit-customer eval "location.reload()"
    sleep 3
-   ```
+````
 
 ## 접근 URL
+
 `http://localhost:{port}/[정확한 경로와 쿼리 파라미터]`
 
 ## 테스트 시나리오
 
 ### 시나리오 1: [시나리오 제목]
+
 1. `[접근 URL]` 페이지로 이동
 2. 스크린샷 촬영
 3. [구체적 액션]
 4. **검증**: [기대하는 상태]
 
 ### 주의사항
+
 - 스크린샷은 절대 경로로 저장 (예: /Users/kangho/rapportlabs/damoa-customer-web/tmp/test.png)
 - 각 단계마다 스크린샷으로 확인
 - snapshot -i 에서 [disabled] 속성 유무로 비활성화 검증
 - 코드 변경이 반영되지 않은 것 같으면 `agent-browser eval "location.reload()" && sleep 3` 실행
 
 ### 결과 보고 (필수)
+
 검증 완료 후 반드시 아래 두 가지를 team-lead에게 SendMessage로 보고:
 
 1. **검증 결과**: 각 항목별 PASS/FAIL + 스크린샷 경로
 2. **SKILL 개선 피드백**: 작업 중 겪은 문제점을 솔직하게 보고
-   - SKILL.md 가이드에서 부족했거나 잘못된 부분
-   - 실제 실행 시 예상과 다르게 동작한 부분
-   - 추가되면 좋을 가이드/팁
-   - 프롬프트에서 개선이 필요한 부분
-```
+    - SKILL.md 가이드에서 부족했거나 잘못된 부분
+    - 실제 실행 시 예상과 다르게 동작한 부분
+    - 추가되면 좋을 가이드/팁
+    - 프롬프트에서 개선이 필요한 부분
+
+````
 
 ## 검증 테크닉
 
@@ -310,7 +321,7 @@ agent-browser CLI를 사용하여 [화면명]에서 [기능]이 제대로 동작
 ```bash
 agent-browser snapshot -i 2>&1 | grep -E "disabled"
 # 출력: checkbox [disabled] [ref=e90]
-```
+````
 
 ### 요소 존재 여부 확인
 
@@ -366,6 +377,7 @@ agent-browser console 2>&1 | grep "DEBUG_TAG"
 ```
 
 ### 주의사항
+
 - `reload`/`open`은 JS 컨텍스트를 초기화하므로, `eval`로 fetch를 가로채는 방식은 동작하지 않습니다
 - 고유 태그(예: `[DEBUG_TAG]`)를 반드시 사용하여 다른 로그와 구분합니다
 - **확인 후 임시 console.log를 반드시 제거합니다**

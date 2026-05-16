@@ -9,9 +9,9 @@ import dogDefault from './dog/default.jpeg'
 // Record로 강제해 새 CharacterId / Mood 추가 시 매핑 누락이 컴파일 에러로 잡힌다.
 // 아직 도착하지 않은 조합은 default 무드로 폴백한다.
 export const CHARACTER_ASSETS: Record<CharacterId, Record<Mood, string>> = {
-  dog: {
-    default: dogDefault,
-    happy: dogDefault,
-    sad: dogDefault
-  }
+    dog: {
+        default: dogDefault,
+        happy: dogDefault,
+        sad: dogDefault,
+    },
 }

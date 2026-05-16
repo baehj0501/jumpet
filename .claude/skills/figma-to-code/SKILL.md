@@ -17,8 +17,8 @@ Canvas-write, design generation, Code Connect tooling, and agent-rule authoring 
 
 - Figma MCP server must be connected and accessible
 - User must provide a Figma URL in the format: `https://figma.com/design/:fileKey/:fileName?node-id=1-2`
-  - `:fileKey` is the file key
-  - `1-2` is the node ID (the specific component or frame to implement)
+    - `:fileKey` is the file key
+    - `1-2` is the node ID (the specific component or frame to implement)
 - **OR** when using `figma-desktop` MCP: User can select a node directly in the Figma desktop app (no URL required)
 - Project should have an established design system or component library (preferred)
 
@@ -297,9 +297,9 @@ Step 5 / Step 6에서 어떤 Figma 노드가 어떤 코드 컴포넌트·토큰�
 
 ### 1. UI 매핑 (각 행에 `status` 컬럼)
 
-| Figma node | Code target | status |
-|---|---|---|
-| 7996:150311 / 전체보기 Title | `DamoaText variant="HeadingMedium"` | matched |
+| Figma node                     | Code target                          | status   |
+| ------------------------------ | ------------------------------------ | -------- |
+| 7996:150311 / 전체보기 Title   | `DamoaText variant="HeadingMedium"`  | matched  |
 | 7996:150420 / 16px gray border | `VesperColors.gray300` (가장 근사치) | fallback |
 
 `status` 값:
@@ -311,9 +311,9 @@ Step 5 / Step 6에서 어떤 Figma 노드가 어떤 코드 컴포넌트·토큰�
 
 ### 2. Behavior / State / Spec 축 (Context Layer 결과)
 
-| Source (node id / name) | Attached UI node | Content (verbatim) | Category | Status |
-|---|---|---|---|---|
-| 7996:150313 / context card | 7996:150311 / 전체보기 Screen | "전체보기 진입 시 디폴트 랜딩 기준으로 동일하게 랜딩" | state | captured |
+| Source (node id / name)    | Attached UI node              | Content (verbatim)                                    | Category | Status   |
+| -------------------------- | ----------------------------- | ----------------------------------------------------- | -------- | -------- |
+| 7996:150313 / context card | 7996:150311 / 전체보기 Screen | "전체보기 진입 시 디폴트 랜딩 기준으로 동일하게 랜딩" | state    | captured |
 
 - **Category**: `behavior` / `state` / `edge-case` / `policy` / `question`. 불확실 시 `behavior`.
 - **Status**: `captured` (텍스트 추출 성공) / `unresolved` (추출 실패 또는 의미 모호) / `out-of-scope` (구현 범위 밖).

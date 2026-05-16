@@ -1,37 +1,37 @@
 :root {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: transparent;
 }
 
 * {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 html,
 body,
 #root {
-  width: 100%;
-  height: 100%;
-  background: transparent;
-  overflow: hidden;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    overflow: hidden;
 }
 
 .pet {
-  width: 100%;
-  height: 100%;
-  cursor: grab;
-  user-select: none;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    user-select: none;
 }
 
 .pet:active {
-  cursor: grabbing;
+    cursor: grabbing;
 }
 
 .pet img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  pointer-events: none;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
 }

@@ -15,31 +15,34 @@
 ### 핵심 전략
 
 #### 맥락 줄이기
+
 - 동시에 실행되는 코드 분리
 - 구현 세부사항 추상화
 - 함수 분해로 복잡도 낮추기
 
 #### 이름 붙이기
+
 - 복잡한 조건에 명확한 이름 부여
 - 매직 넘버를 상수로 추출
 
 ```typescript
 // ❌ Bad: 매직 넘버 + 조건 의미 불명확
 if (user.age >= 18 && user.status === 1) {
-  await delay(300);
+    await delay(300)
 }
 
 // ✅ Good: 이름으로 의도 전달
-const ANIMATION_DELAY_MS = 300;
-const isAdult = user.age >= 18;
-const isActive = user.status === UserStatus.ACTIVE;
+const ANIMATION_DELAY_MS = 300
+const isAdult = user.age >= 18
+const isActive = user.status === UserStatus.ACTIVE
 
 if (isAdult && isActive) {
-  await delay(ANIMATION_DELAY_MS);
+    await delay(ANIMATION_DELAY_MS)
 }
 ```
 
 #### 위에서 아래로 흐르기
+
 - 시점 이동 최소화
 - 삼항 연산자 단순화
 
@@ -56,6 +59,7 @@ if (isAdult && isActive) {
 ### 핵심 전략
 
 #### 이름 중복 방지
+
 ```typescript
 // ❌ Bad: 라이브러리와 이름 충돌
 import { http } from "@some-library/http";
@@ -69,23 +73,25 @@ export const httpService = {
 ```
 
 #### 일관된 반환 타입
+
 ```typescript
 // ❌ Bad: 때로는 값, 때로는 undefined
 function findUser(id: string) {
-  const user = users.find(u => u.id === id);
-  return user; // User | undefined
+    const user = users.find((u) => u.id === id)
+    return user // User | undefined
 }
 
 // ✅ Good: 명시적 Result 타입
 function checkIsNameValid(name: string): ValidationResult {
-  if (name.length === 0) {
-    return { ok: false, reason: 'Name cannot be empty.' };
-  }
-  return { ok: true };
+    if (name.length === 0) {
+        return { ok: false, reason: 'Name cannot be empty.' }
+    }
+    return { ok: true }
 }
 ```
 
 #### 숨겨진 로직 명시화
+
 - 함수명에 부가 동작 드러내기 (예: `getWithAuth`)
 - 예상치 못한 side effect 피하기
 
@@ -102,6 +108,7 @@ function checkIsNameValid(name: string): ValidationResult {
 ### 핵심 전략
 
 #### 함께 수정되는 코드를 가까이 배치
+
 ```
 # ❌ Bad: 관련 코드 분산
 src/
@@ -120,10 +127,12 @@ src/components/LikeButton/
 ```
 
 #### 매직 넘버 제거
+
 - 의미 있는 상수명으로 추출
 - 변경 시 한 곳만 수정하도록
 
 #### Form 관련 응집도
+
 - 유효성 검사 로직을 Form 가까이에 배치
 
 📚 **상세 가이드**: [cohesion.md](cohesion.md)
@@ -139,6 +148,7 @@ src/components/LikeButton/
 ### 핵심 전략
 
 #### 책임을 개별적으로 관리
+
 ```typescript
 // ❌ Bad: 높은 결합도 - 내부에서 API 직접 호출
 function BannerCard({ banner }: Props) {
@@ -154,10 +164,12 @@ function BannerCard({ banner, onDelete }: Props) {
 ```
 
 #### 중복 코드 허용 (신중하게)
+
 - 섣부른 추상화보다 약간의 중복이 나을 수 있음
 - 진짜 공통점이 확실할 때만 추상화
 
 #### Props Drilling 제거
+
 - Context 또는 상태 관리 도구 활용
 - 단, 과도한 Context 사용은 다른 결합도 문제 유발
 
@@ -169,10 +181,10 @@ function BannerCard({ banner, onDelete }: Props) {
 
 가독성과 응집도는 상충할 수 있습니다.
 
-| 상황 | 우선 원칙 |
-|------|----------|
+| 상황                        | 우선 원칙       |
+| --------------------------- | --------------- |
 | 버그 발생 시 위험이 큰 코드 | **응집도** 우선 |
-| 자주 읽히는 일반 코드 | **가독성** 우선 |
+| 자주 읽히는 일반 코드       | **가독성** 우선 |
 
 ---
 

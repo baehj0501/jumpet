@@ -9,10 +9,10 @@ description: Agent Teams를 활용한 병렬 코드 리뷰. 2명의 독립 팀�
 
 ## 팀 구성
 
-| 팀원 이름 | Skill | 관점 |
-|-----------|-------|------|
-| frontend-fundamentals-reviewer | `frontend-fundamentals` | 응집도, 결합도, 가독성, 예측 가능성 |
-| vercel-react-best-practices-reviewer | `vercel-react-best-practices` | React/Next.js 성능 최적화 |
+| 팀원 이름                            | Skill                         | 관점                                |
+| ------------------------------------ | ----------------------------- | ----------------------------------- |
+| frontend-fundamentals-reviewer       | `frontend-fundamentals`       | 응집도, 결합도, 가독성, 예측 가능성 |
+| vercel-react-best-practices-reviewer | `vercel-react-best-practices` | React/Next.js 성능 최적화           |
 
 ## 실행 절차
 
@@ -22,9 +22,9 @@ description: Agent Teams를 활용한 병렬 코드 리뷰. 2명의 독립 팀�
 
 1. **$ARGUMENTS**: 인자로 파일/폴더가 전달된 경우 그대로 사용
 2. **git diff 기반** (인자 없을 때):
-   - `git diff --cached --name-only` (staged)
-   - 없으면 `git diff --name-only` (unstaged)
-   - 없으면 `git diff $(git merge-base HEAD develop) --name-only` (현재 브랜치 분기점 기준)
+    - `git diff --cached --name-only` (staged)
+    - 없으면 `git diff --name-only` (unstaged)
+    - 없으면 `git diff $(git merge-base HEAD develop) --name-only` (현재 브랜치 분기점 기준)
 3. **AskUserQuestion**: 위 모두 해당 없으면 사용자에게 질문
 
 제외 대상: `*.md`, `*.json`, `*.yaml`, `*.test.*`, `*.spec.*`, 자동 생성 파일.
@@ -33,14 +33,15 @@ description: Agent Teams를 활용한 병렬 코드 리뷰. 2명의 독립 팀�
 
 1. **TeamCreate**로 팀 생성: `team_name: "code-review"`
 2. **TaskCreate**로 2개 작업 등록:
-   - "frontend-fundamentals 관점 코드 리뷰"
-   - "vercel-react-best-practices 관점 코드 리뷰"
+    - "frontend-fundamentals 관점 코드 리뷰"
+    - "vercel-react-best-practices 관점 코드 리뷰"
 
 ### Step 3: 팀원 2명 동시 Spawn
 
 **반드시 하나의 메시지에서 2개 Task tool을 동시에 호출할 것.**
 
 각 팀원의 Task 설정:
+
 - `subagent_type`: `"general-purpose"`
 - `team_name`: `"code-review"`
 - `name`: 위 팀 구성 테이블의 팀원 이름
@@ -83,6 +84,7 @@ description: Agent Teams를 활용한 병렬 코드 리뷰. 2명의 독립 팀�
 #### 중복 제거
 
 동일 파일:동일 라인에 대해 같은 문제를 지적한 경우:
+
 - 하나로 통합, 관련 관점 모두 표기 (예: `[frontend-fundamentals, vercel-react-best-practices]`)
 - 더 구체적인 개선 제안 채택. 양쪽 모두 유용하면 병합
 
@@ -117,5 +119,6 @@ description: Agent Teams를 활용한 병렬 코드 리뷰. 2명의 독립 팀�
 ### Step 5: 팀 정리
 
 결과 출력 완료 후:
+
 1. 모든 팀원에게 SendMessage(type: "shutdown_request")를 보낸다.
 2. 팀원들이 shutdown을 승인하면 TeamDelete로 팀을 정리한다.

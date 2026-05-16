@@ -28,11 +28,11 @@ game/
 
 ### Three-process model
 
-| Process  | Runs in   | Has Node.js? | Role                                        |
-| -------- | --------- | ------------ | ------------------------------------------- |
-| Main     | Node.js   | Yes          | Window lifecycle, OS access, file system    |
-| Preload  | Both      | Limited      | Secure bridge — exposes whitelisted APIs    |
-| Renderer | Chromium  | No           | React UI, no direct OS/file access          |
+| Process  | Runs in  | Has Node.js? | Role                                     |
+| -------- | -------- | ------------ | ---------------------------------------- |
+| Main     | Node.js  | Yes          | Window lifecycle, OS access, file system |
+| Preload  | Both     | Limited      | Secure bridge — exposes whitelisted APIs |
+| Renderer | Chromium | No           | React UI, no direct OS/file access       |
 
 The renderer cannot touch the OS directly (security). It calls
 `window.api.*` which is defined in **preload**, which forwards

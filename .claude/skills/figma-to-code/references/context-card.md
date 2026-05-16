@@ -30,12 +30,12 @@ Figma MCP 응답에서 다음 중 하나에 해당하는 `<instance>`는 **spec 
 
 ```tsx
 // 7996:150313 context card
-<div data-name="context card">
-  <p>전체보기 진입 시</p>
-  <ul>
-    <li>현재 디폴트 랜딩 기준으로 동일하게 랜딩</li>
-    <li>(아마도 그냥 '신청' 탭으로 떨어지고 있는 듯)</li>
-  </ul>
+<div data-name='context card'>
+    <p>전체보기 진입 시</p>
+    <ul>
+        <li>현재 디폴트 랜딩 기준으로 동일하게 랜딩</li>
+        <li>(아마도 그냥 '신청' 탭으로 떨어지고 있는 듯)</li>
+    </ul>
 </div>
 ```
 
@@ -62,13 +62,13 @@ spec 인스턴스의 중심점 `(cx, cy) = (x + width/2, y + height/2)`를 구�
 
 Mapping Report의 Behavior/State/Spec 축에서 category 값으로 쓰는 태그.
 
-| Category | 내용 예시 |
-|---|---|
-| `behavior` | "버튼 누르면 X 화면으로 이동", "3초 후 자동 닫힘" |
-| `state` | "로그인 안 된 상태일 때 [...] 표시", "빈 목록일 때 empty state" |
-| `edge-case` | "상품 0개일 때", "재고 초과 시 snackbar" |
-| `policy` | "프로모션 제외 목록", "최저가 기준은 일 단위 갱신" |
-| `question` | 디자이너가 결정 안 된 상태로 남긴 물음표 |
+| Category    | 내용 예시                                                       |
+| ----------- | --------------------------------------------------------------- |
+| `behavior`  | "버튼 누르면 X 화면으로 이동", "3초 후 자동 닫힘"               |
+| `state`     | "로그인 안 된 상태일 때 [...] 표시", "빈 목록일 때 empty state" |
+| `edge-case` | "상품 0개일 때", "재고 초과 시 snackbar"                        |
+| `policy`    | "프로모션 제외 목록", "최저가 기준은 일 단위 갱신"              |
+| `question`  | 디자이너가 결정 안 된 상태로 남긴 물음표                        |
 
 분류 불확실 시 `behavior`로 기본.
 
@@ -76,15 +76,16 @@ Mapping Report의 Behavior/State/Spec 축에서 category 값으로 쓰는 태그
 
 ```markdown
 ### Behavior / State / Spec
-| Source (node id / name) | Attached UI node | Content (verbatim) | Category | Status |
-|---|---|---|---|---|
-| 7996:150313 / context card | 7996:150311 / 전체보기 Screen | "전체보기 진입 시 디폴트 랜딩 기준으로 동일하게 랜딩. (아마도 그냥 '신청' 탭으로 떨어지고 있는 듯)" | state | captured |
-| 8002:151228 / Comment 주석 | 8002:151230 / 협찬 현황 Frame | "문구는 조금 더 다듬어야 할 듯..." | question | unresolved |
-| 7996:150743 / context card | (후보: 7996:150740, 7996:150745) | "크리에이터 홈으로 랜딩" | behavior | unresolved |
+
+| Source (node id / name)    | Attached UI node                 | Content (verbatim)                                                                                  | Category | Status     |
+| -------------------------- | -------------------------------- | --------------------------------------------------------------------------------------------------- | -------- | ---------- |
+| 7996:150313 / context card | 7996:150311 / 전체보기 Screen    | "전체보기 진입 시 디폴트 랜딩 기준으로 동일하게 랜딩. (아마도 그냥 '신청' 탭으로 떨어지고 있는 듯)" | state    | captured   |
+| 8002:151228 / Comment 주석 | 8002:151230 / 협찬 현황 Frame    | "문구는 조금 더 다듬어야 할 듯..."                                                                  | question | unresolved |
+| 7996:150743 / context card | (후보: 7996:150740, 7996:150745) | "크리에이터 홈으로 랜딩"                                                                            | behavior | unresolved |
 ```
 
 ## 주의
 
 - `<connector>` (화살표/관계선) 자체는 spec이 아니라 관계 표현이다. Context card를 찾는 용도로만 활용한다 (가능하면).
 - Figma 네이티브 Comment 핀은 **MCP 응답에 안 들어온다**. 디자이너가 이걸 썼다면 context card로 옮겨달라고 요청하는 게 사내 컨벤션이다.
-- 이 adapter는 **spec 추출 전용**이다. UI 구현 판단은 SKILL.md의 *프로젝트 특화 규칙 > Vesper rules* 섹션이 책임진다.
+- 이 adapter는 **spec 추출 전용**이다. UI 구현 판단은 SKILL.md의 _프로젝트 특화 규칙 > Vesper rules_ 섹션이 책임진다.

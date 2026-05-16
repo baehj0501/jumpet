@@ -25,10 +25,12 @@ function BannerCard({ banner, onDelete }: Props) {
 ```
 
 ### 중복 코드 허용 (신중하게)
+
 - 섣부른 추상화보다 약간의 중복이 나을 수 있음
 - 진짜 공통점이 확실할 때만 추상화
 
 ### Props Drilling 제거
+
 - Context 또는 상태 관리 도구 활용
 - 단, 과도한 Context 사용은 다른 결합도 문제 유발
 
@@ -41,6 +43,7 @@ function BannerCard({ banner, onDelete }: Props) {
 컴포넌트 내부에서 외부 의존성을 직접 호출하면 결합도가 높아집니다.
 
 #### Before: 높은 결합도
+
 ```typescript
 function BannerCard({ banner }: Props) {
   const queryClient = useQueryClient();
@@ -62,6 +65,7 @@ function BannerCard({ banner }: Props) {
 ```
 
 #### After: 낮은 결합도
+
 ```typescript
 // BannerCard는 순수한 프레젠테이션 컴포넌트
 function BannerCard({ banner, onDelete }: Props) {
@@ -104,54 +108,54 @@ function BannerList() {
 구체적인 구현이 아닌 인터페이스에 의존합니다.
 
 #### Before: 구체 구현에 의존
+
 ```typescript
 // localStorage에 강하게 결합
 function useUserPreferences() {
-  const [prefs, setPrefs] = useState(() => {
-    const stored = localStorage.getItem('prefs');
-    return stored ? JSON.parse(stored) : DEFAULT_PREFS;
-  });
+    const [prefs, setPrefs] = useState(() => {
+        const stored = localStorage.getItem('prefs')
+        return stored ? JSON.parse(stored) : DEFAULT_PREFS
+    })
 
-  const updatePrefs = (newPrefs: Preferences) => {
-    localStorage.setItem('prefs', JSON.stringify(newPrefs));
-    setPrefs(newPrefs);
-  };
+    const updatePrefs = (newPrefs: Preferences) => {
+        localStorage.setItem('prefs', JSON.stringify(newPrefs))
+        setPrefs(newPrefs)
+    }
 
-  return { prefs, updatePrefs };
+    return { prefs, updatePrefs }
 }
 ```
 
 #### After: Storage 추상화
+
 ```typescript
 // storage 인터페이스 정의
 interface Storage {
-  get<T>(key: string): T | null;
-  set<T>(key: string, value: T): void;
+    get<T>(key: string): T | null
+    set<T>(key: string, value: T): void
 }
 
 // 구현체들
 const localStorageAdapter: Storage = {
-  get: (key) => JSON.parse(localStorage.getItem(key) ?? 'null'),
-  set: (key, value) => localStorage.setItem(key, JSON.stringify(value)),
-};
+    get: (key) => JSON.parse(localStorage.getItem(key) ?? 'null'),
+    set: (key, value) => localStorage.setItem(key, JSON.stringify(value)),
+}
 
 const sessionStorageAdapter: Storage = {
-  get: (key) => JSON.parse(sessionStorage.getItem(key) ?? 'null'),
-  set: (key, value) => sessionStorage.setItem(key, JSON.stringify(value)),
-};
+    get: (key) => JSON.parse(sessionStorage.getItem(key) ?? 'null'),
+    set: (key, value) => sessionStorage.setItem(key, JSON.stringify(value)),
+}
 
 // 훅은 Storage 인터페이스에만 의존
 function useUserPreferences(storage: Storage = localStorageAdapter) {
-  const [prefs, setPrefs] = useState(() =>
-    storage.get<Preferences>('prefs') ?? DEFAULT_PREFS
-  );
+    const [prefs, setPrefs] = useState(() => storage.get<Preferences>('prefs') ?? DEFAULT_PREFS)
 
-  const updatePrefs = (newPrefs: Preferences) => {
-    storage.set('prefs', newPrefs);
-    setPrefs(newPrefs);
-  };
+    const updatePrefs = (newPrefs: Preferences) => {
+        storage.set('prefs', newPrefs)
+        setPrefs(newPrefs)
+    }
 
-  return { prefs, updatePrefs };
+    return { prefs, updatePrefs }
 }
 ```
 
@@ -162,6 +166,7 @@ function useUserPreferences(storage: Storage = localStorageAdapter) {
 너무 이른 추상화는 오히려 결합도를 높입니다.
 
 #### Before: 과도한 추상화
+
 ```typescript
 // 한 곳에서만 쓰이는데 추상화
 interface ButtonConfig {
@@ -200,6 +205,7 @@ createButton({
 ```
 
 #### After: 필요할 때만 추상화
+
 ```typescript
 // 단순하게 직접 사용
 <Button type="primary" onClick={handleSubmit} loading={isSubmitting}>
@@ -221,34 +227,36 @@ function SubmitButton({ loading, children }: Props) {
 ### 4. 모듈 경계 명확히 하기
 
 #### Before: 모듈 간 깊은 의존
+
 ```typescript
 // features/order/OrderSummary.tsx
-import { useUserPoints } from '../user/hooks/useUserPoints';
-import { calculateDiscount } from '../promotion/utils/discount';
-import { formatShippingDate } from '../shipping/utils/date';
-import { SHIPPING_COST } from '../shipping/constants';
+import { useUserPoints } from '../user/hooks/useUserPoints'
+import { calculateDiscount } from '../promotion/utils/discount'
+import { formatShippingDate } from '../shipping/utils/date'
+import { SHIPPING_COST } from '../shipping/constants'
 
 // 여러 도메인을 직접 참조
 ```
 
 #### After: 명확한 모듈 경계
+
 ```typescript
 // features/order/OrderSummary.tsx
-import { useOrderSummary } from './hooks/useOrderSummary';
+import { useOrderSummary } from './hooks/useOrderSummary'
 
 // 이 훅이 필요한 정보를 조합
 function useOrderSummary(orderId: string) {
-  const { data: order } = useQuery(OrderApiCaller.getOptions(orderId));
-  const { data: user } = useQuery(UserApiCaller.getOptions());
+    const { data: order } = useQuery(OrderApiCaller.getOptions(orderId))
+    const { data: user } = useQuery(UserApiCaller.getOptions())
 
-  // 다른 도메인 로직은 API 또는 서비스 레이어에서 처리
-  return {
-    items: order?.items,
-    totalPrice: order?.totalPrice,
-    discount: order?.appliedDiscount,
-    shippingDate: order?.estimatedShippingDate,
-    userPoints: user?.points,
-  };
+    // 다른 도메인 로직은 API 또는 서비스 레이어에서 처리
+    return {
+        items: order?.items,
+        totalPrice: order?.totalPrice,
+        discount: order?.appliedDiscount,
+        shippingDate: order?.estimatedShippingDate,
+        userPoints: user?.points,
+    }
 }
 ```
 
