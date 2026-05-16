@@ -65,21 +65,3 @@
 | --------------------------- | ------------------------ |
 | `git commit ...`            | `/commit`                |
 | `git push` + `gh pr create` | `/pr-description-simple` |
-
-### Skill 목록
-
-아래 작업 요청 시 반드시 해당 skill을 먼저 호출할 것:
-
-| 작업           | Skill                    | 설명                                      |
-| -------------- | ------------------------ | ----------------------------------------- |
-| 커밋           | `/commit`                | 변경사항 분석 기반 커밋 메시지 생성       |
-| PR 생성        | `/pr-description-simple` | PR 분석 및 템플릿 생성 (기본)             |
-| PR 생성 (상세) | `/pr-description`        | 멀티 에이전트 병렬 분석 및 PR 템플릿 생성 |
-| PR 리뷰        | `/pr-review`             | PR 전체 리뷰                              |
-| 배포           | `/deploy`                | Preview 환경 배포                         |
-| 새 화면 생성   | `/generate-screen`       | Screen, Page, Route 생성                  |
-| 이벤트 추가    | `/add-event`             | 분석 이벤트 추가                          |
-| Feature Flag   | `/add-feature-flag`      | Feature Flag 추가                         |
-| API 분석       | `/analyze-api`           | damoa-api PR 분석 (rapportlabs-fe plugin) |
-| API 구현       | `/implement-api`         | 분석 결과 기반 ApiCaller 생성             |
-| 코드 리뷰      | `/review-with-git`       | Git 변경사항 기반 코드 리뷰               |
