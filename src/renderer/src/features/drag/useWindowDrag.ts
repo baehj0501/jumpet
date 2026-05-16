@@ -1,8 +1,9 @@
 import type { MouseEvent, RefObject } from 'react'
 
 type UseWindowDragOptions = {
-    // 드래그 진행 여부를 외부 hook(useWalking 등)에 전파하기 위한 ref.
-    isDraggingRef: RefObject<boolean>
+    // 사용자 인터랙션 진행 여부를 외부 hook(useWalking 등)에 전파하기 위한 ref.
+    // 드래그 외에도 컨텍스트 메뉴 같은 인터랙션이 이 신호를 공유한다.
+    isInteractingRef: RefObject<boolean>
     // 드래그 시작 시 자율 행동을 즉시 멈추는 등의 부수효과를 위한 콜백.
     onDragStart?: () => void
 }
@@ -11,13 +12,13 @@ type UseWindowDragOptions = {
 // mousedown만 React에서 받고, mousemove/mouseup은 window 레벨에 등록해
 // 마우스가 작은 펫 윈도우 밖으로 나가도 드래그가 끊기지 않게 한다.
 // IPC는 fire-and-forget(send) + requestAnimationFrame throttle 조합이다.
-export const useWindowDrag = ({ isDraggingRef, onDragStart }: UseWindowDragOptions) => {
+export const useWindowDrag = ({ isInteractingRef, onDragStart }: UseWindowDragOptions) => {
     const handleMouseDown = (event: MouseEvent) => {
         if (event.button !== 0) {
             return
         }
 
-        isDraggingRef.current = true
+        isInteractingRef.current = true
         onDragStart?.()
 
         window.api.startWindowDrag(event.screenX, event.screenY)
@@ -54,7 +55,7 @@ export const useWindowDrag = ({ isDraggingRef, onDragStart }: UseWindowDragOptio
                 pendingPosition = null
             }
             window.api.endWindowDrag()
-            isDraggingRef.current = false
+            isInteractingRef.current = false
         }
 
         // mousemove/mouseup은 preventDefault를 호출하지 않으므로 passive로 표시.

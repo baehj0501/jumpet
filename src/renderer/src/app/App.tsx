@@ -10,20 +10,22 @@ const CURRENT_CHARACTER_ID: CharacterId = 'dog'
 const CURRENT_MOOD: Mood = 'default'
 
 export const App = () => {
-    // 드래그와 자율 이동(walking) 사이의 경합을 막기 위한 공유 신호.
-    const isDraggingRef = useRef(false)
+    // 사용자 인터랙션(드래그, 메뉴 열림) 동안 자율 이동(walking)을 멈추기 위한 공유 신호.
+    // features 계층(드래그, 컨텍스트 메뉴)이 write하고 entities 계층(behaviors)이 read한다.
+    // 드래그와 메뉴는 시간상 거의 겹치지 않으므로 단일 ref OR set으로 충분하다.
+    const isInteractingRef = useRef(false)
 
     // 캐릭터의 상태 머신을 초기화하고 현재 상태를 가져온다.
-    const [characterState, { interrupt: interruptAutonomousState }] = useStateMachine(isDraggingRef)
+    const [characterState, { interrupt: interruptAutonomousState }] = useStateMachine(isInteractingRef)
 
     // 캐릭터의 현재 상태에 따라 걷기 애니메이션을 적용한다.
-    useWalking(characterState, isDraggingRef)
+    useWalking(characterState, isInteractingRef)
 
     const { handleMouseDown } = useWindowDrag({
-        isDraggingRef,
+        isInteractingRef,
         onDragStart: interruptAutonomousState,
     })
-    const { handleContextMenu } = useContextMenu()
+    const { handleContextMenu } = useContextMenu({ isInteractingRef })
 
     return (
         <CharacterView

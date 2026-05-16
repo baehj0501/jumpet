@@ -8,8 +8,8 @@ type ReadonlyBooleanRef = { readonly current: boolean }
 
 // walking 상태 동안 윈도우를 자율 이동시킨다.
 // walking 진입 시 랜덤 방향을 정한 뒤, 작업 영역 경계에서 반사된다.
-// 드래그 중에는 ref 신호로 이동을 일시 정지한다.
-export const useWalking = (state: CharacterState, isDraggingRef: ReadonlyBooleanRef) => {
+// 사용자 인터랙션(드래그, 메뉴 열림 등) 동안에는 ref 신호로 이동을 일시 정지한다.
+export const useWalking = (state: CharacterState, isInteractingRef: ReadonlyBooleanRef) => {
     useEffect(() => {
         if (state !== 'walking') {
             return
@@ -41,10 +41,10 @@ export const useWalking = (state: CharacterState, isDraggingRef: ReadonlyBoolean
                 if (cancelled) {
                     return
                 }
-                // 드래그 중에도 lastTime은 갱신해야 한다.
-                // 갱신하지 않으면 드래그 길이만큼 deltaSec가 누적되어
-                // 드래그 종료 직후 한 프레임에 큰 점프가 발생함.
-                if (isDraggingRef.current) {
+                // 인터랙션 중에도 lastTime은 갱신해야 한다.
+                // 갱신하지 않으면 인터랙션 길이만큼 deltaSec가 누적되어
+                // 인터랙션 종료 직후 한 프레임에 큰 점프가 발생함.
+                if (isInteractingRef.current) {
                     lastTime = now
                     animationFrameId = requestAnimationFrame(tick)
                     return
@@ -88,6 +88,6 @@ export const useWalking = (state: CharacterState, isDraggingRef: ReadonlyBoolean
                 cancelAnimationFrame(animationFrameId)
             }
         }
-        // isDraggingRef는 useRef 결과로 identity가 영구히 stable이므로 deps에 넣지 않는다.
+        // isInteractingRef는 useRef 결과로 identity가 영구히 stable이므로 deps에 넣지 않는다.
     }, [state])
 }

@@ -18,6 +18,7 @@ declare global {
             getWindowBounds: () => Promise<Rect | null>
             getDisplayWorkArea: () => Promise<Rect>
             showContextMenu: () => void
+            onMenuStateChange: (handler: (state: 'opened' | 'closed') => void) => () => void
         }
     }
 }

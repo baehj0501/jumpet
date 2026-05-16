@@ -133,8 +133,10 @@ app.whenReady().then(() => {
     // 다중 모니터에서도 현재 윈도우가 속한 모니터를 기준으로 반환한다.
     ipcMain.handle('window:getDisplayWorkArea', (event) => {
         const win = BrowserWindow.fromWebContents(event.sender)
-        const targetDisplay = win ? screen.getDisplayMatching(win.getBounds()) : screen.getPrimaryDisplay()
-        return targetDisplay.workArea
+        if (!win) {
+            return screen.getPrimaryDisplay().workArea
+        }
+        return screen.getDisplayMatching(win.getBounds()).workArea
     })
 
     ipcMain.on('window:showContextMenu', (event) => {
@@ -142,7 +144,11 @@ app.whenReady().then(() => {
         if (!win) {
             return
         }
-        showCharacterContextMenu(win)
+        // renderer가 메뉴 표시 동안 자율 행동을 멈출 수 있도록 양 끝에서 신호를 보낸다.
+        win.webContents.send('menu:state', 'opened')
+        showCharacterContextMenu(win, () => {
+            win.webContents.send('menu:state', 'closed')
+        })
     })
 
     createWindow()

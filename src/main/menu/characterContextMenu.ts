@@ -19,7 +19,7 @@ const PANEL_MENU_ITEMS: PanelMenuItem[] = [
     { label: '📊  정보', panelId: 'info' },
 ]
 
-export const showCharacterContextMenu = (window: BrowserWindow) => {
+export const showCharacterContextMenu = (window: BrowserWindow, onClose: () => void) => {
     const menu = Menu.buildFromTemplate([
         ...PANEL_MENU_ITEMS.map((item) => ({
             label: item.label,
@@ -38,5 +38,6 @@ export const showCharacterContextMenu = (window: BrowserWindow) => {
             },
         },
     ])
-    menu.popup({ window })
+    // popup의 callback은 항목 클릭이든 외부 클릭이든 메뉴가 닫히면 한 번 호출된다.
+    menu.popup({ window, callback: onClose })
 }
