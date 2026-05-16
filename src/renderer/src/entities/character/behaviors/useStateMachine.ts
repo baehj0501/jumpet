@@ -26,7 +26,8 @@ export const useStateMachine = (isDraggingRef: RefObject<boolean>) => {
       })
     }, STATE_TICK_INTERVAL_MS)
     return () => clearInterval(intervalId)
-  }, [isDraggingRef])
+    // isDraggingRef는 useRef 결과로 identity가 영구히 stable이므로 deps에 넣지 않는다.
+  }, [])
 
   return [state, setState] as const
 }

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import type { RefObject } from 'react'
 import type { CharacterState } from '../model/CharacterState'
-import { WALK_FRAME_INTERVAL_MS, WALK_SPEED_PX_PER_SEC } from '../model/constants'
+import { WALK_SPEED_PX_PER_SEC } from '../model/constants'
 
 // walking 상태 동안 윈도우를 자율 이동시킨다.
 // walking 진입 시 랜덤 방향을 정한 뒤, 작업 영역 경계에서 반사된다.
@@ -13,7 +13,7 @@ export const useWalking = (state: CharacterState, isDraggingRef: RefObject<boole
     }
 
     let cancelled = false
-    let intervalId: ReturnType<typeof setInterval> | null = null
+    let animationFrameId: number | null = null
 
     void (async () => {
       const [bounds, workArea] = await Promise.all([
@@ -24,8 +24,8 @@ export const useWalking = (state: CharacterState, isDraggingRef: RefObject<boole
         return
       }
 
-      let posX = bounds.x
-      let posY = bounds.y
+      let positionX = bounds.x
+      let positionY = bounds.y
       let headingRad = Math.random() * Math.PI * 2
       let lastTime = performance.now()
 
@@ -34,16 +34,24 @@ export const useWalking = (state: CharacterState, isDraggingRef: RefObject<boole
       const minY = workArea.y
       const maxY = workArea.y + workArea.height - bounds.height
 
-      intervalId = setInterval(() => {
-        if (isDraggingRef.current) {
+      const tick = (now: number) => {
+        if (cancelled) {
           return
         }
-        const now = performance.now()
+        // 드래그 중에도 lastTime은 갱신해야 한다.
+        // 갱신하지 않으면 드래그 길이만큼 deltaSec가 누적되어
+        // 드래그 종료 직후 한 프레임에 큰 점프가 발생함.
+        if (isDraggingRef.current) {
+          lastTime = now
+          animationFrameId = requestAnimationFrame(tick)
+          return
+        }
+
         const deltaSec = (now - lastTime) / 1000
         lastTime = now
 
-        let nextX = posX + Math.cos(headingRad) * WALK_SPEED_PX_PER_SEC * deltaSec
-        let nextY = posY + Math.sin(headingRad) * WALK_SPEED_PX_PER_SEC * deltaSec
+        let nextX = positionX + Math.cos(headingRad) * WALK_SPEED_PX_PER_SEC * deltaSec
+        let nextY = positionY + Math.sin(headingRad) * WALK_SPEED_PX_PER_SEC * deltaSec
 
         // 작업 영역 경계에 닿으면 해당 축으로 반사.
         if (nextX < minX) {
@@ -61,17 +69,22 @@ export const useWalking = (state: CharacterState, isDraggingRef: RefObject<boole
           headingRad = -headingRad
         }
 
-        posX = nextX
-        posY = nextY
-        window.api.moveWindowTo(posX, posY)
-      }, WALK_FRAME_INTERVAL_MS)
+        positionX = nextX
+        positionY = nextY
+        window.api.moveWindowTo(positionX, positionY)
+
+        animationFrameId = requestAnimationFrame(tick)
+      }
+
+      animationFrameId = requestAnimationFrame(tick)
     })()
 
     return () => {
       cancelled = true
-      if (intervalId !== null) {
-        clearInterval(intervalId)
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId)
       }
     }
-  }, [state, isDraggingRef])
+    // isDraggingRef는 useRef 결과로 identity가 영구히 stable이므로 deps에 넣지 않는다.
+  }, [state])
 }

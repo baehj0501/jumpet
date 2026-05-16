@@ -57,8 +57,10 @@ export const useWindowDrag = ({ isDraggingRef, onDragStart }: UseWindowDragOptio
       isDraggingRef.current = false
     }
 
-    window.addEventListener('mousemove', handleMove)
-    window.addEventListener('mouseup', handleUp)
+    // mousemove/mouseup은 preventDefault를 호출하지 않으므로 passive로 표시.
+    // 메인 스레드 부담을 줄이고 컴포지터에서 조기 처리할 수 있게 한다.
+    window.addEventListener('mousemove', handleMove, { passive: true })
+    window.addEventListener('mouseup', handleUp, { passive: true })
   }
 
   return { handleMouseDown }

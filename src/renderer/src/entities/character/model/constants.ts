@@ -1,10 +1,7 @@
 // 상태 전환 검토 주기.
 export const STATE_TICK_INTERVAL_MS = 2000
 
-// walking 중 윈도우 위치 갱신 주기 (~30 FPS).
-export const WALK_FRAME_INTERVAL_MS = 33
-
-// walking 속도 (px / 초).
+// walking 속도 (px / 초). rAF 기반이라 별도 frame interval 상수는 두지 않는다.
 export const WALK_SPEED_PX_PER_SEC = 60
 
 // 매 tick에서 idle → walking으로 넘어갈 확률.
