@@ -1,11 +1,11 @@
 ---
 name: code-review-team
-description: Agent Teams를 활용한 병렬 코드 리뷰. 3명의 독립 팀원이 각자의 context window에서 코드 품질 원칙, React 성능, 프로젝트 컨벤션을 동시에 검사합니다. Use when (1) "팀 리뷰", "team review" 언급 시, (2) Agent Teams 기반 병렬 코드 리뷰가 필요할 때
+description: Agent Teams를 활용한 병렬 코드 리뷰. 2명의 독립 팀원이 각자의 context window에서 코드 품질 원칙, React 성능을 동시에 검사합니다. Use when (1) "팀 리뷰", "team review" 언급 시, (2) Agent Teams 기반 병렬 코드 리뷰가 필요할 때
 ---
 
 # Agent Teams 코드 리뷰
 
-3명의 독립 팀원을 Agent Teams로 spawn하여 병렬 코드 리뷰를 수행한다.
+2명의 독립 팀원을 Agent Teams로 spawn하여 병렬 코드 리뷰를 수행한다.
 
 ## 팀 구성
 
@@ -13,7 +13,6 @@ description: Agent Teams를 활용한 병렬 코드 리뷰. 3명의 독립 팀�
 |-----------|-------|------|
 | frontend-fundamentals-reviewer | `frontend-fundamentals` | 응집도, 결합도, 가독성, 예측 가능성 |
 | vercel-react-best-practices-reviewer | `vercel-react-best-practices` | React/Next.js 성능 최적화 |
-| rapportlabs-frontend-guide-reviewer | `rapportlabs-frontend-guide` | 프로젝트 컨벤션 (파일 구조, 네이밍, API 패턴) |
 
 ## 실행 절차
 
@@ -33,14 +32,13 @@ description: Agent Teams를 활용한 병렬 코드 리뷰. 3명의 독립 팀�
 ### Step 2: Team 생성 및 Task 등록
 
 1. **TeamCreate**로 팀 생성: `team_name: "code-review"`
-2. **TaskCreate**로 3개 작업 등록:
+2. **TaskCreate**로 2개 작업 등록:
    - "frontend-fundamentals 관점 코드 리뷰"
    - "vercel-react-best-practices 관점 코드 리뷰"
-   - "rapportlabs-frontend-guide 관점 코드 리뷰"
 
-### Step 3: 팀원 3명 동시 Spawn
+### Step 3: 팀원 2명 동시 Spawn
 
-**반드시 하나의 메시지에서 3개 Task tool을 동시에 호출할 것.**
+**반드시 하나의 메시지에서 2개 Task tool을 동시에 호출할 것.**
 
 각 팀원의 Task 설정:
 - `subagent_type`: `"general-purpose"`
@@ -80,7 +78,7 @@ description: Agent Teams를 활용한 병렬 코드 리뷰. 3명의 독립 팀�
 
 ### Step 4: 결과 수집 및 병합
 
-팀원 3명의 메시지를 모두 수신한 뒤:
+팀원 2명의 메시지를 모두 수신한 뒤:
 
 #### 중복 제거
 
@@ -110,11 +108,7 @@ description: Agent Teams를 활용한 병렬 코드 리뷰. 3명의 독립 팀�
 ## React 성능 (vercel-react-best-practices)
 
 3. [WARNING] `파일명:라인번호` - 문제 설명 ...
-
-## 프로젝트 컨벤션 (rapportlabs-frontend-guide)
-
-4. [INFO] `파일명:라인번호` - 문제 설명 ...
-5. [WARNING] `파일명:라인번호` [frontend-fundamentals와 중복 통합] - 문제 설명 ...
+4. [WARNING] `파일명:라인번호` [frontend-fundamentals와 중복 통합] - 문제 설명 ...
 ```
 
 넘버링은 섹션을 넘어 전체에서 연속. 중복 통합된 항목은 `[{관점}와 중복 통합]` 표기.
