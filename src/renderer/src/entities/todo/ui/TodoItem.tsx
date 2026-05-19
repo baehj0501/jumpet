@@ -83,10 +83,26 @@ export const TodoItem = ({ todo, onToggle, onRemove, onUpdateText }: TodoItemPro
 
     return (
         <li
-            className='todo-item'
+            css={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '8px 14px',
+                borderRadius: 6,
+                cursor: 'default',
+                '&:hover': {
+                    background: '#f3f6fb',
+                },
+            }}
             data-completed={todo.completed}
         >
             <input
+                css={{
+                    width: 16,
+                    height: 16,
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                }}
                 type='checkbox'
                 checked={todo.completed}
                 onChange={handleToggle}
@@ -95,7 +111,17 @@ export const TodoItem = ({ todo, onToggle, onRemove, onUpdateText }: TodoItemPro
             {isEditing ? (
                 <input
                     ref={editInputRef}
-                    className='todo-edit-input'
+                    css={{
+                        flex: 1,
+                        padding: '4px 6px',
+                        fontSize: 14,
+                        border: '1px solid #4a90e2',
+                        borderRadius: 4,
+                        outline: 'none',
+                        background: '#ffffff',
+                        color: 'inherit',
+                        fontFamily: 'inherit',
+                    }}
                     value={draft}
                     onChange={handleDraftChange}
                     onKeyDown={handleEditKeyDown}
@@ -104,7 +130,17 @@ export const TodoItem = ({ todo, onToggle, onRemove, onUpdateText }: TodoItemPro
                 />
             ) : (
                 <span
-                    className='todo-text'
+                    css={{
+                        flex: 1,
+                        fontSize: 14,
+                        lineHeight: 1.4,
+                        overflowWrap: 'anywhere',
+                        userSelect: 'none',
+                        ...(todo.completed && {
+                            textDecoration: 'line-through',
+                            color: '#b0b0b0',
+                        }),
+                    }}
                     onDoubleClick={enterEditMode}
                 >
                     {todo.text}
@@ -112,7 +148,26 @@ export const TodoItem = ({ todo, onToggle, onRemove, onUpdateText }: TodoItemPro
             )}
             <button
                 type='button'
-                className='todo-remove'
+                css={{
+                    background: 'transparent',
+                    border: 'none',
+                    padding: '4px 8px',
+                    cursor: 'pointer',
+                    color: '#cccccc',
+                    fontSize: 16,
+                    lineHeight: 1,
+                    borderRadius: 4,
+                    opacity: 0,
+                    transition: 'opacity 0.12s ease',
+                    // 부모 li가 hover일 때만 노출. 자식이 자기 발현 조건을 지님으로써 응집도 유지.
+                    'li:hover > &': {
+                        opacity: 1,
+                    },
+                    '&:hover': {
+                        color: '#e25b5b',
+                        background: '#ffefef',
+                    },
+                }}
                 onClick={handleRemove}
                 aria-label='삭제'
             >

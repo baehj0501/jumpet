@@ -20,13 +20,27 @@ export const CharacterView = ({ characterId, mood, state, onMouseDown, onContext
 
     return (
         <div
-            className='pet'
+            css={{
+                width: '100%',
+                height: '100%',
+                cursor: 'grab',
+                userSelect: 'none',
+                '&:active': {
+                    cursor: 'grabbing',
+                },
+            }}
             data-state={state}
             data-mood={mood}
             onMouseDown={onMouseDown}
             onContextMenu={onContextMenu}
         >
             <img
+                css={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                    pointerEvents: 'none',
+                }}
                 src={imageSrc}
                 alt={characterId}
                 draggable={false}

@@ -2,7 +2,6 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { TodoPage } from './TodoPage'
 import '@renderer/app/styles/base.css'
-import './styles.css'
 
 const rootElement = document.getElementById('root')
 

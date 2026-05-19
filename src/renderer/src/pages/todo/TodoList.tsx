@@ -29,11 +29,31 @@ export const TodoList = ({ todos, filter, onToggle, onRemove, onUpdateText }: To
     const visibleTodos = filterTodos(todos, filter)
 
     if (visibleTodos.length === 0) {
-        return <div className='todo-list-empty'>{EMPTY_MESSAGES[filter]}</div>
+        return (
+            <div
+                css={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    color: '#aaaaaa',
+                    fontSize: 13,
+                }}
+            >
+                {EMPTY_MESSAGES[filter]}
+            </div>
+        )
     }
 
     return (
-        <ul className='todo-list'>
+        <ul
+            css={{
+                flex: 1,
+                overflowY: 'auto',
+                padding: '6px 4px',
+                listStyle: 'none',
+            }}
+        >
             {visibleTodos.map((todo) => (
                 <TodoItem
                     key={todo.id}

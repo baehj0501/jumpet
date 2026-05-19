@@ -23,10 +23,25 @@ const FILTER_OPTIONS: FilterOption[] = [
 // 빈 상태에서는 상위 컴포넌트가 footer 자체를 숨기므로 itemsLeft=0 처리는 신경 쓰지 않는다.
 export const TodoFooter = ({ itemsLeft, filter, onFilterChange, hasCompleted, onClearCompleted }: TodoFooterProps) => {
     return (
-        <footer className='todo-footer'>
-            <span className='todo-footer-count'>{itemsLeft}개 남음</span>
+        <footer
+            css={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '10px 14px',
+                borderTop: '1px solid #eeeeee',
+                fontSize: 12,
+                color: '#666666',
+            }}
+        >
+            <span css={{ flexShrink: 0 }}>{itemsLeft}개 남음</span>
             <div
-                className='todo-filter-group'
+                css={{
+                    display: 'flex',
+                    gap: 4,
+                    flex: 1,
+                    justifyContent: 'center',
+                }}
                 role='radiogroup'
                 aria-label='필터'
             >
@@ -34,7 +49,22 @@ export const TodoFooter = ({ itemsLeft, filter, onFilterChange, hasCompleted, on
                     <button
                         key={option.value}
                         type='button'
-                        className='todo-filter-button'
+                        css={{
+                            background: 'transparent',
+                            border: '1px solid transparent',
+                            padding: '3px 8px',
+                            borderRadius: 4,
+                            fontSize: 12,
+                            cursor: 'pointer',
+                            color: 'inherit',
+                            '&:hover': {
+                                borderColor: '#dcdcdc',
+                            },
+                            '&[data-active="true"]': {
+                                borderColor: '#4a90e2',
+                                color: '#4a90e2',
+                            },
+                        }}
                         data-active={filter === option.value}
                         role='radio'
                         aria-checked={filter === option.value}
@@ -47,7 +77,19 @@ export const TodoFooter = ({ itemsLeft, filter, onFilterChange, hasCompleted, on
             {hasCompleted && (
                 <button
                     type='button'
-                    className='todo-clear-completed'
+                    css={{
+                        background: 'transparent',
+                        border: 'none',
+                        padding: '3px 4px',
+                        cursor: 'pointer',
+                        color: 'inherit',
+                        fontSize: 12,
+                        textDecoration: 'underline',
+                        textUnderlineOffset: 2,
+                        '&:hover': {
+                            color: '#e25b5b',
+                        },
+                    }}
                     onClick={onClearCompleted}
                 >
                     완료 항목 지우기
