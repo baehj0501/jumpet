@@ -31,6 +31,7 @@ export default defineConfig({
             rollupOptions: {
                 input: {
                     index: resolve('src/renderer/index.html'),
+                    todo: resolve('src/renderer/todo.html'),
                 },
             },
         },

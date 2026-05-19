@@ -1,0 +1,187 @@
+/* TODO 창 전용 스타일. base.css의 reset 위에 얹는다. */
+/* 펫의 global.css가 박는 transparent 규칙은 이쪽 창에서는 import 하지 않으므로 회피된다. */
+
+:root {
+    color-scheme: light;
+}
+
+body {
+    background: #f7f7f7;
+    color: #1a1a1a;
+}
+
+.todo-page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #ffffff;
+}
+
+.todo-header {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.todo-header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #1a1a1a;
+}
+
+.todo-form {
+    display: flex;
+}
+
+.todo-form input {
+    flex: 1;
+    padding: 9px 12px;
+    font-size: 14px;
+    border: 1px solid #dcdcdc;
+    border-radius: 6px;
+    outline: none;
+    background: #ffffff;
+    color: inherit;
+}
+
+.todo-form input:focus {
+    border-color: #4a90e2;
+}
+
+.todo-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px 4px;
+    list-style: none;
+}
+
+.todo-list-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #aaaaaa;
+    font-size: 13px;
+}
+
+.todo-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: default;
+}
+
+.todo-item:hover {
+    background: #f3f6fb;
+}
+
+.todo-item input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.todo-text {
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+    user-select: none;
+}
+
+.todo-item[data-completed='true'] .todo-text {
+    text-decoration: line-through;
+    color: #b0b0b0;
+}
+
+.todo-item .todo-edit-input {
+    flex: 1;
+    padding: 4px 6px;
+    font-size: 14px;
+    border: 1px solid #4a90e2;
+    border-radius: 4px;
+    outline: none;
+    background: #ffffff;
+    color: inherit;
+    font-family: inherit;
+}
+
+.todo-item .todo-remove {
+    background: transparent;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    color: #cccccc;
+    font-size: 16px;
+    line-height: 1;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+}
+
+.todo-item:hover .todo-remove {
+    opacity: 1;
+}
+
+.todo-item .todo-remove:hover {
+    color: #e25b5b;
+    background: #ffefef;
+}
+
+.todo-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-top: 1px solid #eeeeee;
+    font-size: 12px;
+    color: #666666;
+}
+
+.todo-footer-count {
+    flex-shrink: 0;
+}
+
+.todo-filter-group {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+    justify-content: center;
+}
+
+.todo-filter-button {
+    background: transparent;
+    border: 1px solid transparent;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    color: inherit;
+}
+
+.todo-filter-button:hover {
+    border-color: #dcdcdc;
+}
+
+.todo-filter-button[data-active='true'] {
+    border-color: #4a90e2;
+    color: #4a90e2;
+}
+
+.todo-clear-completed {
+    background: transparent;
+    border: none;
+    padding: 3px 4px;
+    cursor: pointer;
+    color: inherit;
+    font-size: 12px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.todo-clear-completed:hover {
+    color: #e25b5b;
+}
