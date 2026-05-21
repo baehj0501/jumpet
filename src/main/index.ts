@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerWindowIpc } from './window'
 import { registerMenuIpc } from './menu'
-import { registerPlayerStateIpc } from './playerState'
+import { applyPlayerEvent, registerPlayerStateIpc } from './playerState'
 import { registerTodoIpc } from './todo'
 
 const createWindow = () => {
@@ -74,7 +74,13 @@ app.whenReady().then(() => {
     registerPlayerStateIpc()
 
     // TODO 영속 데이터 IPC — playerState와 같은 패턴으로 main SSOT 일관성 유지.
-    registerTodoIpc()
+    // todo 완료 시 일어날 부수효과들은 todo 도메인 외부에서 조립한다.
+    // (todo는 점수/사운드/업적 등을 직접 import하지 않고, 사건 사실만 콜백으로 위임.)
+    registerTodoIpc({
+        onTodoCompleted: () => {
+            applyPlayerEvent({ type: 'todoComplete' })
+        },
+    })
 
     createWindow()
 

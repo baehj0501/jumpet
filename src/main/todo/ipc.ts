@@ -2,7 +2,6 @@ import { BrowserWindow, ipcMain } from 'electron'
 import type { TodoEvent, TodoState } from '@shared/contracts/todoEvents'
 import { reduceTodoState } from './todoState'
 import { readTodoState, writeTodoState } from './store'
-import { applyPlayerEvent } from '../playerState'
 
 const TODO_CHANGED_CHANNEL = 'todo:changed'
 
@@ -25,7 +24,14 @@ const wasNewlyCompleted = (id: string, before: TodoState, after: TodoState): boo
     return wasIncomplete && isNowCompleted
 }
 
-export const registerTodoIpc = (): void => {
+// 의존성 주입 — todo 도메인이 점수 / 사운드 / 업적 등 다른 도메인을 직접 import하지 않게 한다.
+// 부수효과의 조립은 main/index.ts에서 일어나고, todo는 "이런 일이 일어났다"는 사실만 호출한다.
+type TodoIpcDeps = {
+    // 새로 완료된 todo의 id. 호출자가 점수 가산 등 부수효과를 자유롭게 합성한다.
+    onTodoCompleted: (id: string) => void
+}
+
+export const registerTodoIpc = ({ onTodoCompleted }: TodoIpcDeps): void => {
     ipcMain.handle('todo:get', (): TodoState => {
         return readTodoState()
     })
@@ -42,9 +48,8 @@ export const registerTodoIpc = (): void => {
         writeTodoState(next)
         broadcastTodoState(next)
 
-        // 새로 완료된 todo가 있으면 점수 보상 지급 (도메인 결합은 정책상 한 곳: 이 핸들러).
         if (eventInput.type === 'toggle' && wasNewlyCompleted(eventInput.id, current, next)) {
-            applyPlayerEvent({ type: 'todoComplete' })
+            onTodoCompleted(eventInput.id)
         }
 
         return next
