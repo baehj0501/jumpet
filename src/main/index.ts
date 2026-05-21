@@ -4,6 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerWindowIpc } from './window'
 import { registerMenuIpc } from './menu'
 import { registerPlayerStateIpc } from './playerState'
+import { registerTodoIpc } from './todo'
 
 const createWindow = () => {
     const mainWindow = new BrowserWindow({
@@ -71,6 +72,9 @@ app.whenReady().then(() => {
 
     // 플레이어 영속 데이터(점수 등) IPC — main이 SSOT, 모든 창에 broadcast해 동기화.
     registerPlayerStateIpc()
+
+    // TODO 영속 데이터 IPC — playerState와 같은 패턴으로 main SSOT 일관성 유지.
+    registerTodoIpc()
 
     createWindow()
 

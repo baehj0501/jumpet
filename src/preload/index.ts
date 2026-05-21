@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import type { PlayerEvent, PlayerState } from '../main/playerState'
+import type { TodoEvent, TodoState } from '../main/todo'
 
 const api = {
     startWindowDrag: (mouseX: number, mouseY: number): void => {
@@ -45,6 +46,21 @@ const api = {
             ipcRenderer.on('player:changed', listener)
             const unsubscribe = () => {
                 ipcRenderer.removeListener('player:changed', listener)
+            }
+            return unsubscribe
+        },
+    },
+    // TODO 영속 데이터 API. player와 같은 패턴.
+    todo: {
+        get: (): Promise<TodoState> => ipcRenderer.invoke('todo:get'),
+        apply: (event: TodoEvent): Promise<TodoState> => ipcRenderer.invoke('todo:apply', event),
+        onChange: (handler: (state: TodoState) => void): (() => void) => {
+            const listener = (_event: unknown, state: TodoState) => {
+                handler(state)
+            }
+            ipcRenderer.on('todo:changed', listener)
+            const unsubscribe = () => {
+                ipcRenderer.removeListener('todo:changed', listener)
             }
             return unsubscribe
         },

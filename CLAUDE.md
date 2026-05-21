@@ -70,7 +70,7 @@ src/
 - **자율 행동 일시정지**: `isInteractingRef` 단일 채널. 드래그 + 컨텍스트 메뉴 둘 다 같은 ref를 토글. behaviors hook은 read-only(`{ readonly current: boolean }`)로 받음 — write 권한은 features 계층에만.
 - **빌드 타임 에셋**: 런타임에서 사용자가 이미지를 추가하지 않음. 배포 시 번들에 포함. 미래에 GIF/WebP 도입 시에도 동일 카탈로그 구조.
 - **상태 머신 캡슐화**: `useStateMachine`이 raw `setState`가 아닌 의미 단위 액션(`interrupt`)만 노출.
-- **영속 데이터의 SSOT**: 여러 윈도우가 봐야 하는 영속 데이터(점수, 잠금해제 등)는 **main 프로세스가 SSOT** — `electron-store`로 영속화하고 IPC로 broadcast. renderer는 **Zustand 글로벌 store**로 캐시(`entities/player/`가 첫 예시). 한 별창 안에서만 쓰는 영속 데이터(`entities/todo/`)는 별창 로컬 `useState + localStorage` hook으로 처리 — 도메인 범위에 따라 도구가 갈린다.
+- **영속 데이터의 SSOT**: 모든 사용자 영속 데이터(점수, TODO, 잠금해제 등)는 **main 프로세스가 SSOT** — `electron-store`로 영속화하고 IPC로 모든 윈도우에 broadcast. renderer는 **Zustand 글로벌 store**로 캐시. 도메인별 패턴은 동일: `src/main/{domain}/{todoState|playerState|...}.ts`(타입+reducer) + `store.ts`(electron-store wrapper) + `ipc.ts`(handle + broadcast), renderer는 `entities/{domain}/model/use{Domain}Store.ts`(Zustand)에서 모듈 로드 시 동기화 시작.
 - **CSS 정책**: 비즈니스 UI는 emotion `css` prop, 글로벌 기본은 `base.css`. Tailwind/styled-components 미사용.
 - **포매팅**: Prettier (`tabWidth: 4`, `semi: false`, `singleQuote: true`, `singleAttributePerLine: true`).
 
@@ -85,6 +85,8 @@ src/
 | 캐릭터 카탈로그         | `src/renderer/src/entities/character/assets/index.ts`, `model/Character.ts` |
 | 플레이어 재화 (main SSOT) | `src/main/playerState/`                                                    |
 | 플레이어 재화 (renderer)  | `src/renderer/src/entities/player/`                                        |
+| TODO (main SSOT)        | `src/main/todo/`                                                            |
+| TODO (renderer)         | `src/renderer/src/entities/todo/`                                          |
 | 드래그/메뉴 인터랙션    | `src/renderer/src/features/`                                                |
 | App 조립부              | `src/renderer/src/app/App.tsx`                                              |
 | 새 패널 entry 등록      | `electron.vite.config.ts` (rollupOptions.input), `src/renderer/{name}.html` |

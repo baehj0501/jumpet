@@ -19,6 +19,26 @@ type PlayerEvent = {
     delta: number
 }
 
+// TODO 영속 데이터 타입.
+// main의 src/main/todo/todoState.ts와 모양을 일치시켜야 한다.
+type Todo = {
+    id: string
+    text: string
+    completed: boolean
+    createdAt: number
+}
+
+type TodoState = {
+    todos: Todo[]
+}
+
+type TodoEvent =
+    | { type: 'add'; text: string }
+    | { type: 'toggle'; id: string }
+    | { type: 'remove'; id: string }
+    | { type: 'updateText'; id: string; text: string }
+    | { type: 'clearCompleted' }
+
 declare global {
     interface Window {
         electron: ElectronAPI
@@ -35,6 +55,11 @@ declare global {
                 get: () => Promise<PlayerState>
                 apply: (event: PlayerEvent) => Promise<PlayerState>
                 onChange: (handler: (state: PlayerState) => void) => () => void
+            }
+            todo: {
+                get: () => Promise<TodoState>
+                apply: (event: TodoEvent) => Promise<TodoState>
+                onChange: (handler: (state: TodoState) => void) => () => void
             }
         }
     }

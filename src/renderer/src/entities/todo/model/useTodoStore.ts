@@ -1,107 +1,75 @@
-import { useCallback, useEffect, useState } from 'react'
+import { create } from 'zustand'
 import type { Todo } from './Todo'
-import { isTodo } from './Todo'
-import { STORAGE_KEY, STORAGE_VERSION } from './constants'
 
-// 저장 봉투. version 필드로 스키마 진화 시 구버전 데이터를 안전하게 폐기한다.
-type StorageEnvelope = {
-    version: number
+// TODO 데이터의 renderer 측 글로벌 store.
+// main이 SSOT이고, 이 store는 main 데이터의 read-only 미러 + 의미 단위 액션의 진입점이다.
+// usePlayerStore와 같은 패턴 — 모듈 로드 시 한 번 main 동기화를 시작하고,
+// 'todo:changed' broadcast로 자동 갱신된다.
+//
+// 반환 인터페이스는 마이그레이션 전 hook과 동일하게 유지해 TodoPage 변경을 0으로 만든다.
+
+type TodoStore = {
     todos: Todo[]
+    addTodo: (text: string) => Promise<void>
+    toggleTodo: (id: string) => Promise<void>
+    removeTodo: (id: string) => Promise<void>
+    updateTodoText: (id: string, text: string) => Promise<void>
+    clearCompleted: () => Promise<void>
 }
 
-const loadFromStorage = (): Todo[] => {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY)
-        if (raw === null) {
-            return []
-        }
-        const parsed: unknown = JSON.parse(raw)
-        if (typeof parsed !== 'object' || parsed === null) {
-            return []
-        }
-        const envelope = parsed as Partial<StorageEnvelope>
-        if (envelope.version !== STORAGE_VERSION) {
-            return []
-        }
-        if (!Array.isArray(envelope.todos)) {
-            return []
-        }
-        return envelope.todos.filter(isTodo)
-    } catch {
-        // JSON 깨짐 / quota 등 모든 케이스에서 빈 리스트로 fallback.
-        return []
+const useTodoStoreInternal = create<TodoStore>((set) => ({
+    todos: [],
+    addTodo: async (text) => {
+        const next = await window.api.todo.apply({ type: 'add', text })
+        set({ todos: next.todos })
+    },
+    toggleTodo: async (id) => {
+        const next = await window.api.todo.apply({ type: 'toggle', id })
+        set({ todos: next.todos })
+    },
+    removeTodo: async (id) => {
+        const next = await window.api.todo.apply({ type: 'remove', id })
+        set({ todos: next.todos })
+    },
+    updateTodoText: async (id, text) => {
+        const next = await window.api.todo.apply({ type: 'updateText', id, text })
+        set({ todos: next.todos })
+    },
+    clearCompleted: async () => {
+        const next = await window.api.todo.apply({ type: 'clearCompleted' })
+        set({ todos: next.todos })
+    },
+}))
+
+// 모듈 단위 초기화 가드 — usePlayerStore와 동일 패턴.
+// HMR 재평가 시 listener가 누적되지 않게 dispose도 같이 둔다.
+let isInitialized = false
+let unsubscribeFromChanges: (() => void) | null = null
+
+const initializeTodoSync = (): void => {
+    if (isInitialized) {
+        return
     }
+    isInitialized = true
+
+    void window.api.todo.get().then((state) => {
+        useTodoStoreInternal.setState({ todos: state.todos })
+    })
+    unsubscribeFromChanges = window.api.todo.onChange((state) => {
+        useTodoStoreInternal.setState({ todos: state.todos })
+    })
 }
 
-const saveToStorage = (todos: Todo[]) => {
-    try {
-        const envelope: StorageEnvelope = {
-            version: STORAGE_VERSION,
-            todos,
-        }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(envelope))
-    } catch {
-        // quota 초과 등은 조용히 무시 (사용자에게 띄울 만한 시그널이 아니다).
-    }
+if (import.meta.hot) {
+    import.meta.hot.dispose(() => {
+        unsubscribeFromChanges?.()
+        unsubscribeFromChanges = null
+        isInitialized = false
+    })
 }
 
-// 할 일 목록 상태 + localStorage 동기화 hook.
-// 액션은 의미 단위로만 노출해 raw setTodos 우회를 차단한다.
-export const useTodoStore = () => {
-    const [todos, setTodos] = useState<Todo[]>(() => loadFromStorage())
+initializeTodoSync()
 
-    useEffect(() => {
-        saveToStorage(todos)
-    }, [todos])
-
-    const addTodo = useCallback((text: string) => {
-        const trimmed = text.trim()
-        if (trimmed === '') {
-            return
-        }
-        setTodos((previousTodos) => [
-            ...previousTodos,
-            {
-                id: crypto.randomUUID(),
-                text: trimmed,
-                completed: false,
-                createdAt: Date.now(),
-            },
-        ])
-    }, [])
-
-    const toggleTodo = useCallback((id: string) => {
-        setTodos((previousTodos) =>
-            previousTodos.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo)),
-        )
-    }, [])
-
-    const removeTodo = useCallback((id: string) => {
-        setTodos((previousTodos) => previousTodos.filter((todo) => todo.id !== id))
-    }, [])
-
-    // 인라인 편집의 저장 동작. 빈 문자열로 저장되면 삭제로 간주 (TodoMVC 표준).
-    const updateTodoText = useCallback((id: string, text: string) => {
-        const trimmed = text.trim()
-        if (trimmed === '') {
-            setTodos((previousTodos) => previousTodos.filter((todo) => todo.id !== id))
-            return
-        }
-        setTodos((previousTodos) =>
-            previousTodos.map((todo) => (todo.id === id ? { ...todo, text: trimmed } : todo)),
-        )
-    }, [])
-
-    const clearCompleted = useCallback(() => {
-        setTodos((previousTodos) => previousTodos.filter((todo) => !todo.completed))
-    }, [])
-
-    return {
-        todos,
-        addTodo,
-        toggleTodo,
-        removeTodo,
-        updateTodoText,
-        clearCompleted,
-    }
-}
+// 사용처는 마이그레이션 전과 동일한 호출 방식 유지:
+//   const { todos, addTodo, toggleTodo, ... } = useTodoStore()
+export const useTodoStore = (): TodoStore => useTodoStoreInternal()
