@@ -14,10 +14,10 @@ type PlayerState = {
     score: number
 }
 
-type PlayerEvent = {
-    type: 'manual'
-    delta: number
-}
+type PlayerEvent =
+    | { type: 'manual'; delta: number }
+    // TODO 완료 시 1~5점 랜덤 지급. delta는 main이 결정한다.
+    | { type: 'todoComplete' }
 
 // TODO 영속 데이터 타입.
 // main의 src/main/todo/todoState.ts와 모양을 일치시켜야 한다.
@@ -32,12 +32,12 @@ type TodoState = {
     todos: Todo[]
 }
 
+// 'toggle'은 단방향 (완료 처리만, 되돌릴 수 없음).
 type TodoEvent =
     | { type: 'add'; text: string }
     | { type: 'toggle'; id: string }
     | { type: 'remove'; id: string }
     | { type: 'updateText'; id: string; text: string }
-    | { type: 'clearCompleted' }
 
 declare global {
     interface Window {

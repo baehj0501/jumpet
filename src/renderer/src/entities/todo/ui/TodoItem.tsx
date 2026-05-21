@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, KeyboardEvent } from 'react'
 import type { Todo } from '../model/Todo'
 
@@ -12,7 +12,15 @@ type TodoItemProps = {
 
 // 단일 할 일 항목. 더블클릭으로 인라인 편집 모드 진입.
 // Enter/blur=저장, Esc=원복, 빈 문자열로 저장=삭제.
-export const TodoItem = ({ todo, onToggle, onRemove, onUpdateText }: TodoItemProps) => {
+//
+// 단방향 정책 — todo.completed === true 인 경우 사용자 인터랙션 전부 잠금.
+//   체크박스: disabled (완료 해제 불가)
+//   더블클릭 편집: enterEditMode가 차단
+//   × 삭제: 버튼 자체 미렌더 (완료 후 삭제 → 재추가 → 재토글로 점수 어뷰징 차단)
+//
+// memo로 감싸 부모(TodoList) 재렌더 시 변경 안 된 항목은 reconcile을 건너뛴다.
+// 변경 없는 todo는 reducer가 동일 reference를 유지하므로 strict-equal 비교가 정상 작동.
+export const TodoItem = memo(({ todo, onToggle, onRemove, onUpdateText }: TodoItemProps) => {
     const [isEditing, setIsEditing] = useState(false)
     const [draft, setDraft] = useState(todo.text)
     const editInputRef = useRef<HTMLInputElement>(null)
@@ -42,6 +50,10 @@ export const TodoItem = ({ todo, onToggle, onRemove, onUpdateText }: TodoItemPro
     }
 
     const enterEditMode = () => {
+        // 단방향 정책상 완료된 항목은 더 이상 편집할 수 없다.
+        if (todo.completed) {
+            return
+        }
         setDraft(todo.text)
         setIsEditing(true)
     }
@@ -100,13 +112,15 @@ export const TodoItem = ({ todo, onToggle, onRemove, onUpdateText }: TodoItemPro
                 css={{
                     width: 16,
                     height: 16,
-                    cursor: 'pointer',
+                    cursor: todo.completed ? 'default' : 'pointer',
                     flexShrink: 0,
                 }}
                 type='checkbox'
                 checked={todo.completed}
+                // 단방향 정책 — 완료된 항목은 다시 체크 해제할 수 없다.
+                disabled={todo.completed}
                 onChange={handleToggle}
-                aria-label={todo.completed ? '완료 해제' : '완료 표시'}
+                aria-label={todo.completed ? '완료됨' : '완료 표시'}
             />
             {isEditing ? (
                 <input
@@ -146,33 +160,35 @@ export const TodoItem = ({ todo, onToggle, onRemove, onUpdateText }: TodoItemPro
                     {todo.text}
                 </span>
             )}
-            <button
-                type='button'
-                css={{
-                    background: 'transparent',
-                    border: 'none',
-                    padding: '4px 8px',
-                    cursor: 'pointer',
-                    color: '#cccccc',
-                    fontSize: 16,
-                    lineHeight: 1,
-                    borderRadius: 4,
-                    opacity: 0,
-                    transition: 'opacity 0.12s ease',
-                    // 부모 li가 hover일 때만 노출. 자식이 자기 발현 조건을 지님으로써 응집도 유지.
-                    'li:hover > &': {
-                        opacity: 1,
-                    },
-                    '&:hover': {
-                        color: '#e25b5b',
-                        background: '#ffefef',
-                    },
-                }}
-                onClick={handleRemove}
-                aria-label='삭제'
-            >
-                ×
-            </button>
+            {!todo.completed && (
+                <button
+                    type='button'
+                    css={{
+                        background: 'transparent',
+                        border: 'none',
+                        padding: '4px 8px',
+                        cursor: 'pointer',
+                        color: '#cccccc',
+                        fontSize: 16,
+                        lineHeight: 1,
+                        borderRadius: 4,
+                        opacity: 0,
+                        transition: 'opacity 0.12s ease',
+                        // 부모 li가 hover일 때만 노출. 자식이 자기 발현 조건을 지님으로써 응집도 유지.
+                        'li:hover > &': {
+                            opacity: 1,
+                        },
+                        '&:hover': {
+                            color: '#e25b5b',
+                            background: '#ffefef',
+                        },
+                    }}
+                    onClick={handleRemove}
+                    aria-label='삭제'
+                >
+                    ×
+                </button>
+            )}
         </li>
     )
-}
+})

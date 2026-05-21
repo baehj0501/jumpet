@@ -29,15 +29,22 @@ export const usePlayerStore = create<PlayerStore>((set) => ({
 let isInitialized = false
 let unsubscribeFromChanges: (() => void) | null = null
 
-const initializePlayerSync = (): void => {
+// 명시적 진입점. 모듈 import 자체로 IPC를 호출하는 사이드이펙트를 제거하고,
+// 사용처가 생기는 entrypoint에서 1회 호출한다.
+export const initializePlayerSync = (): void => {
     if (isInitialized) {
         return
     }
     isInitialized = true
 
-    void window.api.player.get().then((state) => {
-        usePlayerStore.setState({ player: state })
-    })
+    void window.api.player
+        .get()
+        .then((state) => {
+            usePlayerStore.setState({ player: state })
+        })
+        .catch(() => {
+            // 패널 창이 닫히는 타이밍 등으로 IPC가 단절되면 조용히 무시.
+        })
     unsubscribeFromChanges = window.api.player.onChange((state) => {
         usePlayerStore.setState({ player: state })
     })
@@ -51,5 +58,3 @@ if (import.meta.hot) {
         isInitialized = false
     })
 }
-
-initializePlayerSync()

@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Global, css } from '@emotion/react'
-import { useTodoStore } from '@renderer/entities/todo'
+import { useTodos, useTodoActions } from '@renderer/entities/todo'
 import type { TodoFilter } from '@renderer/entities/todo'
 import { TodoForm } from './TodoForm'
 import { TodoList } from './TodoList'
@@ -22,11 +22,25 @@ const pageGlobalStyles = css`
 `
 
 export const TodoPage = () => {
-    const { todos, addTodo, toggleTodo, removeTodo, updateTodoText, clearCompleted } = useTodoStore()
-    const [filter, setFilter] = useState<TodoFilter>('all')
+    const todos = useTodos()
+    const { addTodo, toggleTodo, removeTodo, updateTodoText } = useTodoActions()
+    // 명세상 메인 탭은 진행중. 사용자가 패널을 열면 곧바로 진행중 목록부터 본다.
+    const [filter, setFilter] = useState<TodoFilter>('active')
 
-    const itemsLeft = todos.filter((todo) => !todo.completed).length
-    const hasCompleted = todos.some((todo) => todo.completed)
+    // todos 한 번 순회로 active/completed 카운트를 같이 계산.
+    // footer가 두 탭에서 각각 다른 숫자를 보여주므로 두 값 다 필요.
+    const { activeCount, completedCount } = useMemo(() => {
+        let active = 0
+        let completed = 0
+        for (const todo of todos) {
+            if (todo.completed) {
+                completed += 1
+            } else {
+                active += 1
+            }
+        }
+        return { activeCount: active, completedCount: completed }
+    }, [todos])
 
     return (
         <>
@@ -66,11 +80,10 @@ export const TodoPage = () => {
                 />
                 {todos.length > 0 && (
                     <TodoFooter
-                        itemsLeft={itemsLeft}
+                        activeCount={activeCount}
+                        completedCount={completedCount}
                         filter={filter}
                         onFilterChange={setFilter}
-                        hasCompleted={hasCompleted}
-                        onClearCompleted={clearCompleted}
                     />
                 )}
             </div>

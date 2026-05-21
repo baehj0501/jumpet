@@ -13,14 +13,10 @@ const filterTodos = (todos: Todo[], filter: TodoFilter): Todo[] => {
     if (filter === 'active') {
         return todos.filter((todo) => !todo.completed)
     }
-    if (filter === 'completed') {
-        return todos.filter((todo) => todo.completed)
-    }
-    return todos
+    return todos.filter((todo) => todo.completed)
 }
 
 const EMPTY_MESSAGES: Record<TodoFilter, string> = {
-    all: '아직 할 일이 없어요',
     active: '진행 중인 할 일이 없어요',
     completed: '완료한 할 일이 없어요',
 }

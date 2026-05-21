@@ -1,11 +1,10 @@
 import type { TodoFilter } from '@renderer/entities/todo'
 
 type TodoFooterProps = {
-    itemsLeft: number
+    activeCount: number
+    completedCount: number
     filter: TodoFilter
     onFilterChange: (filter: TodoFilter) => void
-    hasCompleted: boolean
-    onClearCompleted: () => void
 }
 
 type FilterOption = {
@@ -14,14 +13,16 @@ type FilterOption = {
 }
 
 const FILTER_OPTIONS: FilterOption[] = [
-    { value: 'all', label: '전체' },
     { value: 'active', label: '진행중' },
     { value: 'completed', label: '완료' },
 ]
 
-// 리스트 하단 바: 남은 개수, 필터 전환, 완료 일괄삭제.
-// 빈 상태에서는 상위 컴포넌트가 footer 자체를 숨기므로 itemsLeft=0 처리는 신경 쓰지 않는다.
-export const TodoFooter = ({ itemsLeft, filter, onFilterChange, hasCompleted, onClearCompleted }: TodoFooterProps) => {
+// 리스트 하단 바: 현재 탭의 카운트 + 진행중/완료 탭 전환.
+// 빈 상태에서는 상위 컴포넌트가 footer 자체를 숨기므로 0개 처리는 신경 쓰지 않는다.
+export const TodoFooter = ({ activeCount, completedCount, filter, onFilterChange }: TodoFooterProps) => {
+    // 진행중 탭: "N개 남음", 완료 탭: "N개 완료". 탭별로 의미 있는 카운트만 보인다.
+    const countLabel = filter === 'active' ? `${activeCount}개 남음` : `${completedCount}개 완료`
+
     return (
         <footer
             css={{
@@ -34,13 +35,13 @@ export const TodoFooter = ({ itemsLeft, filter, onFilterChange, hasCompleted, on
                 color: '#666666',
             }}
         >
-            <span css={{ flexShrink: 0 }}>{itemsLeft}개 남음</span>
+            <span css={{ flexShrink: 0 }}>{countLabel}</span>
             <div
                 css={{
                     display: 'flex',
                     gap: 4,
                     flex: 1,
-                    justifyContent: 'center',
+                    justifyContent: 'flex-end',
                 }}
                 role='radiogroup'
                 aria-label='필터'
@@ -74,27 +75,6 @@ export const TodoFooter = ({ itemsLeft, filter, onFilterChange, hasCompleted, on
                     </button>
                 ))}
             </div>
-            {hasCompleted && (
-                <button
-                    type='button'
-                    css={{
-                        background: 'transparent',
-                        border: 'none',
-                        padding: '3px 4px',
-                        cursor: 'pointer',
-                        color: 'inherit',
-                        fontSize: 12,
-                        textDecoration: 'underline',
-                        textUnderlineOffset: 2,
-                        '&:hover': {
-                            color: '#e25b5b',
-                        },
-                    }}
-                    onClick={onClearCompleted}
-                >
-                    완료 항목 지우기
-                </button>
-            )}
         </footer>
     )
 }

@@ -8,4 +8,5 @@ export type Todo = {
 }
 
 // 리스트 가시성 필터. 데스크탑 별창이라 URL hash 라우팅 없이 useState로 다룬다.
-export type TodoFilter = 'all' | 'active' | 'completed'
+// 명세 — 진행중/완료 두 탭만 둔다. '전체' 탭은 두지 않는다.
+export type TodoFilter = 'active' | 'completed'

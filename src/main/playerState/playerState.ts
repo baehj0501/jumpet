@@ -8,12 +8,13 @@ export type PlayerState = {
     score: number
 }
 
-export type PlayerEvent = {
+export type PlayerEvent =
     // 디버그·시드 이벤트. 첫 도메인 이벤트(예: 'pet')가 도입되는 시점에
     // production 빌드에서는 차단하는 방향으로 좁힐 예정.
-    type: 'manual'
-    delta: number
-}
+    | { type: 'manual'; delta: number }
+    // 도메인 이벤트: TODO를 완료하면 1~5점 랜덤 지급 (명세 "완료 시 점수 +1~5").
+    // delta가 main의 reducer 안에서 결정돼 호출자(IPC 핸들러)는 점수 규칙을 모른다.
+    | { type: 'todoComplete' }
 
 export const INITIAL_PLAYER_STATE: PlayerState = {
     score: 0,
@@ -22,7 +23,16 @@ export const INITIAL_PLAYER_STATE: PlayerState = {
 // 음수 잔액은 도메인 invariant — reducer 결과에서 한 번만 floor한다.
 const MIN_SCORE = 0
 
-// 같은 PlayerState + 이벤트 → 항상 같은 결과를 내는 순수 함수.
+// TODO 완료 시 지급되는 보상 범위(둘 다 포함).
+const TODO_COMPLETE_MIN_REWARD = 1
+const TODO_COMPLETE_MAX_REWARD = 5
+
+const pickTodoCompleteReward = (): number => {
+    const range = TODO_COMPLETE_MAX_REWARD - TODO_COMPLETE_MIN_REWARD + 1
+    return TODO_COMPLETE_MIN_REWARD + Math.floor(Math.random() * range)
+}
+
+// 같은 PlayerState + 이벤트 → 결과 score만 본다 (Math.random은 'todoComplete'의 도메인 룰 자체).
 // IPC 핸들러는 이 함수만 호출하고, 영속화·broadcast는 호출자가 책임진다.
 export const reducePlayerState = (state: PlayerState, event: PlayerEvent): PlayerState => {
     switch (event.type) {
@@ -32,11 +42,17 @@ export const reducePlayerState = (state: PlayerState, event: PlayerEvent): Playe
                 score: Math.max(MIN_SCORE, state.score + event.delta),
             }
         }
+        case 'todoComplete': {
+            return {
+                ...state,
+                score: state.score + pickTodoCompleteReward(),
+            }
+        }
         default: {
-            // PlayerEvent union이 확장되면 TS가 event.type을 never로 좁히지 못해
+            // PlayerEvent union이 확장되면 TS가 event를 never로 좁히지 못해
             // 여기서 컴파일 에러로 잡아준다 (case를 빠뜨릴 수 없게).
-            const exhaustiveCheck: never = event.type
-            throw new Error(`Unhandled PlayerEvent type: ${String(exhaustiveCheck)}`)
+            const exhaustiveCheck: never = event
+            throw new Error(`Unhandled PlayerEvent: ${JSON.stringify(exhaustiveCheck)}`)
         }
     }
 }
