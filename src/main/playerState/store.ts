@@ -1,5 +1,5 @@
 import Store from 'electron-store'
-import { INITIAL_PLAYER_STATE, type PlayerState } from './playerState'
+import { INITIAL_PLAYER_STATE, type PlayerState } from '@shared/contracts/playerEvents'
 
 // 디스크 영속화 저장소.
 // 위치: app.getPath('userData')/config.json (electron-store 기본 경로)

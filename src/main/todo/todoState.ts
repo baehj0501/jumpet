@@ -1,31 +1,9 @@
 import { randomUUID } from 'node:crypto'
+import type { Todo, TodoEvent, TodoState } from '@shared/contracts/todoEvents'
 
-// 할 일 항목.
-// createdAt은 안정적 정렬을 위해 보관한다.
-export type Todo = {
-    id: string
-    text: string
-    completed: boolean
-    createdAt: number
-}
-
-export type TodoState = {
-    todos: Todo[]
-}
-
-// 클라이언트가 의미 단위로 보내는 액션.
-// id/createdAt 같은 비결정적 값은 main의 reducer 안에서 생성한다 — 도메인 룰 한 곳 집중.
-export type TodoEvent =
-    | { type: 'add'; text: string }
-    // 'toggle'은 단방향 — 완료 처리만 가능하고 진행중으로 되돌릴 수 없다.
-    // 이유: 명세 "완료한 to-do 모아두기" 의미 + 같은 to-do 재토글로 점수 어뷰징 방지.
-    | { type: 'toggle'; id: string }
-    | { type: 'remove'; id: string }
-    | { type: 'updateText'; id: string; text: string }
-
-export const INITIAL_TODO_STATE: TodoState = {
-    todos: [],
-}
+// TODO reducer + 도메인 룰 (FIFO 정리 등).
+// 타입/시드는 @shared/contracts에서 import해 main·preload·renderer가 동일 정의를 공유한다.
+// id/createdAt 같은 비결정적 값은 reducer 안에서 randomUUID/Date.now로 생성 — 도메인 룰 한 곳 집중.
 
 // 완료한 to-do 보관 상한 (명세). 초과 시 createdAt 기준 가장 오래된 완료 항목부터 제거.
 const MAX_COMPLETED_TODOS = 100

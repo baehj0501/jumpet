@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { INITIAL_PLAYER_STATE, type PlayerEvent, type PlayerState } from './PlayerState'
+import { INITIAL_PLAYER_STATE, type PlayerEvent, type PlayerState } from '@shared/contracts/playerEvents'
 
 // 플레이어 데이터의 renderer 측 글로벌 store.
 // main이 SSOT이고, 이 store는 main 데이터의 read-only 미러 + apply 액션의 진입점이다.

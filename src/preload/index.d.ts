@@ -1,4 +1,8 @@
-import { ElectronAPI } from '@electron-toolkit/preload'
+import type { ElectronAPI } from '@electron-toolkit/preload'
+import type { PlayerEvent, PlayerState } from '@shared/contracts/playerEvents'
+import type { Todo, TodoEvent, TodoState } from '@shared/contracts/todoEvents'
+
+// renderer 전용 외부 타입 보강. window.api 시그니처는 src/preload/index.ts와 한 쌍.
 
 type Rect = {
     x: number
@@ -7,37 +11,9 @@ type Rect = {
     height: number
 }
 
-// 플레이어 영속 데이터 타입.
-// main의 src/main/playerState/playerState.ts와 모양을 일치시켜야 한다.
-// (renderer tsconfig가 src/main을 include하지 않아 cross-import 불가하여 별도 선언)
-type PlayerState = {
-    score: number
-}
-
-type PlayerEvent =
-    | { type: 'manual'; delta: number }
-    // TODO 완료 시 1~5점 랜덤 지급. delta는 main이 결정한다.
-    | { type: 'todoComplete' }
-
-// TODO 영속 데이터 타입.
-// main의 src/main/todo/todoState.ts와 모양을 일치시켜야 한다.
-type Todo = {
-    id: string
-    text: string
-    completed: boolean
-    createdAt: number
-}
-
-type TodoState = {
-    todos: Todo[]
-}
-
-// 'toggle'은 단방향 (완료 처리만, 되돌릴 수 없음).
-type TodoEvent =
-    | { type: 'add'; text: string }
-    | { type: 'toggle'; id: string }
-    | { type: 'remove'; id: string }
-    | { type: 'updateText'; id: string; text: string }
+// renderer가 직접 참조하지 않더라도 entities barrel을 통해 노출되는 도메인 타입은
+// 이 import의 부작용으로 함께 평가되므로 export 형태로 명시한다.
+export type { PlayerEvent, PlayerState, Todo, TodoEvent, TodoState }
 
 declare global {
     interface Window {
@@ -64,5 +40,3 @@ declare global {
         }
     }
 }
-
-export {}

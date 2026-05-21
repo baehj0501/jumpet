@@ -18,8 +18,9 @@
         "isolatedModules": true,
         "paths": {
             "@main/*": ["./src/main/*"],
-            "@preload/*": ["./src/preload/*"]
+            "@preload/*": ["./src/preload/*"],
+            "@shared/*": ["./src/shared/*"]
         }
     },
-    "include": ["electron.vite.config.ts", "src/main/**/*", "src/preload/**/*"]
+    "include": ["electron.vite.config.ts", "src/main/**/*", "src/preload/**/*", "src/shared/**/*"]
 }

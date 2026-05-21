@@ -1,24 +1,7 @@
-// 플레이어 영속 데이터의 진실의 원천(SSOT).
-// 점수(재화)로 시작하고, 행복도·경험치·잠금해제 등은 추후 같은 객체에 필드로 추가한다.
-//
-// 외부에는 PlayerEvent(의미 단위 액션)만 노출해 호출자가 임의로 점수를 조작하지 못하게 한다.
-// 새 이벤트가 추가될 때마다 union과 reducer에 한 case씩 더하면 된다.
+// 플레이어 영속 데이터의 진실의 원천(SSOT) reducer.
+// 타입/시드는 @shared/contracts에서 import해 main·preload·renderer가 동일 정의를 공유한다.
 
-export type PlayerState = {
-    score: number
-}
-
-export type PlayerEvent =
-    // 디버그·시드 이벤트. 첫 도메인 이벤트(예: 'pet')가 도입되는 시점에
-    // production 빌드에서는 차단하는 방향으로 좁힐 예정.
-    | { type: 'manual'; delta: number }
-    // 도메인 이벤트: TODO를 완료하면 1~5점 랜덤 지급 (명세 "완료 시 점수 +1~5").
-    // delta가 main의 reducer 안에서 결정돼 호출자(IPC 핸들러)는 점수 규칙을 모른다.
-    | { type: 'todoComplete' }
-
-export const INITIAL_PLAYER_STATE: PlayerState = {
-    score: 0,
-}
+import type { PlayerEvent, PlayerState } from '@shared/contracts/playerEvents'
 
 // 음수 잔액은 도메인 invariant — reducer 결과에서 한 번만 floor한다.
 const MIN_SCORE = 0

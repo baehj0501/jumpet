@@ -1,5 +1,5 @@
 import Store from 'electron-store'
-import { INITIAL_TODO_STATE, type Todo, type TodoState } from './todoState'
+import { INITIAL_TODO_STATE, type Todo, type TodoState } from '@shared/contracts/todoEvents'
 
 // playerState와 같은 디스크 영속 패턴.
 // 별도 Store 인스턴스를 만들어도 electron-store는 같은 config.json에 키를 추가한다.

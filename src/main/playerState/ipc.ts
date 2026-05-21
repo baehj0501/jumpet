@@ -1,5 +1,6 @@
 import { BrowserWindow, ipcMain } from 'electron'
-import { reducePlayerState, type PlayerEvent, type PlayerState } from './playerState'
+import type { PlayerEvent, PlayerState } from '@shared/contracts/playerEvents'
+import { reducePlayerState } from './playerState'
 import { readPlayerState, writePlayerState } from './store'
 
 // 모든 renderer에 변경 사항을 알리기 위한 채널.

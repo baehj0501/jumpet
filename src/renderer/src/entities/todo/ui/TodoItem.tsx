@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, KeyboardEvent } from 'react'
-import type { Todo } from '../model/Todo'
+import type { Todo } from '@shared/contracts/todoEvents'
 
 type TodoItemProps = {
     todo: Todo

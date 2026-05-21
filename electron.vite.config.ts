@@ -8,6 +8,7 @@ export default defineConfig({
         resolve: {
             alias: {
                 '@main': resolve('src/main'),
+                '@shared': resolve('src/shared'),
             },
         },
     },
@@ -16,6 +17,7 @@ export default defineConfig({
         resolve: {
             alias: {
                 '@preload': resolve('src/preload'),
+                '@shared': resolve('src/shared'),
             },
         },
     },
@@ -24,6 +26,7 @@ export default defineConfig({
         resolve: {
             alias: {
                 '@renderer': resolve('src/renderer/src'),
+                '@shared': resolve('src/shared'),
             },
         },
         plugins: [react({ jsxImportSource: '@emotion/react' })],

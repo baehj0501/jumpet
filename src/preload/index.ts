@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import type { PlayerEvent, PlayerState } from '../main/playerState'
-import type { TodoEvent, TodoState } from '../main/todo'
+import type { PlayerEvent, PlayerState } from '@shared/contracts/playerEvents'
+import type { TodoEvent, TodoState } from '@shared/contracts/todoEvents'
 
 const api = {
     startWindowDrag: (mouseX: number, mouseY: number): void => {

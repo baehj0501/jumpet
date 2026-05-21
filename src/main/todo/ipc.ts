@@ -1,5 +1,6 @@
 import { BrowserWindow, ipcMain } from 'electron'
-import { reduceTodoState, type TodoEvent, type TodoState } from './todoState'
+import type { TodoEvent, TodoState } from '@shared/contracts/todoEvents'
+import { reduceTodoState } from './todoState'
 import { readTodoState, writeTodoState } from './store'
 import { applyPlayerEvent } from '../playerState'
 

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
-import type { Todo } from './Todo'
+import type { Todo } from '@shared/contracts/todoEvents'
 
 // TODO 데이터의 renderer 측 글로벌 store.
 // main이 SSOT이고, 이 store는 main 데이터의 read-only 미러 + 의미 단위 액션의 진입점이다.
