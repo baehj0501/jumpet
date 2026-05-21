@@ -1,0 +1,1 @@
+export { registerWindowIpc } from './ipc'

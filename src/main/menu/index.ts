@@ -1,0 +1,1 @@
+export { registerMenuIpc } from './ipc'

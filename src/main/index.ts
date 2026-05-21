@@ -1,19 +1,9 @@
-import { app, shell, BrowserWindow, ipcMain, screen } from 'electron'
+import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'node:path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { showCharacterContextMenu } from './menu/characterContextMenu'
+import { registerWindowIpc } from './window'
+import { registerMenuIpc } from './menu'
 import { registerPlayerStateIpc } from './playerState'
-
-type DragOrigin = {
-    startWinX: number
-    startWinY: number
-    startMouseX: number
-    startMouseY: number
-}
-
-// 드래그 시작 시점의 윈도우/마우스 좌표를 main에 캐싱.
-// renderer는 이후 mousemove마다 현재 마우스 좌표만 보내고, main이 델타 계산 후 setPosition.
-const dragOrigins = new WeakMap<BrowserWindow, DragOrigin>()
 
 const createWindow = () => {
     const mainWindow = new BrowserWindow({
@@ -73,88 +63,14 @@ app.whenReady().then(() => {
         optimizer.watchWindowShortcuts(window)
     })
 
-    // 점수 등 영속 플레이어 데이터의 IPC 핸들러를 한 번에 등록.
-    // 모든 BrowserWindow가 같은 main의 PlayerState를 SSOT로 본다.
+    // 펫 윈도우 위치/크기 조작 IPC — 드래그, 자율 이동, 모니터 경계 조회.
+    registerWindowIpc()
+
+    // 캐릭터 우클릭 컨텍스트 메뉴 IPC — 메뉴 열림/닫힘 broadcast로 자율 행동 정지 신호도 같이 보낸다.
+    registerMenuIpc()
+
+    // 플레이어 영속 데이터(점수 등) IPC — main이 SSOT, 모든 창에 broadcast해 동기화.
     registerPlayerStateIpc()
-
-    ipcMain.on('window:startDrag', (event, mouseX: number, mouseY: number) => {
-        const win = BrowserWindow.fromWebContents(event.sender)
-        if (!win) {
-            return
-        }
-        const [winX, winY] = win.getPosition()
-        dragOrigins.set(win, {
-            startWinX: winX,
-            startWinY: winY,
-            startMouseX: mouseX,
-            startMouseY: mouseY,
-        })
-    })
-
-    ipcMain.on('window:dragTo', (event, mouseX: number, mouseY: number) => {
-        const win = BrowserWindow.fromWebContents(event.sender)
-        if (!win) {
-            return
-        }
-        const origin = dragOrigins.get(win)
-        if (!origin) {
-            return
-        }
-        const nextX = origin.startWinX + (mouseX - origin.startMouseX)
-        const nextY = origin.startWinY + (mouseY - origin.startMouseY)
-        win.setPosition(Math.round(nextX), Math.round(nextY))
-    })
-
-    ipcMain.on('window:endDrag', (event) => {
-        const win = BrowserWindow.fromWebContents(event.sender)
-        if (!win) {
-            return
-        }
-        dragOrigins.delete(win)
-    })
-
-    // 자율 이동(walking 등) 용 절대 좌표 이동.
-    // 드래그용 dragTo와 분리해 두는 이유: dragTo는 dragOrigin 기반 델타 계산이고,
-    // 자율 이동은 매 프레임 절대 좌표로 갱신하는 게 자연스럽기 때문.
-    ipcMain.on('window:moveTo', (event, x: number, y: number) => {
-        const win = BrowserWindow.fromWebContents(event.sender)
-        if (!win) {
-            return
-        }
-        win.setPosition(Math.round(x), Math.round(y))
-    })
-
-    ipcMain.handle('window:getBounds', (event) => {
-        const win = BrowserWindow.fromWebContents(event.sender)
-        if (!win) {
-            return null
-        }
-        const [x, y] = win.getPosition()
-        const [width, height] = win.getSize()
-        return { x, y, width, height }
-    })
-
-    // 강아지가 돌아다닐 수 있는 모니터 영역(메뉴바/독 제외).
-    // 다중 모니터에서도 현재 윈도우가 속한 모니터를 기준으로 반환한다.
-    ipcMain.handle('window:getDisplayWorkArea', (event) => {
-        const win = BrowserWindow.fromWebContents(event.sender)
-        if (!win) {
-            return screen.getPrimaryDisplay().workArea
-        }
-        return screen.getDisplayMatching(win.getBounds()).workArea
-    })
-
-    ipcMain.on('window:showContextMenu', (event) => {
-        const win = BrowserWindow.fromWebContents(event.sender)
-        if (!win) {
-            return
-        }
-        // renderer가 메뉴 표시 동안 자율 행동을 멈출 수 있도록 양 끝에서 신호를 보낸다.
-        win.webContents.send('menu:state', 'opened')
-        showCharacterContextMenu(win, () => {
-            win.webContents.send('menu:state', 'closed')
-        })
-    })
 
     createWindow()
 
