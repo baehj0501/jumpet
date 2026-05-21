@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import type { PlayerEvent, PlayerState } from '../main/playerState'
 
 const api = {
     startWindowDrag: (mouseX: number, mouseY: number): void => {
@@ -31,6 +32,22 @@ const api = {
             ipcRenderer.removeListener('menu:state', listener)
         }
         return unsubscribe
+    },
+    // 플레이어 영속 데이터(점수 등) API.
+    // main이 SSOT이므로 get/apply는 main을 거치고, onChange로 broadcast를 구독한다.
+    player: {
+        get: (): Promise<PlayerState> => ipcRenderer.invoke('player:get'),
+        apply: (event: PlayerEvent): Promise<PlayerState> => ipcRenderer.invoke('player:apply', event),
+        onChange: (handler: (state: PlayerState) => void): (() => void) => {
+            const listener = (_event: unknown, state: PlayerState) => {
+                handler(state)
+            }
+            ipcRenderer.on('player:changed', listener)
+            const unsubscribe = () => {
+                ipcRenderer.removeListener('player:changed', listener)
+            }
+            return unsubscribe
+        },
     },
 }
 

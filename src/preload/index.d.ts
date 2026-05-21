@@ -7,6 +7,18 @@ type Rect = {
     height: number
 }
 
+// 플레이어 영속 데이터 타입.
+// main의 src/main/playerState/playerState.ts와 모양을 일치시켜야 한다.
+// (renderer tsconfig가 src/main을 include하지 않아 cross-import 불가하여 별도 선언)
+type PlayerState = {
+    score: number
+}
+
+type PlayerEvent = {
+    type: 'manual'
+    delta: number
+}
+
 declare global {
     interface Window {
         electron: ElectronAPI
@@ -19,6 +31,11 @@ declare global {
             getDisplayWorkArea: () => Promise<Rect>
             showContextMenu: () => void
             onMenuStateChange: (handler: (state: 'opened' | 'closed') => void) => () => void
+            player: {
+                get: () => Promise<PlayerState>
+                apply: (event: PlayerEvent) => Promise<PlayerState>
+                onChange: (handler: (state: PlayerState) => void) => () => void
+            }
         }
     }
 }

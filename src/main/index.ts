@@ -2,6 +2,7 @@ import { app, shell, BrowserWindow, ipcMain, screen } from 'electron'
 import { join } from 'node:path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { showCharacterContextMenu } from './menu/characterContextMenu'
+import { registerPlayerStateIpc } from './playerState'
 
 type DragOrigin = {
     startWinX: number
@@ -71,6 +72,10 @@ app.whenReady().then(() => {
     app.on('browser-window-created', (_, window) => {
         optimizer.watchWindowShortcuts(window)
     })
+
+    // 점수 등 영속 플레이어 데이터의 IPC 핸들러를 한 번에 등록.
+    // 모든 BrowserWindow가 같은 main의 PlayerState를 SSOT로 본다.
+    registerPlayerStateIpc()
 
     ipcMain.on('window:startDrag', (event, mouseX: number, mouseY: number) => {
         const win = BrowserWindow.fromWebContents(event.sender)
