@@ -1,5 +1,6 @@
 import type { Link, LinkEmoji } from '@renderer/entities/link'
 import { LinkItem } from './LinkItem'
+import { emptyStateStyle, listStyle } from './LinkList.styles'
 
 type LinkListProps = {
     links: Link[]
@@ -10,31 +11,11 @@ type LinkListProps = {
 
 export const LinkList = ({ links, onOpen, onRemove, onUpdate }: LinkListProps) => {
     if (links.length === 0) {
-        return (
-            <div
-                css={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '100%',
-                    color: '#aaaaaa',
-                    fontSize: 13,
-                }}
-            >
-                아직 등록된 링크가 없어요
-            </div>
-        )
+        return <div css={emptyStateStyle}>아직 등록된 링크가 없어요</div>
     }
 
     return (
-        <ul
-            css={{
-                flex: 1,
-                overflowY: 'auto',
-                padding: '6px 4px',
-                listStyle: 'none',
-            }}
-        >
+        <ul css={listStyle}>
             {links.map((link) => (
                 <LinkItem
                     key={link.id}

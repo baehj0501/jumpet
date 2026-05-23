@@ -2,6 +2,7 @@ import type { MouseEvent } from 'react'
 import type { CharacterState } from '../model/CharacterState'
 import type { CharacterId, Mood } from '../model/Character'
 import { CHARACTER_ASSETS } from '../assets'
+import { containerStyle, imageStyle } from './CharacterView.styles'
 
 type CharacterViewProps = {
     characterId: CharacterId
@@ -20,27 +21,14 @@ export const CharacterView = ({ characterId, mood, state, onMouseDown, onContext
 
     return (
         <div
-            css={{
-                width: '100%',
-                height: '100%',
-                cursor: 'grab',
-                userSelect: 'none',
-                '&:active': {
-                    cursor: 'grabbing',
-                },
-            }}
+            css={containerStyle}
             data-state={state}
             data-mood={mood}
             onMouseDown={onMouseDown}
             onContextMenu={onContextMenu}
         >
             <img
-                css={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'contain',
-                    pointerEvents: 'none',
-                }}
+                css={imageStyle}
                 src={imageSrc}
                 alt={characterId}
                 draggable={false}

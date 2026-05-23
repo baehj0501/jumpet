@@ -1,6 +1,14 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, KeyboardEvent } from 'react'
 import { MAX_TODO_TEXT_LENGTH, type Todo } from '@shared/contracts/todoEvents'
+import {
+    completedAtStyle,
+    editInputStyle,
+    itemStyle,
+    labelStyle,
+    removeButtonStyle,
+    toggleButtonStyle,
+} from './TodoItem.styles'
 
 type TodoItemProps = {
     todo: Todo
@@ -106,33 +114,12 @@ export const TodoItem = memo(({ todo, onToggle, onRemove, onUpdateText }: TodoIt
 
     return (
         <li
-            css={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '8px 14px',
-                borderRadius: 6,
-                cursor: 'default',
-                '&:hover': {
-                    background: '#f3f6fb',
-                },
-            }}
+            css={itemStyle}
             data-completed={todo.completed}
         >
             <button
                 type='button'
-                css={{
-                    background: 'transparent',
-                    border: 'none',
-                    padding: 0,
-                    fontSize: 16,
-                    lineHeight: 1,
-                    flexShrink: 0,
-                    cursor: todo.completed ? 'default' : 'pointer',
-                    '&:disabled': {
-                        cursor: 'default',
-                    },
-                }}
+                css={toggleButtonStyle(todo.completed)}
                 onClick={handleToggle}
                 disabled={todo.completed}
                 aria-label={todo.completed ? '완료됨' : '완료 표시'}
@@ -142,17 +129,7 @@ export const TodoItem = memo(({ todo, onToggle, onRemove, onUpdateText }: TodoIt
             {isEditing ? (
                 <input
                     ref={editInputRef}
-                    css={{
-                        flex: 1,
-                        padding: '4px 6px',
-                        fontSize: 14,
-                        border: '1px solid #4a90e2',
-                        borderRadius: 4,
-                        outline: 'none',
-                        background: '#ffffff',
-                        color: 'inherit',
-                        fontFamily: 'inherit',
-                    }}
+                    css={editInputStyle}
                     value={draft}
                     onChange={handleDraftChange}
                     onKeyDown={handleEditKeyDown}
@@ -163,29 +140,14 @@ export const TodoItem = memo(({ todo, onToggle, onRemove, onUpdateText }: TodoIt
             ) : (
                 <>
                     <span
-                        css={{
-                            flex: 1,
-                            fontSize: 14,
-                            lineHeight: 1.4,
-                            overflowWrap: 'anywhere',
-                            userSelect: 'none',
-                            cursor: 'text',
-                            ...(todo.completed && {
-                                textDecoration: 'line-through',
-                                color: '#b0b0b0',
-                            }),
-                        }}
+                        css={labelStyle(todo.completed)}
                         onClick={enterEditMode}
                     >
                         {todo.text}
                     </span>
                     {todo.completed && todo.completedAt !== undefined && (
                         <time
-                            css={{
-                                fontSize: 11,
-                                color: '#aaaaaa',
-                                flexShrink: 0,
-                            }}
+                            css={completedAtStyle}
                             dateTime={new Date(todo.completedAt).toISOString()}
                         >
                             {formatCompletedAt(todo.completedAt)}
@@ -196,26 +158,7 @@ export const TodoItem = memo(({ todo, onToggle, onRemove, onUpdateText }: TodoIt
             {!todo.completed && (
                 <button
                     type='button'
-                    css={{
-                        background: 'transparent',
-                        border: 'none',
-                        padding: '4px 8px',
-                        cursor: 'pointer',
-                        color: '#cccccc',
-                        fontSize: 16,
-                        lineHeight: 1,
-                        borderRadius: 4,
-                        opacity: 0,
-                        transition: 'opacity 0.12s ease',
-                        // 부모 li가 hover일 때만 노출. 자식이 자기 발현 조건을 지님으로써 응집도 유지.
-                        'li:hover > &': {
-                            opacity: 1,
-                        },
-                        '&:hover': {
-                            color: '#e25b5b',
-                            background: '#ffefef',
-                        },
-                    }}
+                    css={removeButtonStyle}
                     onClick={handleRemove}
                     aria-label='삭제'
                 >

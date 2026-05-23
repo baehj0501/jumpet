@@ -1,4 +1,10 @@
 import type { TodoFilter } from '@renderer/entities/todo'
+import {
+    countLabelStyle,
+    filterButtonStyle,
+    filterGroupStyle,
+    footerStyle,
+} from './TodoFooter.styles'
 
 type TodoFooterProps = {
     activeCount: number
@@ -24,25 +30,10 @@ export const TodoFooter = ({ activeCount, completedCount, filter, onFilterChange
     const countLabel = filter === 'active' ? `${activeCount}개 남음` : `${completedCount}개 완료`
 
     return (
-        <footer
-            css={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '10px 14px',
-                borderTop: '1px solid #eeeeee',
-                fontSize: 12,
-                color: '#666666',
-            }}
-        >
-            <span css={{ flexShrink: 0 }}>{countLabel}</span>
+        <footer css={footerStyle}>
+            <span css={countLabelStyle}>{countLabel}</span>
             <div
-                css={{
-                    display: 'flex',
-                    gap: 4,
-                    flex: 1,
-                    justifyContent: 'flex-end',
-                }}
+                css={filterGroupStyle}
                 role='radiogroup'
                 aria-label='필터'
             >
@@ -50,22 +41,7 @@ export const TodoFooter = ({ activeCount, completedCount, filter, onFilterChange
                     <button
                         key={option.value}
                         type='button'
-                        css={{
-                            background: 'transparent',
-                            border: '1px solid transparent',
-                            padding: '3px 8px',
-                            borderRadius: 4,
-                            fontSize: 12,
-                            cursor: 'pointer',
-                            color: 'inherit',
-                            '&:hover': {
-                                borderColor: '#dcdcdc',
-                            },
-                            '&[data-active="true"]': {
-                                borderColor: '#4a90e2',
-                                color: '#4a90e2',
-                            },
-                        }}
+                        css={filterButtonStyle}
                         data-active={filter === option.value}
                         role='radio'
                         aria-checked={filter === option.value}

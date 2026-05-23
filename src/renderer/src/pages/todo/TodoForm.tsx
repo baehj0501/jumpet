@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import { MAX_TODO_TEXT_LENGTH } from '@shared/contracts/todoEvents'
+import { formStyle, inputStyle } from './TodoForm.styles'
 
 type TodoFormProps = {
     // 빈 문자열은 store 측에서 무시되지만, 여기서도 UX 상 제출 자체를 막는다.
@@ -26,23 +27,11 @@ export const TodoForm = ({ onAdd }: TodoFormProps) => {
 
     return (
         <form
-            css={{ display: 'flex' }}
+            css={formStyle}
             onSubmit={handleSubmit}
         >
             <input
-                css={{
-                    flex: 1,
-                    padding: '9px 12px',
-                    fontSize: 14,
-                    border: '1px solid #dcdcdc',
-                    borderRadius: 6,
-                    outline: 'none',
-                    background: '#ffffff',
-                    color: 'inherit',
-                    '&:focus': {
-                        borderColor: '#4a90e2',
-                    },
-                }}
+                css={inputStyle}
                 type='text'
                 value={text}
                 onChange={handleChange}

@@ -1,6 +1,16 @@
 import { memo } from 'react'
 import type { MouseEvent } from 'react'
 import type { Link } from '@renderer/entities/link'
+import {
+    actionsAreaStyle,
+    editButtonStyle,
+    emojiStyle,
+    itemStyle,
+    nameStyle,
+    removeButtonStyle,
+    textColumnStyle,
+    urlStyle,
+} from './LinkItemView.styles'
 
 type LinkItemViewProps = {
     link: Link
@@ -31,92 +41,26 @@ export const LinkItemView = memo(({ link, onOpen, onRequestEdit, onRemove }: Lin
 
     return (
         <li
-            css={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '8px 12px',
-                borderRadius: 6,
-                cursor: 'pointer',
-                '&:hover': {
-                    background: '#f3f6fb',
-                },
-            }}
+            css={itemStyle}
             onClick={handleOpen}
         >
             <span
-                css={{
-                    fontSize: 18,
-                    lineHeight: 1,
-                    flexShrink: 0,
-                }}
+                css={emojiStyle}
                 aria-hidden='true'
             >
                 {link.emoji}
             </span>
-            <div
-                css={{
-                    flex: 1,
-                    minWidth: 0,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
-                }}
-            >
-                <span
-                    css={{
-                        fontSize: 13,
-                        fontWeight: 500,
-                        lineHeight: 1.3,
-                        color: '#1a1a1a',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                    }}
-                >
-                    {link.name}
-                </span>
-                <span
-                    css={{
-                        fontSize: 11,
-                        color: '#888888',
-                        lineHeight: 1.3,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                    }}
-                >
-                    {link.url}
-                </span>
+            <div css={textColumnStyle}>
+                <span css={nameStyle}>{link.name}</span>
+                <span css={urlStyle}>{link.url}</span>
             </div>
             <div
-                css={{
-                    display: 'flex',
-                    gap: 2,
-                    flexShrink: 0,
-                    opacity: 0,
-                    transition: 'opacity 0.12s ease',
-                    'li:hover > &': {
-                        opacity: 1,
-                    },
-                }}
+                css={actionsAreaStyle}
                 onClick={handleActionsClick}
             >
                 <button
                     type='button'
-                    css={{
-                        background: 'transparent',
-                        border: 'none',
-                        padding: '4px 8px',
-                        cursor: 'pointer',
-                        color: '#888888',
-                        fontSize: 13,
-                        borderRadius: 4,
-                        '&:hover': {
-                            color: '#4a90e2',
-                            background: '#eaf2fc',
-                        },
-                    }}
+                    css={editButtonStyle}
                     onClick={onRequestEdit}
                     aria-label='편집'
                 >
@@ -124,20 +68,7 @@ export const LinkItemView = memo(({ link, onOpen, onRequestEdit, onRemove }: Lin
                 </button>
                 <button
                     type='button'
-                    css={{
-                        background: 'transparent',
-                        border: 'none',
-                        padding: '4px 8px',
-                        cursor: 'pointer',
-                        color: '#cccccc',
-                        fontSize: 16,
-                        lineHeight: 1,
-                        borderRadius: 4,
-                        '&:hover': {
-                            color: '#e25b5b',
-                            background: '#ffefef',
-                        },
-                    }}
+                    css={removeButtonStyle}
                     onClick={handleRemove}
                     aria-label='삭제'
                 >

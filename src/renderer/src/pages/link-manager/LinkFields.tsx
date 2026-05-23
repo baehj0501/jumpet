@@ -5,36 +5,17 @@ import {
     MAX_LINK_NAME_LENGTH,
     type LinkEmoji,
 } from '@renderer/entities/link'
+import {
+    containerStyle,
+    emojiButtonStyle,
+    emojiGridStyle,
+    inputStyle,
+    inputsColumnStyle,
+    type LinkFieldsSize,
+    type LinkFieldsVariant,
+} from './LinkFields.styles'
 
-// 입력 위젯의 크기 변형.
-// - 'comfortable': 새 링크 추가 폼(LinkForm)에서 사용. 패널 헤더의 여유 있는 입력.
-// - 'compact': 항목 인라인 편집(LinkItemEdit)에서 사용. 리스트 안 좁은 공간.
-export type LinkFieldsSize = 'comfortable' | 'compact'
-
-type SizeTokens = {
-    emojiButton: number
-    emojiFontSize: number
-    inputPadding: string
-    inputFontSize: number
-    gridGap: number
-}
-
-const SIZE_TOKENS: Record<LinkFieldsSize, SizeTokens> = {
-    comfortable: {
-        emojiButton: 28,
-        emojiFontSize: 16,
-        inputPadding: '8px 10px',
-        inputFontSize: 13,
-        gridGap: 4,
-    },
-    compact: {
-        emojiButton: 24,
-        emojiFontSize: 14,
-        inputPadding: '5px 8px',
-        inputFontSize: 13,
-        gridGap: 3,
-    },
-}
+export type { LinkFieldsSize, LinkFieldsVariant }
 
 type LinkFieldsProps = {
     emoji: LinkEmoji
@@ -51,7 +32,7 @@ type LinkFieldsProps = {
     urlPlaceholder?: string
     size: LinkFieldsSize
     // 편집 모드는 input border를 강조 색(파랑)으로, 추가 모드는 기본 색으로 — 동일 위젯의 모드 표시.
-    variant?: 'default' | 'focused'
+    variant?: LinkFieldsVariant
 }
 
 // 링크 입력 3-필드 위젯.
@@ -75,8 +56,6 @@ export const LinkFields = memo(
         size,
         variant = 'default',
     }: LinkFieldsProps) => {
-        const tokens = SIZE_TOKENS[size]
-
         // data-attribute로 어떤 이모지를 골랐는지 식별 → 단일 핸들러로 위임.
         // map 안의 inline 클로저(매 렌더 재생성) 12개를 제거한다.
         const handleEmojiPick = (event: MouseEvent<HTMLButtonElement>) => {
@@ -96,22 +75,10 @@ export const LinkFields = memo(
             onUrlChange(event.target.value)
         }
 
-        const inputBorderColor = variant === 'focused' ? '#4a90e2' : '#dcdcdc'
-
         return (
-            <div
-                css={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 8,
-                }}
-            >
+            <div css={containerStyle}>
                 <div
-                    css={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: tokens.gridGap,
-                    }}
+                    css={emojiGridStyle(size)}
                     role='radiogroup'
                     aria-label='이모지'
                 >
@@ -119,26 +86,7 @@ export const LinkFields = memo(
                         <button
                             key={option}
                             type='button'
-                            css={{
-                                width: tokens.emojiButton,
-                                height: tokens.emojiButton,
-                                border: '1px solid transparent',
-                                borderRadius: 6,
-                                background: 'transparent',
-                                fontSize: tokens.emojiFontSize,
-                                lineHeight: 1,
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                '&:hover': {
-                                    background: '#f0f3f8',
-                                },
-                                '&[data-selected="true"]': {
-                                    borderColor: '#4a90e2',
-                                    background: '#eaf2fc',
-                                },
-                            }}
+                            css={emojiButtonStyle(size)}
                             data-emoji={option}
                             data-selected={emoji === option}
                             role='radio'
@@ -150,28 +98,10 @@ export const LinkFields = memo(
                         </button>
                     ))}
                 </div>
-                <div
-                    css={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 6,
-                    }}
-                >
+                <div css={inputsColumnStyle}>
                     <input
                         ref={nameInputRef}
-                        css={{
-                            padding: tokens.inputPadding,
-                            fontSize: tokens.inputFontSize,
-                            border: `1px solid ${inputBorderColor}`,
-                            borderRadius: 4,
-                            outline: 'none',
-                            background: '#ffffff',
-                            color: 'inherit',
-                            fontFamily: 'inherit',
-                            '&:focus': {
-                                borderColor: '#4a90e2',
-                            },
-                        }}
+                        css={inputStyle(size, variant)}
                         type='text'
                         value={name}
                         onChange={handleNameChange}
@@ -182,19 +112,7 @@ export const LinkFields = memo(
                     />
                     <input
                         ref={urlInputRef}
-                        css={{
-                            padding: tokens.inputPadding,
-                            fontSize: tokens.inputFontSize,
-                            border: `1px solid ${inputBorderColor}`,
-                            borderRadius: 4,
-                            outline: 'none',
-                            background: '#ffffff',
-                            color: 'inherit',
-                            fontFamily: 'inherit',
-                            '&:focus': {
-                                borderColor: '#4a90e2',
-                            },
-                        }}
+                        css={inputStyle(size, variant)}
                         type='text'
                         value={url}
                         onChange={handleUrlChange}

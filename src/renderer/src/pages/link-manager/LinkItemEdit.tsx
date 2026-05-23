@@ -2,6 +2,12 @@ import { memo, useEffect, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import type { Link, LinkEmoji, LinkUpdatePatch } from '@renderer/entities/link'
 import { LinkFields } from './LinkFields'
+import {
+    actionsRowStyle,
+    cancelButtonStyle,
+    itemStyle,
+    saveButtonStyle,
+} from './LinkItemEdit.styles'
 
 type LinkItemEditProps = {
     link: Link
@@ -56,17 +62,7 @@ export const LinkItemEdit = memo(({ link, onCommit, onCancel }: LinkItemEditProp
     const isSubmittable = draftName.trim() !== '' && draftUrl.trim() !== ''
 
     return (
-        <li
-            css={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-                padding: '8px 10px',
-                borderRadius: 6,
-                background: '#f7faff',
-                border: '1px solid #cfe0f5',
-            }}
-        >
+        <li css={itemStyle}>
             <LinkFields
                 emoji={draftEmoji}
                 name={draftName}
@@ -80,39 +76,17 @@ export const LinkItemEdit = memo(({ link, onCommit, onCancel }: LinkItemEditProp
                 size='compact'
                 variant='focused'
             />
-            <div
-                css={{
-                    display: 'flex',
-                    gap: 6,
-                    justifyContent: 'flex-end',
-                }}
-            >
+            <div css={actionsRowStyle}>
                 <button
                     type='button'
-                    css={{
-                        padding: '4px 10px',
-                        fontSize: 12,
-                        border: '1px solid #dcdcdc',
-                        borderRadius: 4,
-                        background: '#ffffff',
-                        color: '#555555',
-                        cursor: 'pointer',
-                    }}
+                    css={cancelButtonStyle}
                     onClick={onCancel}
                 >
                     취소
                 </button>
                 <button
                     type='button'
-                    css={{
-                        padding: '4px 10px',
-                        fontSize: 12,
-                        border: 'none',
-                        borderRadius: 4,
-                        background: isSubmittable ? '#4a90e2' : '#bdbdbd',
-                        color: '#ffffff',
-                        cursor: isSubmittable ? 'pointer' : 'not-allowed',
-                    }}
+                    css={saveButtonStyle(isSubmittable)}
                     onClick={commit}
                     disabled={!isSubmittable}
                 >

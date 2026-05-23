@@ -1,5 +1,6 @@
 import { TodoItem } from '@renderer/entities/todo'
 import type { Todo, TodoFilter } from '@renderer/entities/todo'
+import { emptyStateStyle, listStyle } from './TodoList.styles'
 
 type TodoListProps = {
     todos: Todo[]
@@ -25,31 +26,11 @@ export const TodoList = ({ todos, filter, onToggle, onRemove, onUpdateText }: To
     const visibleTodos = filterTodos(todos, filter)
 
     if (visibleTodos.length === 0) {
-        return (
-            <div
-                css={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '100%',
-                    color: '#aaaaaa',
-                    fontSize: 13,
-                }}
-            >
-                {EMPTY_MESSAGES[filter]}
-            </div>
-        )
+        return <div css={emptyStateStyle}>{EMPTY_MESSAGES[filter]}</div>
     }
 
     return (
-        <ul
-            css={{
-                flex: 1,
-                overflowY: 'auto',
-                padding: '6px 4px',
-                listStyle: 'none',
-            }}
-        >
+        <ul css={listStyle}>
             {visibleTodos.map((todo) => (
                 <TodoItem
                     key={todo.id}

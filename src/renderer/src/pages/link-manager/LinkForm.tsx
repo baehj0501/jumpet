@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { LINK_EMOJIS, type LinkEmoji } from '@renderer/entities/link'
 import { LinkFields } from './LinkFields'
+import { formStyle, submitButtonStyle, submitRowStyle } from './LinkForm.styles'
 
 type LinkFormProps = {
     // 빈 값/잘못된 값은 reducer에서 무시되지만, 여기서도 UX 상 제출 자체를 막는다.
@@ -36,13 +37,7 @@ export const LinkForm = ({ onAdd, disabled }: LinkFormProps) => {
 
     return (
         <form
-            css={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-                opacity: disabled ? 0.5 : 1,
-                pointerEvents: disabled ? 'none' : 'auto',
-            }}
+            css={formStyle(disabled)}
             onSubmit={handleSubmit}
             aria-disabled={disabled}
         >
@@ -55,31 +50,10 @@ export const LinkForm = ({ onAdd, disabled }: LinkFormProps) => {
                 onUrlChange={setUrl}
                 size='comfortable'
             />
-            <div
-                css={{
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                }}
-            >
+            <div css={submitRowStyle}>
                 <button
                     type='submit'
-                    css={{
-                        padding: '8px 14px',
-                        fontSize: 13,
-                        fontWeight: 500,
-                        border: 'none',
-                        borderRadius: 6,
-                        background: '#4a90e2',
-                        color: '#ffffff',
-                        cursor: 'pointer',
-                        '&:hover': {
-                            background: '#3a7ec8',
-                        },
-                        '&:disabled': {
-                            background: '#bdbdbd',
-                            cursor: 'not-allowed',
-                        },
-                    }}
+                    css={submitButtonStyle}
                     disabled={!isSubmittable}
                 >
                     추가
