@@ -36,6 +36,8 @@ declare global {
                 get: () => Promise<TodoState>
                 apply: (event: TodoEvent) => Promise<TodoState>
                 onChange: (handler: (state: TodoState) => void) => () => void
+                // 100개 한도 초과로 자동 정리된 todo 목록 구독.
+                onEvicted: (handler: (todos: Todo[]) => void) => () => void
             }
         }
     }

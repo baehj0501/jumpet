@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import type { PlayerEvent, PlayerState } from '@shared/contracts/playerEvents'
-import type { TodoEvent, TodoState } from '@shared/contracts/todoEvents'
+import type { Todo, TodoEvent, TodoState } from '@shared/contracts/todoEvents'
 
 const api = {
     startWindowDrag: (mouseX: number, mouseY: number): void => {
@@ -61,6 +61,17 @@ const api = {
             ipcRenderer.on('todo:changed', listener)
             const unsubscribe = () => {
                 ipcRenderer.removeListener('todo:changed', listener)
+            }
+            return unsubscribe
+        },
+        // 100개 한도 초과로 자동 정리(FIFO)된 todo 목록. 사용자 명시적 삭제와 구분되는 신호.
+        onEvicted: (handler: (todos: Todo[]) => void): (() => void) => {
+            const listener = (_event: unknown, todos: Todo[]) => {
+                handler(todos)
+            }
+            ipcRenderer.on('todo:evicted', listener)
+            const unsubscribe = () => {
+                ipcRenderer.removeListener('todo:evicted', listener)
             }
             return unsubscribe
         },

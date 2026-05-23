@@ -1,9 +1,12 @@
 import { BrowserWindow, ipcMain } from 'electron'
-import type { TodoEvent, TodoState } from '@shared/contracts/todoEvents'
+import type { Todo, TodoEvent, TodoState } from '@shared/contracts/todoEvents'
 import { reduceTodoState } from './todoState'
 import { readTodoState, writeTodoState } from './store'
 
 const TODO_CHANGED_CHANNEL = 'todo:changed'
+// 100개 한도로 자동 정리된 todo를 알리는 별도 채널.
+// 사용자가 명시적으로 보낸 remove 이벤트와 의미가 다르므로 분리.
+const TODO_EVICTED_CHANNEL = 'todo:evicted'
 
 const broadcastTodoState = (next: TodoState): void => {
     const allWindows = BrowserWindow.getAllWindows()
@@ -15,6 +18,16 @@ const broadcastTodoState = (next: TodoState): void => {
     }
 }
 
+const broadcastTodoEviction = (evictedTodos: Todo[]): void => {
+    const allWindows = BrowserWindow.getAllWindows()
+    for (const targetWindow of allWindows) {
+        if (targetWindow.isDestroyed()) {
+            continue
+        }
+        targetWindow.webContents.send(TODO_EVICTED_CHANNEL, evictedTodos)
+    }
+}
+
 // toggle 이벤트로 해당 to-do가 실제로 false→true 전환됐는지 확인한다.
 // reducer는 단방향이라 잘못된 id/이미 완료된 항목이면 state가 그대로 반환되지만,
 // FIFO 정리로 다른 todo가 함께 바뀔 수 있어 'next !== current' 만으로는 판별 부족.
@@ -22,6 +35,14 @@ const wasNewlyCompleted = (id: string, before: TodoState, after: TodoState): boo
     const wasIncomplete = before.todos.some((todo) => todo.id === id && !todo.completed)
     const isNowCompleted = after.todos.some((todo) => todo.id === id && todo.completed)
     return wasIncomplete && isNowCompleted
+}
+
+// 100개 한도 초과로 FIFO 정리된 todo를 추출. toggle 시점에만 발생 가능.
+// before/after id 차이로 추론 — reducer는 같은 ipc 호출 안에서 한 todo를 추가/변경하므로
+// 그 id 외에 사라진 항목이 곧 evict 대상.
+const findEvictedTodos = (before: TodoState, after: TodoState): Todo[] => {
+    const afterIds = new Set(after.todos.map((todo) => todo.id))
+    return before.todos.filter((todo) => !afterIds.has(todo.id))
 }
 
 // 의존성 주입 — todo 도메인이 점수 / 사운드 / 업적 등 다른 도메인을 직접 import하지 않게 한다.
@@ -48,8 +69,16 @@ export const registerTodoIpc = ({ onTodoCompleted }: TodoIpcDeps): void => {
         writeTodoState(next)
         broadcastTodoState(next)
 
-        if (eventInput.type === 'toggle' && wasNewlyCompleted(eventInput.id, current, next)) {
-            onTodoCompleted(eventInput.id)
+        if (eventInput.type === 'toggle') {
+            if (wasNewlyCompleted(eventInput.id, current, next)) {
+                onTodoCompleted(eventInput.id)
+            }
+            // 100개 한도 초과로 자동 정리된 todo가 있으면 별도 알림 broadcast.
+            // toggle 시점에만 evict 가능하므로 다른 이벤트 타입은 검사 생략.
+            const evictedTodos = findEvictedTodos(current, next)
+            if (evictedTodos.length > 0) {
+                broadcastTodoEviction(evictedTodos)
+            }
         }
 
         return next

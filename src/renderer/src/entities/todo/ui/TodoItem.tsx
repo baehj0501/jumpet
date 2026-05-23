@@ -26,11 +26,12 @@ const formatCompletedAt = (timestamp: number): string => {
 //   진행 중: ⭕ + 할 일 텍스트
 //   완료:    ✅ + 취소선 텍스트 + 완료 시각 (예: 5/16 14:30)
 //
-// 단방향 정책 — toggle만 단방향(false → true). 편집·삭제는 진행·완료 양쪽 모두 가능.
+// 단방향 정책 — toggle + 삭제는 단방향. 편집은 양방향.
 //   ⭕/✅ 토글: 완료 시 disabled (해제 불가)
-//   편집:      텍스트 클릭으로 진입 (진행/완료 모두 가능)
-//   × 삭제:    진행/완료 모두 가능
-//   빈 텍스트로 편집 저장하면 삭제 (TodoMVC 표준).
+//   × 삭제:    진행 항목만 노출. 완료 항목은 미렌더
+//             (점수 어뷰징 봉쇄: 완료 → 삭제 → 재추가 → 재토글로 점수 반복 차단)
+//   편집:      텍스트 클릭으로 진입. 진행/완료 모두 가능
+//   빈 텍스트로 편집 저장하면 삭제 (TodoMVC 표준 — 완료 항목도 빈 텍스트 저장 시 삭제됨)
 //
 // memo로 감싸 부모(TodoList) 재렌더 시 변경 안 된 항목은 reconcile 건너뜀.
 // 변경 없는 todo는 reducer가 동일 reference를 유지하므로 strict-equal OK.
@@ -192,33 +193,35 @@ export const TodoItem = memo(({ todo, onToggle, onRemove, onUpdateText }: TodoIt
                     )}
                 </>
             )}
-            <button
-                type='button'
-                css={{
-                    background: 'transparent',
-                    border: 'none',
-                    padding: '4px 8px',
-                    cursor: 'pointer',
-                    color: '#cccccc',
-                    fontSize: 16,
-                    lineHeight: 1,
-                    borderRadius: 4,
-                    opacity: 0,
-                    transition: 'opacity 0.12s ease',
-                    // 부모 li가 hover일 때만 노출. 자식이 자기 발현 조건을 지님으로써 응집도 유지.
-                    'li:hover > &': {
-                        opacity: 1,
-                    },
-                    '&:hover': {
-                        color: '#e25b5b',
-                        background: '#ffefef',
-                    },
-                }}
-                onClick={handleRemove}
-                aria-label='삭제'
-            >
-                ×
-            </button>
+            {!todo.completed && (
+                <button
+                    type='button'
+                    css={{
+                        background: 'transparent',
+                        border: 'none',
+                        padding: '4px 8px',
+                        cursor: 'pointer',
+                        color: '#cccccc',
+                        fontSize: 16,
+                        lineHeight: 1,
+                        borderRadius: 4,
+                        opacity: 0,
+                        transition: 'opacity 0.12s ease',
+                        // 부모 li가 hover일 때만 노출. 자식이 자기 발현 조건을 지님으로써 응집도 유지.
+                        'li:hover > &': {
+                            opacity: 1,
+                        },
+                        '&:hover': {
+                            color: '#e25b5b',
+                            background: '#ffefef',
+                        },
+                    }}
+                    onClick={handleRemove}
+                    aria-label='삭제'
+                >
+                    ×
+                </button>
+            )}
         </li>
     )
 })

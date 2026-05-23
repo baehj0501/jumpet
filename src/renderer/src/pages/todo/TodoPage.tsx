@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Global, css } from '@emotion/react'
-import { useTodos, useTodoActions } from '@renderer/entities/todo'
+import { useTodos, useTodoActions, useLastEvictedTodo } from '@renderer/entities/todo'
 import type { TodoFilter } from '@renderer/entities/todo'
 import { TodoForm } from './TodoForm'
 import { TodoList } from './TodoList'
@@ -24,6 +24,7 @@ const pageGlobalStyles = css`
 export const TodoPage = () => {
     const todos = useTodos()
     const { addTodo, toggleTodo, removeTodo, updateTodoText } = useTodoActions()
+    const lastEvictedTodo = useLastEvictedTodo()
     // 명세상 메인 탭은 진행중. 사용자가 패널을 열면 곧바로 진행중 목록부터 본다.
     const [filter, setFilter] = useState<TodoFilter>('active')
 
@@ -71,6 +72,24 @@ export const TodoPage = () => {
                     </h1>
                     <TodoForm onAdd={addTodo} />
                 </header>
+                {lastEvictedTodo && (
+                    <div
+                        css={{
+                            margin: '8px 14px 0',
+                            padding: '8px 12px',
+                            borderRadius: 6,
+                            background: '#fff7e0',
+                            border: '1px solid #f0d784',
+                            fontSize: 12,
+                            color: '#8a6d1f',
+                            lineHeight: 1.4,
+                        }}
+                        role='status'
+                        aria-live='polite'
+                    >
+                        완료 항목 보관 한도(100개)를 넘어 가장 오래된 “{lastEvictedTodo.text}”가 정리됐어요
+                    </div>
+                )}
                 <TodoList
                     todos={todos}
                     filter={filter}
