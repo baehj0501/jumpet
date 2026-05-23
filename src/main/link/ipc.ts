@@ -15,6 +15,15 @@ const broadcastLinkState = (next: LinkState): void => {
     }
 }
 
+// 외부 모듈이 link state 변경 시점에 부수효과를 합성할 수 있게 콜백을 받는다.
+// todo의 onTodoCompleted와 같은 의존성 주입 패턴 — link 도메인이 linkBar/character 등을 직접 import하지 않게 한다.
+// 조립은 src/main/index.ts에서.
+type LinkIpcDeps = {
+    onLinksChanged?: (state: LinkState) => void
+}
+
+let onLinksChangedRef: ((state: LinkState) => void) | undefined
+
 // renderer IPC 진입점과 main 내부 트리거 둘 다 같은 함수를 거치게 해
 // 영속화·broadcast·invariant 검증을 한 군데에 모은다 (playerState와 같은 패턴).
 export const applyLinkEvent = (event: LinkEvent): LinkState => {
@@ -26,10 +35,13 @@ export const applyLinkEvent = (event: LinkEvent): LinkState => {
     }
     writeLinkState(next)
     broadcastLinkState(next)
+    onLinksChangedRef?.(next)
     return next
 }
 
-export const registerLinkIpc = (): void => {
+export const registerLinkIpc = (deps: LinkIpcDeps = {}): void => {
+    onLinksChangedRef = deps.onLinksChanged
+
     ipcMain.handle('link:get', (): LinkState => {
         return readLinkState()
     })

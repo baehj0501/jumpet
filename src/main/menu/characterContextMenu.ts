@@ -20,12 +20,32 @@ const PANEL_MENU_ITEMS: PanelMenuItem[] = [
     { label: '📊  정보', panelId: 'info' },
 ]
 
-export const showCharacterContextMenu = (window: BrowserWindow, onClose: () => void) => {
+// 메뉴의 외부 의존성을 콜백 형태로 받는다.
+// menu 모듈이 linkBar 도메인을 직접 import하지 않게 해서 결합도를 낮춘다 — 조립은 main/index.ts에서.
+export type CharacterContextMenuDeps = {
+    // 현재 미니 버튼 바가 보이는 상태인지 — 체크박스 표시에 사용.
+    isLinkBarVisible: () => boolean
+    // 미니 버튼 바 표시 토글. 메뉴 항목 클릭 시 호출.
+    toggleLinkBar: () => void
+}
+
+export const showCharacterContextMenu = (
+    window: BrowserWindow,
+    onClose: () => void,
+    deps: CharacterContextMenuDeps,
+) => {
     const menu = Menu.buildFromTemplate([
         ...PANEL_MENU_ITEMS.map((item) => ({
             label: item.label,
             click: () => openPanel(item.panelId),
         })),
+        { type: 'separator' as const },
+        {
+            label: '🔗  즐겨찾기 바 표시',
+            type: 'checkbox' as const,
+            checked: deps.isLinkBarVisible(),
+            click: deps.toggleLinkBar,
+        },
         { type: 'separator' as const },
         {
             label: '❌  종료',

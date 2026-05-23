@@ -1,12 +1,17 @@
-import { BrowserWindow, screen, shell } from 'electron'
+import { BrowserWindow, shell } from 'electron'
 import { join } from 'node:path'
 import { is } from '@electron-toolkit/utils'
+import { clampToWorkArea, getWorkAreaForWindow, getWorkAreaNearestPoint } from './geometry'
+import type { LinkBarPosition } from './linkBarState'
 
 // 링크 미니 버튼 플로팅 창은 앱 시작 시 캐릭터 윈도우와 함께 1회 생성된다.
-// 캐릭터 윈도우와 동일한 *상시 표시* 정책을 따르되, 데이터는 link 도메인 store에서 read-only로 구독.
+// 캐릭터 윈도우와 동일한 *상시 표시* 정책을 따르되, 표시 여부는 우클릭 메뉴 토글로 사용자가 제어.
 //
-// 위치 결정 (사용자 컨펌 (b)): 시작 시 캐릭터 오른쪽 default. 이후엔 두 창 독립 — 캐릭터가 움직여도 따라가지 않음.
-// 위치 영속화는 하지 않으므로 매 시작 시 캐릭터 오른쪽으로 리셋된다.
+// 위치 정책:
+// - 영속화된 position이 있으면 그걸 (사용자가 마지막으로 옮긴 위치) — 단, 화면 영역으로 clamp.
+//   모니터 구성이 바뀌어 이전 좌표가 무효일 수 있어 그대로 쓰면 창이 화면 밖에 위치 → 보이지 않음.
+// - 없으면 캐릭터 오른쪽 default — 첫 실행/리셋 사용자.
+// 두 창은 이후 독립적으로 동작 — 캐릭터가 움직여도 미니 버튼 창은 따라가지 않는다.
 
 const LINK_BAR_SIZE = {
     width: 160,
@@ -21,55 +26,61 @@ const GAP_TO_CHARACTER = 10
 // HMR/맥OS activate 케이스에서 안전하게 동작하도록 노출한다.
 let linkBarWindow: BrowserWindow | null = null
 
-// 캐릭터 윈도우 위치 + 크기 + 작업 영역을 종합해 미니 버튼 창의 시작 위치를 정한다.
-// 우측 공간이 부족하면 좌측으로 fallback. 하단도 동일하게 clamp.
-const computeInitialPosition = (
-    characterWindow: BrowserWindow,
-): { x: number; y: number } => {
+// 캐릭터 윈도우 위치 + 크기 + 작업 영역을 종합해 미니 버튼 창의 default 위치를 정한다.
+// 우측 공간이 부족하면 좌측으로 fallback. 하단도 clampToWorkArea로 안전 보정.
+const computeInitialPosition = (characterWindow: BrowserWindow): { x: number; y: number } => {
     const [charX, charY] = characterWindow.getPosition()
     const [charWidth] = characterWindow.getSize()
-    const workArea = screen.getDisplayMatching(characterWindow.getBounds()).workArea
+    const workArea = getWorkAreaForWindow(characterWindow)
 
     let x = charX + charWidth + GAP_TO_CHARACTER
-    let y = charY
+    const y = charY
 
     // 캐릭터 오른쪽 공간 부족 시 왼쪽으로.
     if (x + LINK_BAR_SIZE.width > workArea.x + workArea.width) {
         x = charX - LINK_BAR_SIZE.width - GAP_TO_CHARACTER
     }
 
-    // workArea 좌측도 넘는 극단적 경우(예: 캐릭터가 좌측 가장자리)는 workArea 안으로 clamp.
-    if (x < workArea.x) {
-        x = workArea.x
-    }
+    // 좌/상/하단도 clamp — 캐릭터가 가장자리에 있는 극단적 케이스 방어.
+    return clampToWorkArea(
+        { x, y, width: LINK_BAR_SIZE.width, height: LINK_BAR_SIZE.height },
+        workArea,
+    )
+}
 
-    // 하단 한계.
-    if (y + LINK_BAR_SIZE.height > workArea.y + workArea.height) {
-        y = workArea.y + workArea.height - LINK_BAR_SIZE.height
-    }
-    if (y < workArea.y) {
-        y = workArea.y
-    }
-
-    return { x, y }
+// 영속화된 좌표를 사용할 때는 *그 좌표 근처의* 디스플레이 workArea를 기준으로 clamp.
+// 모니터가 분리되어 이전 좌표가 어떤 디스플레이에도 속하지 않더라도 가장 가까운 화면 안으로 끌어들인다.
+const resolvePersistedPosition = (position: LinkBarPosition): { x: number; y: number } => {
+    const workArea = getWorkAreaNearestPoint(position)
+    return clampToWorkArea(
+        { x: position.x, y: position.y, width: LINK_BAR_SIZE.width, height: LINK_BAR_SIZE.height },
+        workArea,
+    )
 }
 
 // 미니 버튼 창 생성.
 // 캐릭터 윈도우(`src/main/index.ts`의 createWindow)와 거의 동일한 옵션 — 상시 표시 + frameless + transparent.
+// 다만 `show: false`로 시작 — 토글에 따라 외부에서 show()/hide()를 결정한다.
 // preload는 캐릭터/패널과 공유한다 (window.api.link.* 그대로 사용).
-export const createLinkBarWindow = (characterWindow: BrowserWindow): BrowserWindow => {
+export const createLinkBarWindow = (
+    characterWindow: BrowserWindow,
+    persistedPosition: LinkBarPosition | null,
+): BrowserWindow => {
     if (linkBarWindow && !linkBarWindow.isDestroyed()) {
         linkBarWindow.focus()
         return linkBarWindow
     }
 
-    const { x, y } = computeInitialPosition(characterWindow)
+    const { x, y } = persistedPosition
+        ? resolvePersistedPosition(persistedPosition)
+        : computeInitialPosition(characterWindow)
 
     linkBarWindow = new BrowserWindow({
         x,
         y,
         width: LINK_BAR_SIZE.width,
         height: LINK_BAR_SIZE.height,
+        // 토글이 ON이어도 ready-to-show 후 show()를 외부에서 호출 — setup이 결정.
         show: false,
         frame: false,
         transparent: true,
@@ -95,10 +106,6 @@ export const createLinkBarWindow = (characterWindow: BrowserWindow): BrowserWind
 
     linkBarWindow.on('closed', () => {
         linkBarWindow = null
-    })
-
-    linkBarWindow.on('ready-to-show', () => {
-        linkBarWindow?.show()
     })
 
     // 패널/캐릭터와 동일 — 새창 요청은 OS 브라우저로 위임.

@@ -1,4 +1,5 @@
 import { memo } from 'react'
+import type { MouseEvent } from 'react'
 import type { Link } from '@renderer/entities/link'
 import { buttonStyle, emojiStyle, nameStyle } from './LinkMiniButton.styles'
 
@@ -15,11 +16,19 @@ export const LinkMiniButton = memo(({ link, onOpen }: LinkMiniButtonProps) => {
         onOpen(link.url)
     }
 
+    // 부모 컨테이너(LinkBarPage)가 onMouseDown으로 윈도우 드래그를 시작하기 때문에,
+    // 미니 버튼 위에서 mousedown 이벤트가 컨테이너로 버블링되면 클릭 의도가 드래그로 새어 나간다.
+    // stopPropagation으로 끊어 미니 버튼은 onClick 본연의 의미(외부 열기)만 수행하게 한다.
+    const handleMouseDown = (event: MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation()
+    }
+
     return (
         <li>
             <button
                 type='button'
                 css={buttonStyle}
+                onMouseDown={handleMouseDown}
                 onClick={handleClick}
                 aria-label={`${link.name} 열기`}
                 title={link.url}

@@ -1,11 +1,16 @@
 import { css } from '@emotion/react'
 
+// 항목 높이는 명시 — main의 BrowserWindow 높이 계산이 이 값을 기준으로 한다.
+// padding은 좌우만, 수직은 align-items: center로 emoji/이름을 가운데 정렬.
+export const LINK_MINI_BUTTON_HEIGHT = 36
+
 export const buttonStyle = css({
     width: '100%',
+    height: LINK_MINI_BUTTON_HEIGHT,
     display: 'flex',
     alignItems: 'center',
     gap: 8,
-    padding: '6px 10px',
+    padding: '0 10px',
     border: '1px solid #e6e6e6',
     borderRadius: 8,
     background: '#ffffff',
