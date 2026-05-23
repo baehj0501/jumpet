@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto'
-import type { Todo, TodoEvent, TodoState } from '@shared/contracts/todoEvents'
+import { MAX_TODO_TEXT_LENGTH, type Todo, type TodoEvent, type TodoState } from '@shared/contracts/todoEvents'
 
-// TODO reducer + 도메인 룰 (FIFO 정리 등).
+// TODO reducer + 도메인 룰 (FIFO 정리, 텍스트 길이 제한 등).
 // 타입/시드는 @shared/contracts에서 import해 main·preload·renderer가 동일 정의를 공유한다.
-// id/createdAt 같은 비결정적 값은 reducer 안에서 randomUUID/Date.now로 생성 — 도메인 룰 한 곳 집중.
+// id/createdAt/completedAt 같은 비결정적 값은 reducer 안에서 생성 — 도메인 룰 한 곳 집중.
 
 // 완료한 to-do 보관 상한 (명세). 초과 시 createdAt 기준 가장 오래된 완료 항목부터 제거.
 const MAX_COMPLETED_TODOS = 100
@@ -37,7 +37,7 @@ const pruneOldestCompleted = (todos: Todo[]): Todo[] => {
 export const reduceTodoState = (state: TodoState, event: TodoEvent): TodoState => {
     switch (event.type) {
         case 'add': {
-            const trimmed = event.text.trim()
+            const trimmed = event.text.trim().slice(0, MAX_TODO_TEXT_LENGTH)
             if (trimmed === '') {
                 return state
             }
@@ -55,8 +55,9 @@ export const reduceTodoState = (state: TodoState, event: TodoEvent): TodoState =
                 // 없는 id이거나 이미 완료된 항목 — 단방향 정책상 변경 없음.
                 return state
             }
+            const now = Date.now()
             const updated = state.todos.map((todo) =>
-                todo.id === event.id ? { ...todo, completed: true } : todo,
+                todo.id === event.id ? { ...todo, completed: true, completedAt: now } : todo,
             )
             return { todos: pruneOldestCompleted(updated) }
         }
@@ -65,7 +66,8 @@ export const reduceTodoState = (state: TodoState, event: TodoEvent): TodoState =
         }
         case 'updateText': {
             // 빈 텍스트로 저장하면 삭제로 간주 (TodoMVC 표준).
-            const trimmed = event.text.trim()
+            // 텍스트 변경 시 completed/completedAt는 보존 (spread).
+            const trimmed = event.text.trim().slice(0, MAX_TODO_TEXT_LENGTH)
             if (trimmed === '') {
                 return { todos: state.todos.filter((todo) => todo.id !== event.id) }
             }

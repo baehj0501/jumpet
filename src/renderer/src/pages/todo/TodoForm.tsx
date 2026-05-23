@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
+import { MAX_TODO_TEXT_LENGTH } from '@shared/contracts/todoEvents'
 
 type TodoFormProps = {
     // 빈 문자열은 store 측에서 무시되지만, 여기서도 UX 상 제출 자체를 막는다.
@@ -48,6 +49,7 @@ export const TodoForm = ({ onAdd }: TodoFormProps) => {
                 placeholder='할 일을 입력하세요'
                 aria-label='새 할 일'
                 autoFocus
+                maxLength={MAX_TODO_TEXT_LENGTH}
             />
         </form>
     )

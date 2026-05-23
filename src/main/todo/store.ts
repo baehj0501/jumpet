@@ -18,13 +18,17 @@ const isTodo = (value: unknown): value is Todo => {
         return false
     }
     const candidate = value as Record<string, unknown>
-    return (
-        typeof candidate.id === 'string' &&
-        typeof candidate.text === 'string' &&
-        typeof candidate.completed === 'boolean' &&
-        typeof candidate.createdAt === 'number' &&
-        Number.isFinite(candidate.createdAt)
-    )
+    if (typeof candidate.id !== 'string') return false
+    if (typeof candidate.text !== 'string') return false
+    if (typeof candidate.completed !== 'boolean') return false
+    if (typeof candidate.createdAt !== 'number' || !Number.isFinite(candidate.createdAt)) return false
+    // completedAt은 optional — 있으면 finite number여야 함 (구버전 데이터 호환).
+    if (candidate.completedAt !== undefined) {
+        if (typeof candidate.completedAt !== 'number' || !Number.isFinite(candidate.completedAt)) {
+            return false
+        }
+    }
+    return true
 }
 
 export const readTodoState = (): TodoState => {

@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, KeyboardEvent } from 'react'
-import type { Todo } from '@shared/contracts/todoEvents'
+import { MAX_TODO_TEXT_LENGTH, type Todo } from '@shared/contracts/todoEvents'
 
 type TodoItemProps = {
     todo: Todo
@@ -10,16 +10,30 @@ type TodoItemProps = {
     onUpdateText: (id: string, text: string) => void
 }
 
-// 단일 할 일 항목. 더블클릭으로 인라인 편집 모드 진입.
-// Enter/blur=저장, Esc=원복, 빈 문자열로 저장=삭제.
+// 완료 시각 표시 포맷: "5/16 14:30" (명세 §8.2).
+const formatCompletedAt = (timestamp: number): string => {
+    const date = new Date(timestamp)
+    const month = date.getMonth() + 1
+    const day = date.getDate()
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    return `${month}/${day} ${hours}:${minutes}`
+}
+
+// 단일 할 일 항목.
 //
-// 단방향 정책 — todo.completed === true 인 경우 사용자 인터랙션 전부 잠금.
-//   체크박스: disabled (완료 해제 불가)
-//   더블클릭 편집: enterEditMode가 차단
-//   × 삭제: 버튼 자체 미렌더 (완료 후 삭제 → 재추가 → 재토글로 점수 어뷰징 차단)
+// 표시 형식 (명세 §8.2):
+//   진행 중: ⭕ + 할 일 텍스트
+//   완료:    ✅ + 취소선 텍스트 + 완료 시각 (예: 5/16 14:30)
 //
-// memo로 감싸 부모(TodoList) 재렌더 시 변경 안 된 항목은 reconcile을 건너뛴다.
-// 변경 없는 todo는 reducer가 동일 reference를 유지하므로 strict-equal 비교가 정상 작동.
+// 단방향 정책 — toggle만 단방향(false → true). 편집·삭제는 진행·완료 양쪽 모두 가능.
+//   ⭕/✅ 토글: 완료 시 disabled (해제 불가)
+//   편집:      텍스트 클릭으로 진입 (진행/완료 모두 가능)
+//   × 삭제:    진행/완료 모두 가능
+//   빈 텍스트로 편집 저장하면 삭제 (TodoMVC 표준).
+//
+// memo로 감싸 부모(TodoList) 재렌더 시 변경 안 된 항목은 reconcile 건너뜀.
+// 변경 없는 todo는 reducer가 동일 reference를 유지하므로 strict-equal OK.
 export const TodoItem = memo(({ todo, onToggle, onRemove, onUpdateText }: TodoItemProps) => {
     const [isEditing, setIsEditing] = useState(false)
     const [draft, setDraft] = useState(todo.text)
@@ -50,10 +64,6 @@ export const TodoItem = memo(({ todo, onToggle, onRemove, onUpdateText }: TodoIt
     }
 
     const enterEditMode = () => {
-        // 단방향 정책상 완료된 항목은 더 이상 편집할 수 없다.
-        if (todo.completed) {
-            return
-        }
         setDraft(todo.text)
         setIsEditing(true)
     }
@@ -108,20 +118,26 @@ export const TodoItem = memo(({ todo, onToggle, onRemove, onUpdateText }: TodoIt
             }}
             data-completed={todo.completed}
         >
-            <input
+            <button
+                type='button'
                 css={{
-                    width: 16,
-                    height: 16,
-                    cursor: todo.completed ? 'default' : 'pointer',
+                    background: 'transparent',
+                    border: 'none',
+                    padding: 0,
+                    fontSize: 16,
+                    lineHeight: 1,
                     flexShrink: 0,
+                    cursor: todo.completed ? 'default' : 'pointer',
+                    '&:disabled': {
+                        cursor: 'default',
+                    },
                 }}
-                type='checkbox'
-                checked={todo.completed}
-                // 단방향 정책 — 완료된 항목은 다시 체크 해제할 수 없다.
+                onClick={handleToggle}
                 disabled={todo.completed}
-                onChange={handleToggle}
                 aria-label={todo.completed ? '완료됨' : '완료 표시'}
-            />
+            >
+                {todo.completed ? '✅' : '⭕'}
+            </button>
             {isEditing ? (
                 <input
                     ref={editInputRef}
@@ -141,54 +157,68 @@ export const TodoItem = memo(({ todo, onToggle, onRemove, onUpdateText }: TodoIt
                     onKeyDown={handleEditKeyDown}
                     onBlur={handleEditBlur}
                     aria-label='할 일 텍스트 편집'
+                    maxLength={MAX_TODO_TEXT_LENGTH}
                 />
             ) : (
-                <span
-                    css={{
-                        flex: 1,
-                        fontSize: 14,
-                        lineHeight: 1.4,
-                        overflowWrap: 'anywhere',
-                        userSelect: 'none',
-                        ...(todo.completed && {
-                            textDecoration: 'line-through',
-                            color: '#b0b0b0',
-                        }),
-                    }}
-                    onDoubleClick={enterEditMode}
-                >
-                    {todo.text}
-                </span>
+                <>
+                    <span
+                        css={{
+                            flex: 1,
+                            fontSize: 14,
+                            lineHeight: 1.4,
+                            overflowWrap: 'anywhere',
+                            userSelect: 'none',
+                            cursor: 'text',
+                            ...(todo.completed && {
+                                textDecoration: 'line-through',
+                                color: '#b0b0b0',
+                            }),
+                        }}
+                        onClick={enterEditMode}
+                    >
+                        {todo.text}
+                    </span>
+                    {todo.completed && todo.completedAt !== undefined && (
+                        <time
+                            css={{
+                                fontSize: 11,
+                                color: '#aaaaaa',
+                                flexShrink: 0,
+                            }}
+                            dateTime={new Date(todo.completedAt).toISOString()}
+                        >
+                            {formatCompletedAt(todo.completedAt)}
+                        </time>
+                    )}
+                </>
             )}
-            {!todo.completed && (
-                <button
-                    type='button'
-                    css={{
-                        background: 'transparent',
-                        border: 'none',
-                        padding: '4px 8px',
-                        cursor: 'pointer',
-                        color: '#cccccc',
-                        fontSize: 16,
-                        lineHeight: 1,
-                        borderRadius: 4,
-                        opacity: 0,
-                        transition: 'opacity 0.12s ease',
-                        // 부모 li가 hover일 때만 노출. 자식이 자기 발현 조건을 지님으로써 응집도 유지.
-                        'li:hover > &': {
-                            opacity: 1,
-                        },
-                        '&:hover': {
-                            color: '#e25b5b',
-                            background: '#ffefef',
-                        },
-                    }}
-                    onClick={handleRemove}
-                    aria-label='삭제'
-                >
-                    ×
-                </button>
-            )}
+            <button
+                type='button'
+                css={{
+                    background: 'transparent',
+                    border: 'none',
+                    padding: '4px 8px',
+                    cursor: 'pointer',
+                    color: '#cccccc',
+                    fontSize: 16,
+                    lineHeight: 1,
+                    borderRadius: 4,
+                    opacity: 0,
+                    transition: 'opacity 0.12s ease',
+                    // 부모 li가 hover일 때만 노출. 자식이 자기 발현 조건을 지님으로써 응집도 유지.
+                    'li:hover > &': {
+                        opacity: 1,
+                    },
+                    '&:hover': {
+                        color: '#e25b5b',
+                        background: '#ffefef',
+                    },
+                }}
+                onClick={handleRemove}
+                aria-label='삭제'
+            >
+                ×
+            </button>
         </li>
     )
 })
