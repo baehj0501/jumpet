@@ -35,6 +35,8 @@ export default defineConfig({
                 input: {
                     index: resolve('src/renderer/index.html'),
                     todo: resolve('src/renderer/todo.html'),
+                    'link-manager': resolve('src/renderer/link-manager.html'),
+                    'link-bar': resolve('src/renderer/link-bar.html'),
                 },
             },
         },

@@ -5,8 +5,10 @@ import { registerWindowIpc } from './window'
 import { registerMenuIpc } from './menu'
 import { applyPlayerEvent, registerPlayerStateIpc } from './playerState'
 import { registerTodoIpc } from './todo'
+import { registerLinkIpc } from './link'
+import { createLinkBarWindow } from './linkBar'
 
-const createWindow = () => {
+const createWindow = (): BrowserWindow => {
     const mainWindow = new BrowserWindow({
         width: 300,
         height: 300,
@@ -55,6 +57,8 @@ const createWindow = () => {
     } else {
         mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
     }
+
+    return mainWindow
 }
 
 app.whenReady().then(() => {
@@ -82,11 +86,19 @@ app.whenReady().then(() => {
         },
     })
 
-    createWindow()
+    // 링크 영속 데이터 IPC + 외부 URL 열기 위임.
+    // 다른 도메인에 부수효과를 주지 않아 외부 콜백 주입은 필요하지 않다.
+    registerLinkIpc()
+
+    // 캐릭터 윈도우 생성 후, 미니 버튼 플로팅 창을 캐릭터 위치를 기준으로 함께 띄운다.
+    // 두 창은 이후 독립적으로 동작 — 캐릭터가 움직여도 미니 버튼 창은 따라가지 않는다.
+    const characterWindow = createWindow()
+    createLinkBarWindow(characterWindow)
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
-            createWindow()
+            const recreatedCharacterWindow = createWindow()
+            createLinkBarWindow(recreatedCharacterWindow)
         }
     })
 })
