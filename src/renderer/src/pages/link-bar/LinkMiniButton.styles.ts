@@ -1,12 +1,11 @@
 import { css } from '@emotion/react'
+import { LINK_BAR_LAYOUT } from '@shared/contracts/linkBarLayout'
 
-// 항목 높이는 명시 — main의 BrowserWindow 높이 계산이 이 값을 기준으로 한다.
+// 항목 높이는 main의 BrowserWindow 높이 계산과 동기화돼야 하므로 shared contracts의 상수를 사용.
 // padding은 좌우만, 수직은 align-items: center로 emoji/이름을 가운데 정렬.
-export const LINK_MINI_BUTTON_HEIGHT = 36
-
 export const buttonStyle = css({
     width: '100%',
-    height: LINK_MINI_BUTTON_HEIGHT,
+    height: LINK_BAR_LAYOUT.itemHeight,
     display: 'flex',
     alignItems: 'center',
     gap: 8,

@@ -45,8 +45,10 @@ export const reduceLinkBarState = (state: LinkBarState, event: LinkBarEvent): Li
             return { ...state, visible: false }
         }
         case 'setPosition': {
-            // moved 이벤트가 setPosition() 호출 후 다시 발화될 수 있어 무한 루프를 막는 guard.
-            // 같은 좌표면 이전 state를 그대로 반환 → reference 유지로 호출자가 단축 경로 진입.
+            // 같은 좌표면 이전 state를 그대로 반환 — applyLinkBarEvent가 reference 비교로
+            // 디스크 write/broadcast 단축 경로에 진입한다.
+            // (applyLinkBarEvent는 윈도우 setPosition을 호출하지 않으므로 'moved' 재발화로 인한
+            //  무한 루프 위험 자체는 없다 — 이 dedup은 순수 비용 절감.)
             if (
                 state.position &&
                 state.position.x === event.x &&

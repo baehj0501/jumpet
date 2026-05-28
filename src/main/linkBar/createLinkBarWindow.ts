@@ -1,6 +1,7 @@
 import { BrowserWindow, shell } from 'electron'
 import { join } from 'node:path'
 import { is } from '@electron-toolkit/utils'
+import { LINK_BAR_LAYOUT, computeLinkBarHeight } from '@shared/contracts/linkBarLayout'
 import { clampToWorkArea, getWorkAreaForWindow, getWorkAreaNearestPoint } from './geometry'
 import type { LinkBarPosition } from './linkBarState'
 
@@ -12,22 +13,22 @@ import type { LinkBarPosition } from './linkBarState'
 //   모니터 구성이 바뀌어 이전 좌표가 무효일 수 있어 그대로 쓰면 창이 화면 밖에 위치 → 보이지 않음.
 // - 없으면 캐릭터 오른쪽 default — 첫 실행/리셋 사용자.
 // 두 창은 이후 독립적으로 동작 — 캐릭터가 움직여도 미니 버튼 창은 따라가지 않는다.
+//
+// 윈도우 ref 보유는 caller(setupLinkBar) → controller.setLinkBarWindow가 단일하게 한다.
+// 이 모듈은 새 BrowserWindow를 생성·반환만 수행 — SSOT 유지 + 중복 호출 방지는 caller 책임.
 
-const LINK_BAR_SIZE = {
-    width: 160,
-    // 미니 버튼 ~36px × 5개(MAX_LINKS) + 상단 핸들 영역 + 패딩 여유.
-    height: 220,
+// 시작 시 BrowserWindow 사이즈. 이후 adjustLinkBarHeight가 실제 링크 개수에 맞춰 조정한다.
+// 5개(MAX_LINKS) 가득 찬 높이로 시작 — 영속 링크가 많은 케이스에서 사이즈 점프를 줄인다.
+const LINK_BAR_INITIAL_SIZE = {
+    width: LINK_BAR_LAYOUT.cardWidth,
+    height: computeLinkBarHeight(5),
 }
 
 // 캐릭터 윈도우와의 시각적 간격 (px).
 const GAP_TO_CHARACTER = 10
 
-// 싱글톤 ref. 캐릭터 윈도우와 같은 lifecycle을 가지므로 외부에서 명시적으로 다시 생성할 일은 거의 없지만,
-// HMR/맥OS activate 케이스에서 안전하게 동작하도록 노출한다.
-let linkBarWindow: BrowserWindow | null = null
-
 // 캐릭터 윈도우 위치 + 크기 + 작업 영역을 종합해 미니 버튼 창의 default 위치를 정한다.
-// 우측 공간이 부족하면 좌측으로 fallback. 하단도 clampToWorkArea로 안전 보정.
+// 우측 공간이 부족하면 좌측으로 fallback. 좌·상·하단도 clampToWorkArea로 안전 보정.
 const computeInitialPosition = (characterWindow: BrowserWindow): { x: number; y: number } => {
     const [charX, charY] = characterWindow.getPosition()
     const [charWidth] = characterWindow.getSize()
@@ -37,13 +38,12 @@ const computeInitialPosition = (characterWindow: BrowserWindow): { x: number; y:
     const y = charY
 
     // 캐릭터 오른쪽 공간 부족 시 왼쪽으로.
-    if (x + LINK_BAR_SIZE.width > workArea.x + workArea.width) {
-        x = charX - LINK_BAR_SIZE.width - GAP_TO_CHARACTER
+    if (x + LINK_BAR_INITIAL_SIZE.width > workArea.x + workArea.width) {
+        x = charX - LINK_BAR_INITIAL_SIZE.width - GAP_TO_CHARACTER
     }
 
-    // 좌/상/하단도 clamp — 캐릭터가 가장자리에 있는 극단적 케이스 방어.
     return clampToWorkArea(
-        { x, y, width: LINK_BAR_SIZE.width, height: LINK_BAR_SIZE.height },
+        { x, y, width: LINK_BAR_INITIAL_SIZE.width, height: LINK_BAR_INITIAL_SIZE.height },
         workArea,
     )
 }
@@ -53,34 +53,34 @@ const computeInitialPosition = (characterWindow: BrowserWindow): { x: number; y:
 const resolvePersistedPosition = (position: LinkBarPosition): { x: number; y: number } => {
     const workArea = getWorkAreaNearestPoint(position)
     return clampToWorkArea(
-        { x: position.x, y: position.y, width: LINK_BAR_SIZE.width, height: LINK_BAR_SIZE.height },
+        {
+            x: position.x,
+            y: position.y,
+            width: LINK_BAR_INITIAL_SIZE.width,
+            height: LINK_BAR_INITIAL_SIZE.height,
+        },
         workArea,
     )
 }
 
 // 미니 버튼 창 생성.
 // 캐릭터 윈도우(`src/main/index.ts`의 createWindow)와 거의 동일한 옵션 — 상시 표시 + frameless + transparent.
-// 다만 `show: false`로 시작 — 토글에 따라 외부에서 show()/hide()를 결정한다.
+// `show: false`로 시작 — 토글에 따라 controller가 show()/hide()를 결정한다.
 // preload는 캐릭터/패널과 공유한다 (window.api.link.* 그대로 사용).
 export const createLinkBarWindow = (
     characterWindow: BrowserWindow,
     persistedPosition: LinkBarPosition | null,
 ): BrowserWindow => {
-    if (linkBarWindow && !linkBarWindow.isDestroyed()) {
-        linkBarWindow.focus()
-        return linkBarWindow
-    }
-
     const { x, y } = persistedPosition
         ? resolvePersistedPosition(persistedPosition)
         : computeInitialPosition(characterWindow)
 
-    linkBarWindow = new BrowserWindow({
+    const window = new BrowserWindow({
         x,
         y,
-        width: LINK_BAR_SIZE.width,
-        height: LINK_BAR_SIZE.height,
-        // 토글이 ON이어도 ready-to-show 후 show()를 외부에서 호출 — setup이 결정.
+        width: LINK_BAR_INITIAL_SIZE.width,
+        height: LINK_BAR_INITIAL_SIZE.height,
+        // 토글이 ON이어도 ready-to-show 후 show()를 controller가 결정한다.
         show: false,
         frame: false,
         transparent: true,
@@ -101,24 +101,20 @@ export const createLinkBarWindow = (
     })
 
     // macOS 풀스크린 앱/모든 Space에서도 미니 버튼이 보이도록 캐릭터와 동일 정책 적용.
-    linkBarWindow.setAlwaysOnTop(true, 'screen-saver')
-    linkBarWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
-
-    linkBarWindow.on('closed', () => {
-        linkBarWindow = null
-    })
+    window.setAlwaysOnTop(true, 'screen-saver')
+    window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
 
     // 패널/캐릭터와 동일 — 새창 요청은 OS 브라우저로 위임.
-    linkBarWindow.webContents.setWindowOpenHandler((details) => {
+    window.webContents.setWindowOpenHandler((details) => {
         shell.openExternal(details.url)
         return { action: 'deny' }
     })
 
     if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-        linkBarWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/link-bar.html`)
+        window.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/link-bar.html`)
     } else {
-        linkBarWindow.loadFile(join(__dirname, '../renderer/link-bar.html'))
+        window.loadFile(join(__dirname, '../renderer/link-bar.html'))
     }
 
-    return linkBarWindow
+    return window
 }

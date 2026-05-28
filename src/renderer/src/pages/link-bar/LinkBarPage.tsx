@@ -1,4 +1,3 @@
-import { useRef } from 'react'
 import { Global } from '@emotion/react'
 import { useLinkActions, useLinks } from '@renderer/entities/link'
 import { useWindowDrag } from '@renderer/features/drag'
@@ -18,15 +17,12 @@ import {
 // - 컨테이너 전체에 onMouseDown을 바인딩 — 핸들/리스트 padding/아이템 사이 gap 어디서든 드래그.
 // - LinkMiniButton 내부는 자체 onMouseDown에서 stopPropagation으로 드래그 시작을 막아
 //   짧은 클릭이 외부 열기로 정상 발화한다.
+// - 자율 행동이 없는 윈도우라 useWindowDrag에 콜백 미주입 — hook이 인터랙션 ref/walking 정책을 모르게 한다.
 export const LinkBarPage = () => {
     const links = useLinks()
     const { openLink } = useLinkActions()
 
-    // 미니 버튼 창에는 자율 행동(walking)이 없다.
-    // useWindowDrag는 isInteractingRef를 required로 받지만 여기선 의미가 없어 noop ref를 주입.
-    // false ↔ true 토글이 일어나도 구독자가 없으므로 무해.
-    const noopInteractingRef = useRef(false)
-    const { handleMouseDown } = useWindowDrag({ isInteractingRef: noopInteractingRef })
+    const { handleMouseDown } = useWindowDrag()
 
     return (
         <>

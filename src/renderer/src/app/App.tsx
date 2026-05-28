@@ -21,9 +21,15 @@ export const App = () => {
     // 캐릭터의 현재 상태에 따라 걷기 애니메이션을 적용한다.
     useWalking(characterState, isInteractingRef)
 
+    // useWindowDrag는 자율 행동 정책을 모른다 — 호출자가 콜백에서 ref를 토글하고 자율 상태도 멈춘다.
     const { handleMouseDown } = useWindowDrag({
-        isInteractingRef,
-        onDragStart: interruptAutonomousState,
+        onDragStart: () => {
+            isInteractingRef.current = true
+            interruptAutonomousState()
+        },
+        onDragEnd: () => {
+            isInteractingRef.current = false
+        },
     })
     const { handleContextMenu } = useContextMenu({ isInteractingRef })
 

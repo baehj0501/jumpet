@@ -1,4 +1,5 @@
 import { css } from '@emotion/react'
+import { LINK_BAR_LAYOUT } from '@shared/contracts/linkBarLayout'
 
 // 펫 윈도우와 동일하게 :root, body 배경을 transparent로 둬 미니 버튼만 보이게 한다.
 // 관리 패널(LinkManagerPage)의 light theme과 격리하기 위해 페이지 단위 <Global>로 주입.
@@ -36,11 +37,9 @@ export const containerStyle = css({
 
 // 드래그 핸들 영역.
 // 카드 위에 얹혀 있어 click-through 문제 없음. 막대 indicator는 시각 단서로 유지.
-// height 상수도 함께 export — LinkBarPage가 핸들 영역 크기를 의미 단위로 참조할 수 있게.
-export const DRAG_HANDLE_HEIGHT = 16
-
+// 높이는 main의 윈도우 높이 계산과 동기화돼야 하므로 shared contracts의 상수를 사용.
 export const dragHandleStyle = css({
-    height: DRAG_HANDLE_HEIGHT,
+    height: LINK_BAR_LAYOUT.handleHeight,
     flexShrink: 0,
     display: 'flex',
     alignItems: 'center',
@@ -60,12 +59,13 @@ export const dragHandleIndicatorStyle = css({
     background: '#666666',
 })
 
+// list padding/gap도 main의 computeLinkBarHeight 계산과 동기화돼야 한다.
 export const listStyle = css({
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    gap: 6,
-    padding: '4px 6px 8px',
+    gap: LINK_BAR_LAYOUT.itemGap,
+    padding: `${LINK_BAR_LAYOUT.listPaddingTop}px ${LINK_BAR_LAYOUT.listPaddingRight}px ${LINK_BAR_LAYOUT.listPaddingBottom}px ${LINK_BAR_LAYOUT.listPaddingLeft}px`,
     listStyle: 'none',
     overflow: 'hidden',
 })
