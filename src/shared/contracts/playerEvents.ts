@@ -11,6 +11,9 @@ export type PlayerEvent =
     | { type: 'manual'; delta: number }
     // 도메인 이벤트: TODO를 완료하면 1~5점 랜덤 지급. delta는 main reducer가 결정.
     | { type: 'todoComplete' }
+    // 도메인 이벤트: 오늘의 운세를 보면 60~100점 가산. 금액은 운세 도메인(단계)이 결정해
+    // amount로 전달한다 — player는 잔액 invariant(음수 금지)만 책임진다.
+    | { type: 'fortune'; amount: number }
 
 export const INITIAL_PLAYER_STATE: PlayerState = {
     score: 0,

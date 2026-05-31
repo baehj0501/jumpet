@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import type { PlayerEvent, PlayerState } from '@shared/contracts/playerEvents'
 import type { Todo, TodoEvent, TodoState } from '@shared/contracts/todoEvents'
+import type { FortuneEvent, FortuneState } from '@shared/contracts/fortuneEvents'
 
 const api = {
     startWindowDrag: (mouseX: number, mouseY: number): void => {
@@ -72,6 +73,22 @@ const api = {
             ipcRenderer.on('todo:evicted', listener)
             const unsubscribe = () => {
                 ipcRenderer.removeListener('todo:evicted', listener)
+            }
+            return unsubscribe
+        },
+    },
+    // 운세 영속 데이터 API. player/todo와 같은 패턴.
+    fortune: {
+        get: (): Promise<FortuneState> => ipcRenderer.invoke('fortune:get'),
+        apply: (event: FortuneEvent): Promise<FortuneState> =>
+            ipcRenderer.invoke('fortune:apply', event),
+        onChange: (handler: (state: FortuneState) => void): (() => void) => {
+            const listener = (_event: unknown, state: FortuneState) => {
+                handler(state)
+            }
+            ipcRenderer.on('fortune:changed', listener)
+            const unsubscribe = () => {
+                ipcRenderer.removeListener('fortune:changed', listener)
             }
             return unsubscribe
         },

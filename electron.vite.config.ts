@@ -35,6 +35,7 @@ export default defineConfig({
                 input: {
                     index: resolve('src/renderer/index.html'),
                     todo: resolve('src/renderer/todo.html'),
+                    fortune: resolve('src/renderer/fortune.html'),
                 },
             },
         },

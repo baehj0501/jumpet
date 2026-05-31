@@ -5,6 +5,8 @@ import { registerWindowIpc } from './window'
 import { registerMenuIpc } from './menu'
 import { applyPlayerEvent, registerPlayerStateIpc } from './playerState'
 import { registerTodoIpc } from './todo'
+import { applyFortuneEvent, readFortuneState, registerFortuneIpc } from './fortune'
+import { openFortunePanel } from './panels'
 
 const createWindow = (): BrowserWindow => {
     const mainWindow = new BrowserWindow({
@@ -84,7 +86,23 @@ app.whenReady().then(() => {
         },
     })
 
+    // 운세 영속 데이터 IPC — todo와 같은 패턴. 새 운세가 떴을 때만 점수 보상을 조립한다.
+    // (fortune은 player를 직접 import하지 않고, 보상 금액(단계 기반)만 콜백으로 위임.)
+    const onFortuneRolled = (record: { scoreAwarded: number }) => {
+        applyPlayerEvent({ type: 'fortune', amount: record.scoreAwarded })
+    }
+    registerFortuneIpc({ onFortuneRolled })
+
     createWindow()
+
+    // 앱 시작 시 오늘 운세를 보장한다(없으면 추첨 + 점수 보상). 날짜당 멱등.
+    // 오늘 운세가 새로 떴다면("아침 팝업") 운세 창을 자동으로 띄운다.
+    const fortuneBefore = readFortuneState().today
+    applyFortuneEvent({ type: 'roll' }, onFortuneRolled)
+    const fortuneAfter = readFortuneState().today
+    if (fortuneAfter && fortuneAfter.date !== fortuneBefore?.date) {
+        openFortunePanel()
+    }
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {

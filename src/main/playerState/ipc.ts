@@ -21,8 +21,11 @@ const broadcastPlayerState = (next: PlayerState): void => {
 // 같은 함수를 거치게 해서 영속화·broadcast·invariant 검증을 한 군데에 모은다.
 export const applyPlayerEvent = (event: PlayerEvent): PlayerState => {
     // 혼자 개발하는 로컬 게임이라 IPC payload는 신뢰 가능.
-    // 다만 manual의 delta가 NaN/Infinity면 score 산술이 회복 불가하게 깨지므로 그것만 차단.
+    // 다만 NaN/Infinity 금액이 들어오면 score 산술이 회복 불가하게 깨지므로 그것만 차단.
     if (event.type === 'manual' && !Number.isFinite(event.delta)) {
+        return readPlayerState()
+    }
+    if (event.type === 'fortune' && !Number.isFinite(event.amount)) {
         return readPlayerState()
     }
     const current = readPlayerState()
