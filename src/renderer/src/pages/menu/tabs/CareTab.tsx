@@ -81,7 +81,7 @@ const ProfileField = ({
     return (
         <div className='profile-field'>
             <div className='profile-head'>
-                <span className='section-title'>{label}</span>
+                <span className='section-title-2'>{label}</span>
                 {!editing && (
                     <button
                         type='button'
@@ -158,6 +158,7 @@ export const CareTab = () => {
                 draggable={false}
             />
 
+            <div className='section-title-1'>정보</div>
             <div className='profile'>
                 <ProfileField
                     label='캐릭터 이름'
@@ -178,7 +179,7 @@ export const CareTab = () => {
 
             <div className='divider' />
 
-            <div className='section-title'>돌봄</div>
+            <div className='section-title-1'>돌봄</div>
             <div className='agrid'>
                 {ACTIONS.map((action) => {
                     const available = action.category === null ? null : availableCount(action.category)

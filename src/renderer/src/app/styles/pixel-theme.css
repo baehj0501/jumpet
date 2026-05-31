@@ -295,10 +295,9 @@ body {
 }
 
 /* 액션 그리드 (돌봄) */
-/* 구분선 — 위아래 30px (패널 gap 8px + margin 22px = 30px). */
+/* 헤딩1에 인라인 구분선이 생겼으므로, 단독 구분선은 라인 없는 여백(스페이서)으로. */
 .divider {
-    border-top: 2px solid var(--border);
-    margin: 22px 0;
+    height: 16px;
 }
 
 .agrid {
@@ -311,6 +310,29 @@ body {
     font-size: 13px;
     color: var(--accent);
     padding: 2px 0;
+}
+/* 헤딩1 — 텍스트 옆에 인라인 구분선("텍스트  ──────"). 14px */
+.section-title-1 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--pix);
+    font-size: 14px;
+    color: var(--accent);
+    padding: 2px 0;
+}
+.section-title-1::after {
+    content: '';
+    flex: 1;
+    height: 0;
+    border-top: 2px solid var(--border);
+}
+/* 작은 헤딩(heading2) — 홈 프로필/섹션용 */
+.section-title-2 {
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--accent);
+    padding: 1px 0;
 }
 .ac {
     background: var(--btn-bg);
@@ -600,6 +622,34 @@ body {
     line-height: 1.6;
     max-width: 280px;
 }
+/* 수정구슬 + 안쪽 점수 오버레이 */
+.fortune-orb {
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
+.fortune-orb-score {
+    position: absolute;
+    top: 47%;
+    left: 48%;
+    transform: translate(-50%, -50%);
+    font-family: var(--pix);
+    font-size: 28px;
+    font-weight: 700;
+    color: #5a2f8a;
+    text-shadow:
+        1px 1px 0 #fff,
+        -1px -1px 0 #fff,
+        1px -1px 0 #fff,
+        -1px 1px 0 #fff;
+}
+/* 운세 등급 별 — 점수(단계)만큼, 30px */
+.fortune-stars {
+    font-size: 30px;
+    line-height: 1;
+    color: #f6c945;
+    letter-spacing: 3px;
+}
 .fortune-score {
     font-family: var(--pix);
     font-size: 13px;
@@ -709,6 +759,11 @@ body {
     pointer-events: none;
 }
 .gacha-ball {
+    position: absolute;
+    image-rendering: pixelated;
+}
+/* 바닥에 떨어진 알사탕(정적) */
+.gacha-floor-ball {
     position: absolute;
     image-rendering: pixelated;
 }

@@ -63,9 +63,74 @@ const DOME_BALLS: { left: number; top: number; color: string }[] = [
     { left: 60, top: 48, color: '#93c8ee' },
 ]
 
-// 알사탕 픽셀 스프라이트(7×7, 계단식 라운드). c=알사탕색, w=하이라이트.
-const BALL_SPRITE = ['..ccc..', '.wcccc.', 'ccccccc', 'ccccccc', 'ccccccc', '.ccccc.', '..ccc..']
-const ballPalette = (color: string): Record<string, string> => ({ c: color, w: '#ffffff' })
+// 머신 바닥에 떨어져 있는 알사탕(정적). stage(120×132px) 기준.
+const FLOOR_BALLS: { left: number; top: number; color: string }[] = [
+    { left: 2, top: 116, color: '#f29b9b' },
+    { left: 16, top: 124, color: '#f7df85' },
+    { left: 30, top: 128, color: '#c7a0e6' },
+    { left: 84, top: 128, color: '#a8e2c4' },
+    { left: 98, top: 116, color: '#93c8ee' },
+    { left: 110, top: 124, color: '#f7df85' },
+]
+
+// 알사탕 픽셀 스프라이트(9×9, 계단식 라운드, 외곽선 2칸 두께). o=테두리 c=알사탕색 w=하이라이트.
+const BALL_SPRITE = [
+    '...ooo...',
+    '.ooooooo.',
+    '.oowccoo.',
+    'oocccccoo',
+    'oocccccoo',
+    'oocccccoo',
+    '.oocccoo.',
+    '.ooooooo.',
+    '...ooo...',
+]
+// 색의 채도를 올린(더 선명한) 톤 — 테두리용.
+const saturateTone = (hex: string, satMul = 1.6, lightMul = 0.82): string => {
+    const n = parseInt(hex.slice(1), 16)
+    const r = ((n >> 16) & 255) / 255
+    const g = ((n >> 8) & 255) / 255
+    const b = (n & 255) / 255
+    const max = Math.max(r, g, b)
+    const min = Math.min(r, g, b)
+    const delta = max - min
+    const l = (max + min) / 2
+    let h = 0
+    let s = 0
+    if (delta !== 0) {
+        s = l > 0.5 ? delta / (2 - max - min) : delta / (max + min)
+        if (max === r) h = ((g - b) / delta) % 6
+        else if (max === g) h = (b - r) / delta + 2
+        else h = (r - g) / delta + 4
+        h *= 60
+        if (h < 0) h += 360
+    }
+    s = Math.min(1, s * satMul)
+    const L = Math.max(0, Math.min(1, l * lightMul))
+    const c = (1 - Math.abs(2 * L - 1)) * s
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
+    const m = L - c / 2
+    let rr = 0
+    let gg = 0
+    let bb = 0
+    if (h < 60) [rr, gg, bb] = [c, x, 0]
+    else if (h < 120) [rr, gg, bb] = [x, c, 0]
+    else if (h < 180) [rr, gg, bb] = [0, c, x]
+    else if (h < 240) [rr, gg, bb] = [0, x, c]
+    else if (h < 300) [rr, gg, bb] = [x, 0, c]
+    else [rr, gg, bb] = [c, 0, x]
+    const toHex = (v: number) =>
+        Math.round((v + m) * 255)
+            .toString(16)
+            .padStart(2, '0')
+    return `#${toHex(rr)}${toHex(gg)}${toHex(bb)}`
+}
+// 알사탕 색 + 그 색의 채도를 올린 테두리.
+const ballPalette = (color: string): Record<string, string> => ({
+    c: color,
+    w: '#ffffff',
+    o: saturateTone(color),
+})
 
 // 반짝이 픽셀 스프라이트(4점 별, 가운데 비움).
 const SPARKLE = ['..#..', '..#..', '##.##', '..#..', '..#..']
@@ -149,6 +214,19 @@ export const GachaTab = () => {
                                 palette={MACHINE_PALETTE}
                                 cell={4}
                             />
+                            {FLOOR_BALLS.map((ball, index) => (
+                                <span
+                                    key={`floor-${index}`}
+                                    className='gacha-floor-ball'
+                                    style={{ left: ball.left, top: ball.top }}
+                                >
+                                    <PixelArt
+                                        pixels={BALL_SPRITE}
+                                        palette={ballPalette(ball.color)}
+                                        cell={1.6}
+                                    />
+                                </span>
+                            ))}
                             <div className={spinning ? 'gacha-balls mixing' : 'gacha-balls'}>
                                 {DOME_BALLS.map((ball, index) => (
                                     <span
