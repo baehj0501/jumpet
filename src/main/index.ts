@@ -7,7 +7,7 @@ import { applyPlayerEvent, readPlayerState, registerPlayerStateIpc } from './pla
 import { registerTodoIpc } from './todo'
 import { applyFortuneEvent, registerFortuneIpc } from './fortune'
 import { registerItemIpc } from './item'
-import { registerCharacterIpc } from './character'
+import { broadcastCharacterSpeech, registerCharacterIpc } from './character'
 import { GACHA_COST } from '@shared/contracts/itemEvents'
 
 const createWindow = (): BrowserWindow => {
@@ -75,7 +75,10 @@ app.whenReady().then(() => {
     // (todo는 점수/사운드/업적 등을 직접 import하지 않고, 사건 사실만 콜백으로 위임.)
     registerTodoIpc({
         onTodoCompleted: () => {
-            applyPlayerEvent({ type: 'todoComplete' })
+            // 완료 시 1~5점 랜덤 지급. 지급량을 계산해 캐릭터 말풍선으로 알린다.
+            const before = readPlayerState().score
+            const after = applyPlayerEvent({ type: 'todoComplete' }).score
+            broadcastCharacterSpeech(`할일 완료! +${after - before}pt 🎉`)
         },
     })
 

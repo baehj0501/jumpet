@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import {
     CharacterView,
     SpeechBubble,
+    pickRandomClickMessage,
     useCharacterSpeech,
     useStateMachine,
     useWalking,
@@ -35,6 +36,10 @@ export const App = () => {
         },
         onDragEnd: () => {
             isInteractingRef.current = false
+        },
+        // 드래그가 아닌 단순 좌클릭 → 랜덤 멘트를 머리 위 말풍선으로.
+        onClick: () => {
+            window.api.character.say(pickRandomClickMessage())
         },
     })
     const { handleContextMenu } = useContextMenu({ isInteractingRef })

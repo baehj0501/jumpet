@@ -1,1 +1,1 @@
-export { registerCharacterIpc } from './ipc'
+export { registerCharacterIpc, broadcastCharacterSpeech } from './ipc'
