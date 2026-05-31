@@ -2,7 +2,6 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import type { PlayerEvent, PlayerState } from '@shared/contracts/playerEvents'
 import type { Todo, TodoEvent, TodoState } from '@shared/contracts/todoEvents'
-import type { LinkEvent, LinkState } from '@shared/contracts/linkEvents'
 
 const api = {
     startWindowDrag: (mouseX: number, mouseY: number): void => {
@@ -75,26 +74,6 @@ const api = {
                 ipcRenderer.removeListener('todo:evicted', listener)
             }
             return unsubscribe
-        },
-    },
-    // 링크 영속 데이터 API. player/todo와 같은 패턴 + 외부 URL 열기 fire-and-forget 추가.
-    link: {
-        get: (): Promise<LinkState> => ipcRenderer.invoke('link:get'),
-        apply: (event: LinkEvent): Promise<LinkState> => ipcRenderer.invoke('link:apply', event),
-        onChange: (handler: (state: LinkState) => void): (() => void) => {
-            const listener = (_event: unknown, state: LinkState) => {
-                handler(state)
-            }
-            ipcRenderer.on('link:changed', listener)
-            const unsubscribe = () => {
-                ipcRenderer.removeListener('link:changed', listener)
-            }
-            return unsubscribe
-        },
-        // 외부 브라우저로 URL 열기. main에서 prefix 재검증 후 shell.openExternal 호출.
-        // 'openExternal' 이름으로 fire-and-forget 모델(send)임을 caller에게 명시.
-        openExternal: (url: string): void => {
-            ipcRenderer.send('link:openExternal', url)
         },
     },
 }

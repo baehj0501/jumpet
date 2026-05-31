@@ -5,8 +5,6 @@ import { registerWindowIpc } from './window'
 import { registerMenuIpc } from './menu'
 import { applyPlayerEvent, registerPlayerStateIpc } from './playerState'
 import { registerTodoIpc } from './todo'
-import { registerLinkIpc } from './link'
-import { adjustLinkBarHeight, applyLinkBarEvent, readLinkBarState, setupLinkBar } from './linkBar'
 
 const createWindow = (): BrowserWindow => {
     const mainWindow = new BrowserWindow({
@@ -72,13 +70,7 @@ app.whenReady().then(() => {
     registerWindowIpc()
 
     // 캐릭터 우클릭 컨텍스트 메뉴 IPC — 메뉴 열림/닫힘 broadcast로 자율 행동 정지 신호도 같이 보낸다.
-    // 메뉴 안의 "즐겨찾기 바 표시" 토글이 linkBar 도메인을 호출하도록 콜백 주입.
-    registerMenuIpc({
-        isLinkBarVisible: () => readLinkBarState().visible,
-        toggleLinkBar: () => {
-            applyLinkBarEvent({ type: 'toggle' })
-        },
-    })
+    registerMenuIpc()
 
     // 플레이어 영속 데이터(점수 등) IPC — main이 SSOT, 모든 창에 broadcast해 동기화.
     registerPlayerStateIpc()
@@ -92,25 +84,11 @@ app.whenReady().then(() => {
         },
     })
 
-    // 링크 영속 데이터 IPC + 외부 URL 열기 위임.
-    // 링크 개수 변경 시 미니 버튼 창의 높이를 자동 조정하도록 onLinksChanged 콜백 주입.
-    registerLinkIpc({
-        onLinksChanged: (state) => {
-            adjustLinkBarHeight(state.links.length)
-        },
-    })
-
-    // 캐릭터 윈도우 생성 후, 미니 버튼 플로팅 창을 setup. 영속화된 visible/position을 적용.
-    // - visible=false(기본) → 윈도우는 만들어 두되 hide 상태 유지
-    // - visible=true → 마지막 위치(or 캐릭터 오른쪽 default)에 등장
-    // 두 창은 이후 독립적으로 동작 — 캐릭터가 움직여도 미니 버튼 창은 따라가지 않는다.
-    const characterWindow = createWindow()
-    setupLinkBar(characterWindow)
+    createWindow()
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
-            const recreatedCharacterWindow = createWindow()
-            setupLinkBar(recreatedCharacterWindow)
+            createWindow()
         }
     })
 })
