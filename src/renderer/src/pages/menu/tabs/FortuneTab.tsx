@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { FORTUNE_LEVEL_LABELS, useFortuneActions, useTodayFortune } from '@renderer/entities/fortune'
+import { useFortuneActions, useTodayFortune } from '@renderer/entities/fortune'
 
 export const FortuneTab = () => {
     const today = useTodayFortune()
@@ -16,9 +16,8 @@ export const FortuneTab = () => {
                 <div className='section-title'>🌸 오늘의 운세</div>
                 {today ? (
                     <>
-                        <div className='fortune-level'>{FORTUNE_LEVEL_LABELS[today.level]}</div>
+                        <div className='fortune-level'>{today.scoreAwarded}점</div>
                         <p className='fortune-text'>{today.text}</p>
-                        <div className='fortune-score'>+{today.scoreAwarded}점 획득</div>
                     </>
                 ) : (
                     <p className='hint'>운세를 보는 중…</p>
