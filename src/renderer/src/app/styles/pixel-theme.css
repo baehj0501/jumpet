@@ -209,7 +209,7 @@ body {
 }
 .tab {
     flex: 1;
-    padding: 5px 1px;
+    padding: 15px 1px 5px;
     font-family: var(--pix);
     font-size: 11px;
     color: var(--dim);
@@ -226,7 +226,7 @@ body {
 .tab .tab-icon {
     display: flex;
     justify-content: center;
-    margin-bottom: 2px;
+    margin-bottom: 5px;
 }
 .tab:hover {
     color: var(--accent);
@@ -626,15 +626,148 @@ body {
 }
 
 /* 뽑은 아이템 표시 슬롯 — 포인트와 뽑기 버튼 사이 여백 + 결과 표시. */
+.gacha-machine {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 132px;
+}
+
+/* 아이템 공개 — 머신이 사라지고 큰 아이템 + 이름 + 반짝이 */
+.gacha-reveal {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 132px;
+    height: 132px;
+}
+.reveal-emoji {
+    font-size: 46px;
+    line-height: 1;
+    animation: reveal-pop 0.4s ease-out;
+}
+.reveal-name {
+    font-family: var(--pix);
+    font-size: 16px;
+    color: var(--accent);
+    animation: reveal-pop 0.4s ease-out;
+}
+@keyframes reveal-pop {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(1.15);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+.sparkle {
+    position: absolute;
+    image-rendering: pixelated;
+    animation: sparkle-twinkle 0.9s ease-in-out infinite;
+}
+.sparkle-1 {
+    top: 10px;
+    left: 22px;
+}
+.sparkle-2 {
+    top: 4px;
+    right: 26px;
+    animation-delay: 0.3s;
+}
+.sparkle-3 {
+    bottom: 16px;
+    right: 30px;
+    animation-delay: 0.6s;
+}
+@keyframes sparkle-twinkle {
+    0%,
+    100% {
+        opacity: 0.25;
+        transform: scale(0.7);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+}
+/* 유리돔 안 알사탕(오버레이) — stage 기준 px 배치 */
+.gacha-stage {
+    position: relative;
+}
+.gacha-balls {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+.gacha-ball {
+    position: absolute;
+    image-rendering: pixelated;
+}
+/* 뽑는 동안 알사탕들이 각자 다른 위상으로 흔들리며 섞이는 모션 */
+.gacha-balls.mixing .gacha-ball {
+    animation: ball-mix 0.45s linear infinite;
+}
+@keyframes ball-mix {
+    0% {
+        transform: translate(0, 0);
+    }
+    25% {
+        transform: translate(5px, -4px);
+    }
+    50% {
+        transform: translate(-4px, 4px);
+    }
+    75% {
+        transform: translate(4px, 5px);
+    }
+    100% {
+        transform: translate(0, 0);
+    }
+}
+/* 배출구로 또르륵 나오는 알사탕(픽셀 스프라이트) */
+.gacha-drop {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    image-rendering: pixelated;
+    animation: gacha-drop 0.6s ease-out;
+}
+@keyframes gacha-drop {
+    0% {
+        transform: translate(-50%, -16px);
+        opacity: 0;
+    }
+    25% {
+        opacity: 1;
+    }
+    65% {
+        transform: translate(-50%, 16px);
+    }
+    80% {
+        transform: translate(-50%, 8px);
+    }
+    100% {
+        transform: translate(-50%, 16px);
+    }
+}
 .gacha-result-slot {
-    min-height: 110px;
+    min-height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: var(--pix);
-    font-size: 24px;
+    font-size: 22px;
     color: var(--text);
-    margin: 18px 0;
+    margin: 4px 0;
 }
 
 /* 보유 포인트 — 박스 없이 일반 텍스트로. */
@@ -643,6 +776,8 @@ body {
     font-size: 14px;
     color: var(--accent);
     text-align: center;
+    /* 뽑기 버튼과의 간격 20px (gacha-wrap gap 14 + margin 6). */
+    margin-bottom: 6px;
 }
 
 /* 뽑기 결과/안내 멘트 — 박스 없이 '돌봄 아이템 뽑기' 위에 텍스트로. */
