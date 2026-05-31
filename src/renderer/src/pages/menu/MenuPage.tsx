@@ -4,6 +4,7 @@ import { TodoTab } from './tabs/TodoTab'
 import { FortuneTab } from './tabs/FortuneTab'
 import { GachaTab } from './tabs/GachaTab'
 import { PlaceholderTab } from './tabs/PlaceholderTab'
+import { PixelIcon } from './PixelIcon'
 
 export type TabId =
     | 'care'
@@ -15,16 +16,28 @@ export type TabId =
     | 'youtube'
     | 'settings'
 
-const TABS: { id: TabId; icon: string; label: string }[] = [
-    { id: 'care', icon: '🐾', label: '돌봄' },
-    { id: 'todo', icon: '✅', label: '할일' },
-    { id: 'fortune', icon: '🌸', label: '운세' },
-    { id: 'gacha', icon: '🎰', label: '가챠' },
-    { id: 'schedule', icon: '📅', label: '일정' },
-    { id: 'item', icon: '🎒', label: '아이템' },
-    { id: 'youtube', icon: '🎵', label: '유튜브' },
-    { id: 'settings', icon: '⚙️', label: '설정' },
+const TABS: { id: TabId; label: string }[] = [
+    { id: 'care', label: '홈' },
+    { id: 'todo', label: '할일' },
+    { id: 'fortune', label: '운세' },
+    { id: 'gacha', label: '가챠' },
+    { id: 'schedule', label: '일정' },
+    { id: 'item', label: '아이템' },
+    { id: 'youtube', label: '유튜브' },
+    { id: 'settings', label: '설정' },
 ]
+
+// 탭별 픽셀 아이콘(7×7). '#'=칠함. 그리드만 고치면 모양 변경.
+const TAB_ICON_PIXELS: Record<TabId, string[]> = {
+    care: ['...#...', '..###..', '.#####.', '#######', '.#####.', '.##.##.', '.##.##.'],
+    todo: ['.......', '......#', '.....#.', '#...#..', '.#.#...', '..#....', '.......'],
+    fortune: ['...#...', '..###..', '#######', '..###..', '...#...', '.#...#.', '#.....#'],
+    gacha: ['..###..', '.#####.', '#######', '#######', '.#####.', '..###..', '...#...'],
+    schedule: ['.#...#.', '#######', '#######', '#.#.#.#', '#######', '#.#.#.#', '#######'],
+    item: ['.#####.', '#######', '##.#.##', '##.#.##', '#######', '#######', '.#####.'],
+    youtube: ['#......', '##.....', '###....', '####...', '###....', '##.....', '#......'],
+    settings: ['.#.#.#.', '.#####.', '###.###', '##...##', '###.###', '.#####.', '.#.#.#.'],
+}
 
 // 통합 메뉴 창의 루트. 우클릭으로 열리며 탭으로 각 기능을 전환한다.
 // 별창 패턴을 대체 — 모든 패널이 이 한 창의 탭으로 산다.
@@ -34,7 +47,7 @@ export const MenuPage = () => {
     const renderTab = () => {
         switch (activeTab) {
             case 'care':
-                return <CareTab onSwitchTab={setActiveTab} />
+                return <CareTab />
             case 'todo':
                 return <TodoTab />
             case 'fortune':
@@ -75,7 +88,9 @@ export const MenuPage = () => {
                         className={tab.id === activeTab ? 'tab active' : 'tab'}
                         onClick={() => setActiveTab(tab.id)}
                     >
-                        <span className='tab-icon'>{tab.icon}</span>
+                        <span className='tab-icon'>
+                            <PixelIcon pixels={TAB_ICON_PIXELS[tab.id]} />
+                        </span>
                         {tab.label}
                     </div>
                 ))}

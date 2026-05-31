@@ -18,6 +18,14 @@
 
 :root {
     --pix: 'Galmuri11', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    /* 계단(픽셀) 라운드 모서리 — 3px×2단으로 깎음. 부드러운 radius가 아닌 픽셀 블록. */
+    --pixel-clip: polygon(
+        0 6px, 3px 6px, 3px 3px, 6px 3px, 6px 0,
+        calc(100% - 6px) 0, calc(100% - 6px) 3px, calc(100% - 3px) 3px, calc(100% - 3px) 6px, 100% 6px,
+        100% calc(100% - 6px), calc(100% - 3px) calc(100% - 6px), calc(100% - 3px) calc(100% - 3px),
+        calc(100% - 6px) calc(100% - 3px), calc(100% - 6px) 100%,
+        6px 100%, 6px calc(100% - 3px), 3px calc(100% - 3px), 3px calc(100% - 6px), 0 calc(100% - 6px)
+    );
     --bg: #e8f4ff;
     --panel: #d4eaff;
     --border: #7bbde0;
@@ -26,6 +34,10 @@
     --text: #0a3050;
     --dim: #5a90b8;
     --card: #f4faff;
+    --btn-bg: #b8d8f8;
+    --btn-bg-hover: #9cc8f2;
+    --emboss-hi: #d8ecff;
+    --emboss-lo: #2c6b94;
 }
 [data-theme='green'] {
     --bg: #eaf5e8;
@@ -36,6 +48,10 @@
     --text: #0a300a;
     --dim: #5a9858;
     --card: #f2faf0;
+    --btn-bg: #b8e8b0;
+    --btn-bg-hover: #9cdc92;
+    --emboss-hi: #d8f3d2;
+    --emboss-lo: #2c6e2c;
 }
 [data-theme='babypink'] {
     --bg: #fde8f2;
@@ -46,6 +62,10 @@
     --text: #500a32;
     --dim: #b07090;
     --card: #fff0f8;
+    --btn-bg: #f8c0dc;
+    --btn-bg-hover: #f4a4ce;
+    --emboss-hi: #ffdcee;
+    --emboss-lo: #a83a72;
 }
 [data-theme='brown'] {
     --bg: #f5ede4;
@@ -56,6 +76,10 @@
     --text: #3c1c08;
     --dim: #9a7858;
     --card: #fdf5ec;
+    --btn-bg: #dfc4a0;
+    --btn-bg-hover: #d2b088;
+    --emboss-hi: #f2ddc6;
+    --emboss-lo: #6b431f;
 }
 [data-theme='light'] {
     --bg: #ffffff;
@@ -66,6 +90,10 @@
     --text: #1a1a1a;
     --dim: #909090;
     --card: #f8f8f8;
+    --btn-bg: #e2e2e2;
+    --btn-bg-hover: #d2d2d2;
+    --emboss-hi: #ffffff;
+    --emboss-lo: #bcbcbc;
 }
 [data-theme='dark'] {
     --bg: #1a1a1a;
@@ -76,6 +104,10 @@
     --text: #f0f0f0;
     --dim: #707070;
     --card: #2e2e2e;
+    --btn-bg: #3a3a3a;
+    --btn-bg-hover: #454545;
+    --emboss-hi: #545454;
+    --emboss-lo: #0e0e0e;
 }
 
 * {
@@ -95,7 +127,7 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border: 1px solid var(--border);
+    border: 2px solid var(--border);
     image-rendering: pixelated;
     transition: background 0.3s;
 }
@@ -107,7 +139,7 @@ body {
 /* ── 타이틀바 ── */
 .titlebar {
     background: var(--accent);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 2px solid var(--border);
     padding: 7px 12px;
     display: flex;
     align-items: center;
@@ -144,7 +176,7 @@ body {
 .close-btn {
     -webkit-app-region: no-drag;
     background: rgba(255, 255, 255, 0.25);
-    border: 2px solid #fff;
+    border: 4px solid #fff;
     color: #fff;
     width: 22px;
     height: 22px;
@@ -154,20 +186,23 @@ body {
     align-items: center;
     justify-content: center;
     font-family: var(--pix);
-    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.35),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.25);
 }
 .close-btn:hover {
     background: #ff5050;
 }
 .close-btn:active {
-    transform: translate(2px, 2px);
-    box-shadow: none;
+    box-shadow:
+        inset -2px -2px 0 rgba(255, 255, 255, 0.3),
+        inset 2px 2px 0 rgba(0, 0, 0, 0.25);
 }
 
 /* ── 탭 ── */
 .tabs {
     display: flex;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 2px solid var(--border);
     flex-shrink: 0;
     background: var(--panel);
     overflow-x: hidden;
@@ -180,8 +215,8 @@ body {
     color: var(--dim);
     cursor: pointer;
     text-align: center;
-    border-bottom: 2px solid transparent;
-    border-right: 1px solid var(--border);
+    border-bottom: 4px solid transparent;
+    border-right: 2px solid var(--border);
     white-space: nowrap;
     line-height: 1.4;
 }
@@ -189,9 +224,9 @@ body {
     border-right: none;
 }
 .tab .tab-icon {
-    font-size: 16px;
-    display: block;
-    margin-bottom: 1px;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2px;
 }
 .tab:hover {
     color: var(--accent);
@@ -214,11 +249,62 @@ body {
     gap: 8px;
 }
 
+/* 홈 프로필 (캐릭터 이름/이름/생일) */
+.profile {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.profile-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.profile-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.edit-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--dim);
+    padding: 0 2px;
+    line-height: 1;
+}
+.edit-btn:hover {
+    color: var(--accent);
+}
+.profile-value {
+    font-family: var(--pix);
+    font-size: 14px;
+    color: var(--text);
+    padding: 2px 2px;
+}
+
+/* 홈 상단 캐릭터 */
+.home-character {
+    display: block;
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    margin: 4px auto 2px;
+    image-rendering: pixelated;
+}
+
 /* 액션 그리드 (돌봄) */
+/* 구분선 — 위아래 30px (패널 gap 8px + margin 22px = 30px). */
+.divider {
+    border-top: 2px solid var(--border);
+    margin: 22px 0;
+}
+
 .agrid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
 }
 .section-title {
     font-family: var(--pix);
@@ -227,35 +313,47 @@ body {
     padding: 2px 0;
 }
 .ac {
-    background: var(--card);
-    border: 1px solid var(--border);
-    padding: 12px 4px;
+    background: var(--btn-bg);
+    border: 2px solid var(--border);
+    padding: 8px 2px;
     cursor: pointer;
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    justify-content: center;
+    gap: 3px;
+    min-height: 72px;
     box-shadow:
-        inset 2px 2px 0 rgba(255, 255, 255, 0.5),
-        inset -2px -2px 0 rgba(0, 0, 0, 0.2),
-        4px 4px 0 0 rgba(0, 0, 0, 0.3);
+        inset 2px 2px 0 rgba(255, 255, 255, 0.6),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.22);
 }
 .ac:hover {
-    background: var(--panel);
+    background: var(--btn-bg-hover);
+}
+/* 아이템 없는 액션 — 그레이 비활성 */
+.ac.disabled {
+    cursor: not-allowed;
+    filter: grayscale(1);
+    opacity: 0.45;
+}
+.ac.disabled:hover {
+    background: var(--btn-bg);
 }
 .ac:active {
-    transform: translate(2px, 2px);
-    box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.25);
+    box-shadow:
+        inset -2px -2px 0 rgba(255, 255, 255, 0.4),
+        inset 2px 2px 0 rgba(0, 0, 0, 0.25);
 }
 .ac .ic {
-    font-size: 26px;
+    font-size: 22px;
     line-height: 1;
 }
 .ac .nm {
     font-family: var(--pix);
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text);
+    white-space: nowrap;
 }
 .ac .ct {
     font-family: var(--pix);
@@ -271,7 +369,7 @@ body {
     text-align: center;
     padding: 8px;
     background: var(--panel);
-    border: 1px solid var(--border);
+    border: 2px solid var(--border);
     box-shadow: 3px 3px 0 0 rgba(0, 0, 0, 0.25);
     min-height: 18px;
 }
@@ -289,39 +387,36 @@ body {
     line-height: 1.6;
 }
 
-/* 포인트 표시 줄 */
+/* 포인트 표시 줄 — 박스 없이 텍스트만. */
 .points-bar {
     text-align: center;
     font-family: var(--pix);
     font-size: 13px;
     color: var(--accent2);
-    background: var(--card);
-    border: 1px solid var(--border);
-    padding: 8px 0;
-    box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.2);
+    padding: 6px 0;
 }
 
 /* 공통 버튼 */
 .pbtn {
     width: 100%;
     background: var(--accent);
-    border: 1px solid var(--border);
+    border: 2px solid var(--border);
     color: #fff;
     font-family: var(--pix);
     font-size: 14px;
     padding: 10px;
     cursor: pointer;
     box-shadow:
-        inset 2px 2px 0 rgba(255, 255, 255, 0.35),
-        inset -2px -2px 0 rgba(0, 0, 0, 0.3),
-        4px 4px 0 0 rgba(0, 0, 0, 0.3);
+        inset 2px 2px 0 rgba(255, 255, 255, 0.4),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.3);
 }
 .pbtn:hover {
     background: var(--accent2);
 }
 .pbtn:active {
-    transform: translate(2px, 2px);
-    box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.3);
+    box-shadow:
+        inset -2px -2px 0 rgba(255, 255, 255, 0.3),
+        inset 2px 2px 0 rgba(0, 0, 0, 0.3);
 }
 .pbtn:disabled {
     opacity: 0.5;
@@ -342,7 +437,7 @@ body {
 }
 .fi {
     background: var(--bg);
-    border: 1px solid var(--border);
+    border: 2px solid var(--border);
     color: var(--text);
     font-family: var(--pix);
     font-size: 13px;
@@ -359,7 +454,7 @@ body {
 }
 .add-btn {
     background: var(--accent);
-    border: 1px solid var(--border);
+    border: 2px solid var(--border);
     color: #fff;
     font-family: var(--pix);
     font-size: 13px;
@@ -367,12 +462,13 @@ body {
     cursor: pointer;
     white-space: nowrap;
     box-shadow:
-        inset 2px 2px 0 rgba(255, 255, 255, 0.3),
-        3px 3px 0 0 rgba(0, 0, 0, 0.25);
+        inset 2px 2px 0 rgba(255, 255, 255, 0.4),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.28);
 }
 .add-btn:active {
-    transform: translate(2px, 2px);
-    box-shadow: none;
+    box-shadow:
+        inset -2px -2px 0 rgba(255, 255, 255, 0.3),
+        inset 2px 2px 0 rgba(0, 0, 0, 0.28);
 }
 /* 남은 할일 / 완료 필터 토글 */
 .todo-filters {
@@ -384,16 +480,20 @@ body {
     padding: 6px 4px;
     font-family: var(--pix);
     font-size: 12px;
-    color: var(--dim);
-    background: var(--card);
-    border: 1px solid var(--border);
+    color: var(--text);
+    background: var(--btn-bg);
+    border: 2px solid var(--border);
     cursor: pointer;
-    box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.3);
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.4),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.2);
 }
 .todo-filter.active {
     background: var(--accent);
     color: #fff;
-    box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.2);
+    box-shadow:
+        inset -2px -2px 0 rgba(255, 255, 255, 0.25),
+        inset 2px 2px 0 rgba(0, 0, 0, 0.22);
 }
 .todo-list {
     display: flex;
@@ -413,7 +513,7 @@ body {
     align-items: center;
     gap: 8px;
     background: var(--card);
-    border: 1px solid var(--border);
+    border: 2px solid var(--border);
     padding: 9px 12px;
     box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.2);
 }
@@ -428,7 +528,7 @@ body {
 .todo-check {
     width: 22px;
     height: 22px;
-    border: 1px solid var(--border);
+    border: 2px solid var(--border);
     cursor: pointer;
     flex-shrink: 0;
     display: flex;
@@ -505,7 +605,7 @@ body {
     font-size: 13px;
     color: var(--accent2);
     background: var(--panel);
-    border: 1px solid var(--border);
+    border: 2px solid var(--border);
     padding: 6px 14px;
     box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.2);
 }
@@ -597,4 +697,54 @@ body {
 .todo-check,
 .close-btn {
     border-radius: 5px;
+}
+
+/* ── 엠보 — 회색(흰/검) 대신 테마 컬러로 ── */
+.ac,
+.pbtn,
+.add-btn,
+.close-btn,
+.todo-filter {
+    box-shadow:
+        inset 2px 2px 0 var(--emboss-hi),
+        inset -2px -2px 0 var(--emboss-lo);
+}
+.ac:active,
+.pbtn:active,
+.add-btn:active,
+.close-btn:active,
+.todo-filter.active {
+    box-shadow:
+        inset -2px -2px 0 var(--emboss-hi),
+        inset 2px 2px 0 var(--emboss-lo);
+}
+
+/* ── 버튼 계단(픽셀) 라운드 모서리 ──
+   테두리가 있는 버튼은 clip-path만 쓰면 모서리에서 테두리선이 끊긴다.
+   그래서 clip-path(채움 모양) + ::before 마스크 테두리 링으로 계단 테두리를 그린다. */
+.ac,
+.pbtn,
+.add-btn,
+.todo-filter {
+    position: relative;
+    border: none;
+    border-radius: 0;
+    clip-path: var(--pixel-clip);
+}
+.ac::before,
+.pbtn::before,
+.add-btn::before,
+.todo-filter::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    clip-path: var(--pixel-clip);
+    background: var(--border);
+    padding: 2px;
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
 }

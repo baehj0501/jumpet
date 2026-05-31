@@ -1,4 +1,14 @@
 /* 공용 reset. 펫 윈도우와 패널 윈도우가 함께 import 한다. */
+
+/* 픽셀 폰트 — 캐릭터 창 말풍선 등에서 사용. (메뉴 창은 pixel-theme.css가 따로 선언) */
+@font-face {
+    font-family: 'Galmuri11';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('./fonts/Galmuri11.woff2') format('woff2');
+}
+
 *,
 *::before,
 *::after {
