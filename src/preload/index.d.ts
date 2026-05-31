@@ -63,6 +63,10 @@ declare global {
                 gacha: () => Promise<GachaResult>
                 onChange: (handler: (state: ItemState) => void) => () => void
             }
+            character: {
+                say: (text: string) => void
+                onSpeech: (handler: (text: string) => void) => () => void
+            }
         }
     }
 }

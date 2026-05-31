@@ -94,6 +94,23 @@ const api = {
             return unsubscribe
         },
     },
+    // 캐릭터 위 말풍선. 다른 창(메뉴 등)에서 say로 멘트를 보내면 캐릭터 창이 onSpeech로 받아 띄운다.
+    // 영속 데이터가 아니라 일시적 UI 신호 — fire-and-forget(send) + 구독(on).
+    character: {
+        say: (text: string): void => {
+            ipcRenderer.send('character:say', text)
+        },
+        onSpeech: (handler: (text: string) => void): (() => void) => {
+            const listener = (_event: unknown, text: string) => {
+                handler(text)
+            }
+            ipcRenderer.on('character:speech', listener)
+            const unsubscribe = () => {
+                ipcRenderer.removeListener('character:speech', listener)
+            }
+            return unsubscribe
+        },
+    },
     // 소모성 아이템 인벤토리 API. consume은 apply, 뽑기는 결과를 반환하는 별도 invoke.
     item: {
         get: (): Promise<ItemState> => ipcRenderer.invoke('item:get'),

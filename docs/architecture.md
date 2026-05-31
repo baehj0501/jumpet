@@ -39,12 +39,13 @@
 
 ### 왜 캐릭터를 작은 윈도우로 두는가
 
-펫은 항상 transparent + alwaysOnTop으로 떠 있어야 한다.
+펫은 transparent + frameless 한 작은 창으로 둔다(캐릭터 이미지만 보이게).
 - 풀스크린 transparent overlay는 다른 앱 클릭이 통과 안 됨 (`setIgnoreMouseEvents`로 토글하기 복잡)
 
-→ **캐릭터 윈도우(작고 transparent + alwaysOnTop)** 로 두고, 기능 UI는 별도 일반 창(통합 메뉴 창)에 둔다.
+→ **캐릭터 윈도우(작고 transparent)** + 기능 UI는 별도 일반 창(통합 메뉴 창).
+**z-order는 일반 창처럼** — always-on-top을 쓰지 않는다(사용자 요청). 클릭하면 앞으로, 다른 앱 클릭 시 아래로.
 
-### 캐릭터 윈도우의 특수 옵션
+### 캐릭터 윈도우의 옵션
 
 ```ts
 new BrowserWindow({
@@ -53,13 +54,10 @@ new BrowserWindow({
     frame: false,
     resizable: false,
     hasShadow: false,
-    alwaysOnTop: true,
-    focusable: false,         // 펫 클릭이 뒷창 포커스를 안 빼앗음
     fullscreenable: false,    // 사용자가 실수로 풀스크린 X
     skipTaskbar: true,        // 작업표시줄 숨김
 })
-mainWindow.setAlwaysOnTop(true, 'screen-saver')   // 풀스크린 앱 위에도 표시
-mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
+// always-on-top / visibleOnAllWorkspaces / focusable:false 는 쓰지 않는다 — 일반 창 z-order.
 ```
 
 자세한 이유는 [`features/character.md`](./features/character.md) 참고.

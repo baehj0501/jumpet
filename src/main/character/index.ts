@@ -1,0 +1,1 @@
+export { registerCharacterIpc } from './ipc'

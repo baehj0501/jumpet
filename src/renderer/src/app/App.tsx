@@ -1,5 +1,11 @@
 import { useRef } from 'react'
-import { CharacterView, useStateMachine, useWalking } from '@renderer/entities/character'
+import {
+    CharacterView,
+    SpeechBubble,
+    useCharacterSpeech,
+    useStateMachine,
+    useWalking,
+} from '@renderer/entities/character'
 import type { CharacterId, Mood } from '@renderer/entities/character'
 import { useWindowDrag } from '@renderer/features/drag'
 import { useContextMenu } from '@renderer/features/context-menu'
@@ -33,13 +39,19 @@ export const App = () => {
     })
     const { handleContextMenu } = useContextMenu({ isInteractingRef })
 
+    // 다른 창(메뉴의 돌봄 등)에서 보낸 멘트를 캐릭터 머리 위 말풍선으로 띄운다.
+    const speech = useCharacterSpeech()
+
     return (
-        <CharacterView
-            characterId={CURRENT_CHARACTER_ID}
-            mood={CURRENT_MOOD}
-            state={characterState}
-            onMouseDown={handleMouseDown}
-            onContextMenu={handleContextMenu}
-        />
+        <>
+            <SpeechBubble text={speech} />
+            <CharacterView
+                characterId={CURRENT_CHARACTER_ID}
+                mood={CURRENT_MOOD}
+                state={characterState}
+                onMouseDown={handleMouseDown}
+                onContextMenu={handleContextMenu}
+            />
+        </>
     )
 }

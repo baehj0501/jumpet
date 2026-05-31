@@ -10,9 +10,7 @@ OS 바탕화면 위에 떠 있는 강아지. 자율적으로 돌아다니다가,
 
 - 기본 표현: **PNG 프레임 3장** (`frame01`, `frame02`, `frame03`) + 투명 배경.
 - 창 테두리 없이 캐릭터 이미지만 보임.
-- 항상 최상위 표시 (alwaysOnTop = 'screen-saver').
-- macOS의 모든 Space에서 보임.
-- 풀스크린 앱 위에도 표시.
+- **일반 창 z-order** — always-on-top을 쓰지 않는다(사용자 요청). 클릭하면 앞으로 나오고, 다른 앱/창을 클릭하면 그 아래로 깔린다. 펫이 다른 창에 가려질 수 있다.
 
 ### 위치 / 이동
 
@@ -79,16 +77,13 @@ new BrowserWindow({
     transparent: true,
     resizable: false,
     hasShadow: false,
-    alwaysOnTop: true,
-    focusable: false,
     fullscreenable: false,
     skipTaskbar: true,
     autoHideMenuBar: true,
     webPreferences: { preload, sandbox: false, contextIsolation: true, nodeIntegration: false },
 })
 mainWindow.center()
-mainWindow.setAlwaysOnTop(true, 'screen-saver')
-mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
+// always-on-top / visibleOnAllWorkspaces / focusable:false 미사용 — 일반 창 z-order.
 ```
 
 ### 윈도우 위치 IPC

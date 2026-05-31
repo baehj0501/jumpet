@@ -47,9 +47,9 @@ OS 데스크탑 위에 상시 떠 있는 **캐릭터(강아지)** 와, 우클릭
 이 앱은 **딱 두 종류의 BrowserWindow**로 구성된다:
 
 - **캐릭터 윈도우** (`createWindow`, `src/main/index.ts`):
-    - 300×300, transparent + frameless + `alwaysOnTop('screen-saver')` + `visibleOnAllWorkspaces` — 풀스크린 앱 위에도 표시, 모든 macOS Space 따라옴
-    - `focusable: false` — 펫 클릭/드래그가 뒷창 포커스를 빼앗지 않음
-    - `skipTaskbar: true` — 작업표시줄/Alt+Tab 숨김
+    - 300×300, transparent + frameless. **일반 창 z-order** — always-on-top을 쓰지 않아, 클릭하면 앞으로 나오고 다른 앱/창을 클릭하면 그 아래로 깔린다(다른 앱처럼).
+    - (과거 `alwaysOnTop('screen-saver')` + `visibleOnAllWorkspaces` + `focusable:false`는 제거됨 — 사용자 요청으로 일반 창 동작 채택.)
+    - `skipTaskbar: true`, `fullscreenable: false`.
 - **통합 메뉴 창** (`src/main/panels/openMenuPanel.ts`):
     - 우클릭 시 열리는 **frameless 싱글톤 창**. 네이티브 드롭다운을 대체.
     - 모든 기능이 이 한 창의 **탭**으로 산다 (별창 패턴 폐기). entry: `renderer/menu.html` → `pages/menu/main.tsx` → `MenuPage`(타이틀바 + 탭바 + 탭 전환).

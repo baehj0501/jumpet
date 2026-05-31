@@ -1,4 +1,3 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
 import {
     CONSUMABLE_ITEMS,
     type ConsumableCategory,
@@ -8,17 +7,15 @@ import {
 import { usePlayerStore } from '@renderer/entities/player'
 import type { TabId } from '../MenuPage'
 
-const ITEM_SECTIONS: { category: ConsumableCategory; emoji: string; title: string; feedback: string }[] = [
-    { category: 'food', emoji: '🍚', title: '밥 주기', feedback: '냠냠! 🍖' },
-    { category: 'toy', emoji: '🎮', title: '놀아주기', feedback: '신난다! ⚡' },
+const ITEM_SECTIONS: { category: ConsumableCategory; emoji: string; title: string; speech: string }[] = [
+    { category: 'food', emoji: '🍚', title: '밥 주기', speech: '냠냠! 🍖' },
+    { category: 'toy', emoji: '🎮', title: '놀아주기', speech: '신난다! ⚡' },
 ]
 
-const FREE_ACTIONS: { key: string; emoji: string; label: string; feedback: string }[] = [
-    { key: 'pet', emoji: '🤗', label: '쓰다듬기', feedback: '좋아 ✨' },
-    { key: 'rest', emoji: '🛋️', label: '눕기', feedback: '편안해~ 🛋️' },
+const FREE_ACTIONS: { key: string; emoji: string; label: string; speech: string }[] = [
+    { key: 'pet', emoji: '🤗', label: '쓰다듬기', speech: '좋아 ✨' },
+    { key: 'rest', emoji: '🛋️', label: '눕기', speech: '편안해~ 🛋️' },
 ]
-
-const FEEDBACK_DURATION_MS = 2500
 
 type CareTabProps = {
     onSwitchTab: (tab: TabId) => void
@@ -28,32 +25,14 @@ export const CareTab = ({ onSwitchTab }: CareTabProps) => {
     const counts = useItemCounts()
     const { consume } = useItemActions()
     const score = usePlayerStore((state) => state.player.score)
-    const [feedback, setFeedback] = useState('오늘도 함께 놀아요!')
-    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-    const flash = useCallback((message: string) => {
-        setFeedback(message)
-        if (timeoutRef.current !== null) {
-            clearTimeout(timeoutRef.current)
-        }
-        timeoutRef.current = setTimeout(() => {
-            setFeedback('오늘도 함께 놀아요!')
-            timeoutRef.current = null
-        }, FEEDBACK_DURATION_MS)
-    }, [])
-
-    useEffect(() => {
-        return () => {
-            if (timeoutRef.current !== null) {
-                clearTimeout(timeoutRef.current)
-            }
-        }
-    }, [])
+    // 멘트는 패널이 아니라 캐릭터 머리 위 말풍선으로 띄운다.
+    const say = (text: string) => {
+        window.api.character.say(text)
+    }
 
     return (
         <div className='panel'>
-            <div className='fr'>{feedback}</div>
-
             {ITEM_SECTIONS.map((section) => {
                 const owned = CONSUMABLE_ITEMS.filter(
                     (item) => item.category === section.category && (counts[item.id] ?? 0) > 0,
@@ -71,7 +50,7 @@ export const CareTab = ({ onSwitchTab }: CareTabProps) => {
                                         className='ac'
                                         onClick={() => {
                                             void consume(item.id)
-                                            flash(section.feedback)
+                                            say(section.speech)
                                         }}
                                     >
                                         <div className='ic'>{item.emoji}</div>
@@ -93,7 +72,7 @@ export const CareTab = ({ onSwitchTab }: CareTabProps) => {
                     <div
                         key={action.key}
                         className='ac'
-                        onClick={() => flash(action.feedback)}
+                        onClick={() => say(action.speech)}
                     >
                         <div className='ic'>{action.emoji}</div>
                         <div className='nm'>{action.label}</div>

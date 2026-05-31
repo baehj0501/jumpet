@@ -7,6 +7,7 @@ import { applyPlayerEvent, readPlayerState, registerPlayerStateIpc } from './pla
 import { registerTodoIpc } from './todo'
 import { applyFortuneEvent, registerFortuneIpc } from './fortune'
 import { registerItemIpc } from './item'
+import { registerCharacterIpc } from './character'
 import { GACHA_COST } from '@shared/contracts/itemEvents'
 
 const createWindow = (): BrowserWindow => {
@@ -18,9 +19,8 @@ const createWindow = (): BrowserWindow => {
         transparent: true,
         resizable: false,
         hasShadow: false,
-        alwaysOnTop: true,
-        // 펫을 클릭/드래그해도 뒤에서 작업하던 창의 포커스를 빼앗지 않게 한다.
-        focusable: false,
+        // 일반 창 z-order: always-on-top을 쓰지 않는다. 클릭하면 앞으로 나오고
+        // 다른 앱/창을 클릭하면 그 아래로 깔린다(다른 앱처럼). 펫도 일반 창.
         // 사용자가 실수로 펫을 풀스크린으로 만들지 못하게 한다.
         fullscreenable: false,
         // Windows 작업표시줄/Alt+Tab에서 숨긴다. macOS Dock에는 영향 없음.
@@ -35,14 +35,6 @@ const createWindow = (): BrowserWindow => {
     })
 
     mainWindow.center()
-
-    // BrowserWindow 옵션의 alwaysOnTop만으로는 macOS에서 'floating' 레벨이라
-    // 풀스크린 앱에 가려진다. 'screen-saver' 레벨까지 올려 풀스크린 위에도 표시.
-    // Windows/Linux에서는 level 인자가 무시되고 일반 alwaysOnTop으로 동작한다.
-    mainWindow.setAlwaysOnTop(true, 'screen-saver')
-
-    // macOS의 모든 Space에서 펫이 보이게 하고, 풀스크린 Space에도 따라간다.
-    mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
 
     mainWindow.on('ready-to-show', () => {
         mainWindow.show()
@@ -102,6 +94,9 @@ app.whenReady().then(() => {
             applyPlayerEvent({ type: 'gachaSpin', cost: GACHA_COST })
         },
     })
+
+    // 캐릭터 위 말풍선 중계 — 메뉴 창의 돌봄 멘트 등을 캐릭터 창으로 보낸다.
+    registerCharacterIpc()
 
     createWindow()
 
