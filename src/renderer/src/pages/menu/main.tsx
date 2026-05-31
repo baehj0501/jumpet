@@ -4,6 +4,8 @@ import { initializePlayerSync } from '@renderer/entities/player'
 import { initializeItemSync } from '@renderer/entities/item'
 import { initializeTodoSync } from '@renderer/entities/todo'
 import { initializeFortuneSync } from '@renderer/entities/fortune'
+import { initializeScheduleSync } from '@renderer/entities/schedule'
+import { initializeCharacterSelectionSync } from '@renderer/entities/character'
 import { MenuPage } from './MenuPage'
 import '@renderer/app/styles/pixel-theme.css'
 
@@ -12,6 +14,8 @@ initializePlayerSync()
 initializeItemSync()
 initializeTodoSync()
 initializeFortuneSync()
+initializeScheduleSync()
+initializeCharacterSelectionSync()
 
 const rootElement = document.getElementById('root')
 

@@ -54,13 +54,14 @@ const MACHINE_PALETTE: Record<string, string> = {
 
 // 유리돔 안 알사탕(오버레이). left/top은 stage(120×132px) 기준 px. 돔 내부에 배치.
 const DOME_BALLS: { left: number; top: number; color: string }[] = [
-    { left: 44, top: 24, color: '#f29b9b' },
-    { left: 60, top: 24, color: '#f7df85' },
-    { left: 36, top: 36, color: '#93c8ee' },
-    { left: 52, top: 34, color: '#c7a0e6' },
-    { left: 68, top: 36, color: '#a8e2c4' },
-    { left: 44, top: 48, color: '#f7df85' },
-    { left: 60, top: 48, color: '#93c8ee' },
+    { left: 41, top: 23, color: '#f29b9b' },
+    { left: 63, top: 25, color: '#f7df85' },
+    { left: 33, top: 39, color: '#93c8ee' },
+    { left: 51, top: 33, color: '#c7a0e6' },
+    { left: 69, top: 41, color: '#a8e2c4' },
+    { left: 41, top: 51, color: '#f4a6c8' },
+    { left: 63, top: 51, color: '#93c8ee' },
+    { left: 51, top: 55, color: '#f7df85' },
 ]
 
 // 머신 바닥에 떨어져 있는 알사탕(정적). stage(120×132px) 기준.
@@ -249,7 +250,6 @@ export const GachaTab = () => {
                         </div>
                     )}
                 </div>
-                <div className='gacha-points'>🪙 {score}pt</div>
                 <button
                     type='button'
                     className='pbtn'
@@ -258,6 +258,7 @@ export const GachaTab = () => {
                 >
                     {spinning ? '섞는 중…' : `🎲 뽑기 (${GACHA_COST}pt)`}
                 </button>
+                <div className='gacha-points'>내 포인트: {score}pt</div>
             </div>
         </div>
     )

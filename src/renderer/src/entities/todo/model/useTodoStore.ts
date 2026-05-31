@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
-import type { Todo } from '@shared/contracts/todoEvents'
+import type { Todo, TodoSource } from '@shared/contracts/todoEvents'
 
 // banner 자동 사라짐 시간 (ms). 4초면 사용자가 어떤 todo가 정리됐는지 읽을 수 있는 정도.
 const EVICTION_BANNER_DURATION_MS = 4000
@@ -10,7 +10,7 @@ const EVICTION_BANNER_DURATION_MS = 4000
 // usePlayerStore와 같은 패턴 — entrypoint(pages/todo/main.tsx)가 initializeTodoSync()를 1회 호출.
 
 type TodoActions = {
-    addTodo: (text: string) => Promise<void>
+    addTodo: (text: string, source?: TodoSource) => Promise<void>
     // 단방향: 완료 처리만 가능하다 (main reducer 정책).
     toggleTodo: (id: string) => Promise<void>
     removeTodo: (id: string) => Promise<void>
@@ -26,8 +26,8 @@ type TodoStore = {
 const useTodoStoreInternal = create<TodoStore>((set) => ({
     todos: [],
     lastEvictedTodo: null,
-    addTodo: async (text) => {
-        const next = await window.api.todo.apply({ type: 'add', text })
+    addTodo: async (text, source) => {
+        const next = await window.api.todo.apply({ type: 'add', text, source })
         set({ todos: next.todos })
     },
     toggleTodo: async (id) => {

@@ -3,6 +3,11 @@ import type { PlayerEvent, PlayerState } from '@shared/contracts/playerEvents'
 import type { Todo, TodoEvent, TodoState } from '@shared/contracts/todoEvents'
 import type { FortuneEvent, FortuneState } from '@shared/contracts/fortuneEvents'
 import type { GachaResult, ItemEvent, ItemState } from '@shared/contracts/itemEvents'
+import type { ScheduleEvent, ScheduleState } from '@shared/contracts/scheduleEvents'
+import type {
+    CharacterSelectionEvent,
+    CharacterSelectionState,
+} from '@shared/contracts/characterEvents'
 
 // renderer 전용 외부 타입 보강. window.api 시그니처는 src/preload/index.ts와 한 쌍.
 
@@ -62,6 +67,16 @@ declare global {
                 apply: (event: ItemEvent) => Promise<ItemState>
                 gacha: () => Promise<GachaResult>
                 onChange: (handler: (state: ItemState) => void) => () => void
+            }
+            schedule: {
+                get: () => Promise<ScheduleState>
+                apply: (event: ScheduleEvent) => Promise<ScheduleState>
+                onChange: (handler: (state: ScheduleState) => void) => () => void
+            }
+            characterSelection: {
+                get: () => Promise<CharacterSelectionState>
+                apply: (event: CharacterSelectionEvent) => Promise<CharacterSelectionState>
+                onChange: (handler: (state: CharacterSelectionState) => void) => () => void
             }
             character: {
                 say: (text: string) => void

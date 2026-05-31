@@ -284,14 +284,43 @@ body {
     padding: 2px 2px;
 }
 
-/* 홈 상단 캐릭터 */
+/* 홈 상단 캐릭터 + 좌우 전환 버튼 */
+.home-character-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
 .home-character {
     display: block;
     width: 120px;
     height: 120px;
     object-fit: contain;
-    margin: 4px auto 2px;
+    margin: 4px 0 2px;
     image-rendering: pixelated;
+}
+.char-nav {
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    font-family: var(--pix);
+    font-size: 18px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    line-height: 1;
+    flex-shrink: 0;
+    clip-path: var(--pixel-clip);
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.4),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.3);
+}
+.char-nav:hover {
+    background: var(--accent2);
+}
+.char-nav:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
 /* 액션 그리드 (돌봄) */
@@ -606,7 +635,8 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    /* 오늘의 운세 제목·수정구슬·운세 텍스트·별 사이를 각각 60px 여백으로. */
+    gap: 60px;
     text-align: center;
     padding: 16px;
 }
@@ -682,6 +712,8 @@ body {
     align-items: center;
     justify-content: center;
     min-height: 132px;
+    /* 안내 텍스트와 함께 윗블록을 60px 위로. */
+    transform: translateY(-60px);
 }
 
 /* 아이템 공개 — 머신이 사라지고 큰 아이템 + 이름 + 반짝이 */
@@ -767,9 +799,13 @@ body {
     position: absolute;
     image-rendering: pixelated;
 }
-/* 뽑는 동안 알사탕들이 각자 다른 위상으로 흔들리며 섞이는 모션 */
+/* 평소엔 천천히 계속 떠다니고(돌고), 뽑을 땐 빠르게 섞인다 */
+.gacha-ball {
+    animation: ball-mix 2.4s ease-in-out infinite;
+}
 .gacha-balls.mixing .gacha-ball {
-    animation: ball-mix 0.45s linear infinite;
+    animation-duration: 0.45s;
+    animation-timing-function: linear;
 }
 @keyframes ball-mix {
     0% {
@@ -828,11 +864,11 @@ body {
 /* 보유 포인트 — 박스 없이 일반 텍스트로. */
 .gacha-points {
     font-family: var(--pix);
-    font-size: 14px;
+    font-size: 12px;
     color: var(--accent);
     text-align: center;
-    /* 뽑기 버튼과의 간격 20px (gacha-wrap gap 14 + margin 6). */
-    margin-bottom: 6px;
+    /* 뽑기 버튼 아래 — 버튼과 약간의 간격. */
+    margin-top: 2px;
 }
 
 /* 뽑기 결과/안내 멘트 — 박스 없이 '돌봄 아이템 뽑기' 위에 텍스트로. */
@@ -845,6 +881,8 @@ body {
     line-height: 1.5;
     max-width: 240px;
     white-space: pre-line;
+    /* 일러스트와 함께 60px 위로. */
+    transform: translateY(-60px);
 }
 
 /* placeholder 탭 */
@@ -937,4 +975,166 @@ body {
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
+}
+
+/* ── 일정(달력) ── */
+.cal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+.cal-selects {
+    flex: 1;
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+}
+.cal-select {
+    font-family: var(--pix);
+    /* 헤딩1(14px)에 맞추고 웨이트 한 단계 올림. */
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    background: transparent;
+    /* 1.5px 두께 테두리 버튼. */
+    border: 1.5px solid var(--border);
+    padding: 2px 6px;
+    cursor: pointer;
+    outline: none;
+}
+.cal-select:hover {
+    color: var(--accent2);
+}
+.cal-nav {
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    font-family: var(--pix);
+    font-size: 16px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    line-height: 1;
+    clip-path: var(--pixel-clip);
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.4),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.3);
+}
+.cal-nav:hover {
+    background: var(--accent2);
+}
+.cal-weekdays,
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+}
+.cal-weekday {
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--dim);
+    text-align: center;
+    padding: 2px 0;
+}
+.cal-weekday.sun {
+    color: #d0506e;
+}
+.cal-weekday.sat {
+    color: var(--accent);
+}
+/* 날짜 셀 — 박스 없이 숫자만. 선택/오늘은 숫자 자체로 표시. */
+.cal-cell {
+    position: relative;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--pix);
+    cursor: pointer;
+    padding: 0;
+    background: none;
+    border: none;
+}
+.cal-cell.blank {
+    cursor: default;
+}
+.cal-cell .cal-day-num {
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1;
+}
+.cal-cell:hover:not(.blank):not(.selected) .cal-day-num {
+    color: var(--accent2);
+}
+.cal-cell.today .cal-day-num {
+    color: var(--accent);
+    font-weight: 700;
+}
+/* 선택한 날 — 숫자에만 원형 강조. */
+.cal-cell.selected .cal-day-num {
+    color: #fff;
+    background: var(--accent);
+    border-radius: 50%;
+}
+/* 일정 있는 날 점 — 숫자보다 10px 아래(숫자 중심 +16px). */
+.cal-dot {
+    position: absolute;
+    left: 50%;
+    top: calc(50% + 16px);
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    background: var(--accent2);
+}
+
+.sched-add-row {
+    display: flex;
+    gap: 6px;
+}
+.sched-time {
+    flex: 0 0 auto;
+    width: 84px;
+}
+.sched-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.sched-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    border: 2px solid var(--border);
+    padding: 9px 12px;
+    box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.2);
+}
+.sched-time-badge {
+    font-family: var(--pix);
+    font-size: 12px;
+    color: #fff;
+    background: var(--accent);
+    padding: 2px 6px;
+    flex-shrink: 0;
+}
+.sched-title {
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--text);
+    flex: 1;
+    line-height: 1.3;
+    word-break: break-all;
+}
+.sched-empty {
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--dim);
+    text-align: center;
+    padding: 24px 0;
 }

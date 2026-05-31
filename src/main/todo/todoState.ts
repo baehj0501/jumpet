@@ -46,6 +46,7 @@ export const reduceTodoState = (state: TodoState, event: TodoEvent): TodoState =
                 text: trimmed,
                 completed: false,
                 createdAt: Date.now(),
+                source: event.source ?? 'manual',
             }
             return { todos: [...state.todos, newTodo] }
         }

@@ -3,6 +3,7 @@ import { CareTab } from './tabs/CareTab'
 import { TodoTab } from './tabs/TodoTab'
 import { FortuneTab } from './tabs/FortuneTab'
 import { GachaTab } from './tabs/GachaTab'
+import { ScheduleTab } from './tabs/ScheduleTab'
 import { PlaceholderTab } from './tabs/PlaceholderTab'
 import { PixelIcon } from './PixelIcon'
 
@@ -55,7 +56,7 @@ export const MenuPage = () => {
             case 'gacha':
                 return <GachaTab />
             case 'schedule':
-                return <PlaceholderTab icon='📅' label='일정' />
+                return <ScheduleTab />
             case 'item':
                 return <PlaceholderTab icon='🎒' label='아이템' />
             case 'youtube':

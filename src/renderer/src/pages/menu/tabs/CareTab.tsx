@@ -6,8 +6,16 @@ import {
     useItemCounts,
 } from '@renderer/entities/item'
 import { usePlayerStore } from '@renderer/entities/player'
-import { CHARACTER_ASSETS } from '@renderer/entities/character'
+import {
+    CHARACTER_ASSETS,
+    type CharacterId,
+    useSelectedCharacterId,
+    useSelectCharacter,
+} from '@renderer/entities/character'
 import { PixelIcon } from '../PixelIcon'
+
+// 카탈로그에 등록된 캐릭터 ID 목록(좌우 전환 대상).
+const CHARACTER_IDS = Object.keys(CHARACTER_ASSETS) as CharacterId[]
 
 // 돌봄 액션 픽셀 아이콘(7×7).
 const ACTION_ICON_PIXELS: Record<string, string[]> = {
@@ -124,6 +132,16 @@ export const CareTab = () => {
     const [petName, setPetName] = usePersistedText('jumpet.profile.petName', '조조')
     const [birthday, setBirthday] = usePersistedText('jumpet.profile.birthday', '5월 31일')
 
+    // 표시 중인 캐릭터 — main SSOT에서 읽는다. 좌우 버튼이 select하면 펫 윈도우도 함께 바뀐다.
+    const currentCharacterId = useSelectedCharacterId()
+    const selectCharacter = useSelectCharacter()
+    const currentCharacterIndex = Math.max(0, CHARACTER_IDS.indexOf(currentCharacterId))
+    const cycleCharacter = (delta: number) => {
+        const nextIndex =
+            (currentCharacterIndex + delta + CHARACTER_IDS.length) % CHARACTER_IDS.length
+        void selectCharacter(CHARACTER_IDS[nextIndex])
+    }
+
     const say = (text: string) => {
         window.api.character.say(text)
     }
@@ -151,12 +169,32 @@ export const CareTab = () => {
 
     return (
         <div className='panel'>
-            <img
-                className='home-character'
-                src={CHARACTER_ASSETS.dog.default}
-                alt='캐릭터'
-                draggable={false}
-            />
+            <div className='home-character-row'>
+                <button
+                    type='button'
+                    className='char-nav'
+                    onClick={() => cycleCharacter(-1)}
+                    disabled={CHARACTER_IDS.length <= 1}
+                    title='이전 캐릭터'
+                >
+                    ‹
+                </button>
+                <img
+                    className='home-character'
+                    src={CHARACTER_ASSETS[CHARACTER_IDS[currentCharacterIndex]].default}
+                    alt='캐릭터'
+                    draggable={false}
+                />
+                <button
+                    type='button'
+                    className='char-nav'
+                    onClick={() => cycleCharacter(1)}
+                    disabled={CHARACTER_IDS.length <= 1}
+                    title='다음 캐릭터'
+                >
+                    ›
+                </button>
+            </div>
 
             <div className='section-title-1'>정보</div>
             <div className='profile'>

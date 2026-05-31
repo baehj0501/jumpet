@@ -7,6 +7,8 @@ import { applyPlayerEvent, readPlayerState, registerPlayerStateIpc } from './pla
 import { registerTodoIpc } from './todo'
 import { applyFortuneEvent, registerFortuneIpc } from './fortune'
 import { registerItemIpc } from './item'
+import { registerScheduleIpc } from './schedule'
+import { registerCharacterSelectionIpc } from './characterSelection'
 import { broadcastCharacterSpeech, registerCharacterIpc } from './character'
 import { GACHA_COST } from '@shared/contracts/itemEvents'
 
@@ -97,6 +99,17 @@ app.whenReady().then(() => {
             applyPlayerEvent({ type: 'gachaSpin', cost: GACHA_COST })
         },
     })
+
+    // 일정 영속 데이터 IPC — 등록된 시각이 되면 캐릭터 말풍선으로 알린다.
+    // (schedule은 character를 직접 import하지 않고, "일정 시각 도래" 사실만 콜백으로 위임.)
+    registerScheduleIpc({
+        onDue: (title) => {
+            broadcastCharacterSpeech(`⏰ ${title}`)
+        },
+    })
+
+    // 선택된 캐릭터(펫) IPC — 홈 탭에서 바꾼 캐릭터를 펫 윈도우와 공유(SSOT).
+    registerCharacterSelectionIpc()
 
     // 캐릭터 위 말풍선 중계 — 메뉴 창의 돌봄 멘트 등을 캐릭터 창으로 보낸다.
     registerCharacterIpc()

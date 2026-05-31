@@ -4,6 +4,11 @@ import type { PlayerEvent, PlayerState } from '@shared/contracts/playerEvents'
 import type { Todo, TodoEvent, TodoState } from '@shared/contracts/todoEvents'
 import type { FortuneEvent, FortuneState } from '@shared/contracts/fortuneEvents'
 import type { GachaResult, ItemEvent, ItemState } from '@shared/contracts/itemEvents'
+import type { ScheduleEvent, ScheduleState } from '@shared/contracts/scheduleEvents'
+import type {
+    CharacterSelectionEvent,
+    CharacterSelectionState,
+} from '@shared/contracts/characterEvents'
 
 const api = {
     startWindowDrag: (mouseX: number, mouseY: number): void => {
@@ -123,6 +128,38 @@ const api = {
             ipcRenderer.on('item:changed', listener)
             const unsubscribe = () => {
                 ipcRenderer.removeListener('item:changed', listener)
+            }
+            return unsubscribe
+        },
+    },
+    // 일정 영속 데이터 API. player/todo와 같은 패턴.
+    schedule: {
+        get: (): Promise<ScheduleState> => ipcRenderer.invoke('schedule:get'),
+        apply: (event: ScheduleEvent): Promise<ScheduleState> =>
+            ipcRenderer.invoke('schedule:apply', event),
+        onChange: (handler: (state: ScheduleState) => void): (() => void) => {
+            const listener = (_event: unknown, state: ScheduleState) => {
+                handler(state)
+            }
+            ipcRenderer.on('schedule:changed', listener)
+            const unsubscribe = () => {
+                ipcRenderer.removeListener('schedule:changed', listener)
+            }
+            return unsubscribe
+        },
+    },
+    // 선택된 캐릭터(펫) API. 홈 탭에서 바꾸면 펫 윈도우도 같은 값을 구독해 함께 바뀐다.
+    characterSelection: {
+        get: (): Promise<CharacterSelectionState> => ipcRenderer.invoke('characterSelection:get'),
+        apply: (event: CharacterSelectionEvent): Promise<CharacterSelectionState> =>
+            ipcRenderer.invoke('characterSelection:apply', event),
+        onChange: (handler: (state: CharacterSelectionState) => void): (() => void) => {
+            const listener = (_event: unknown, state: CharacterSelectionState) => {
+                handler(state)
+            }
+            ipcRenderer.on('characterSelection:changed', listener)
+            const unsubscribe = () => {
+                ipcRenderer.removeListener('characterSelection:changed', listener)
             }
             return unsubscribe
         },

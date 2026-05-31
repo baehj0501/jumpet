@@ -34,6 +34,10 @@ export const TodoTab = () => {
 
     const visibleTodos = filter === 'active' ? activeTodos : completedTodos
 
+    // 출처별 분리 — '일정'(schedule)과 '할일'(manual) 두 섹션으로.
+    const scheduleTodos = visibleTodos.filter((todo) => todo.source === 'schedule')
+    const manualTodos = visibleTodos.filter((todo) => todo.source !== 'schedule')
+
     const handleAdd = () => {
         const trimmed = text.trim()
         if (trimmed === '') {
@@ -41,6 +45,38 @@ export const TodoTab = () => {
         }
         void addTodo(trimmed)
         setText('')
+    }
+
+    // 할 일 한 줄 렌더 — '일정'/'할일' 두 섹션이 공유.
+    const renderTodoItem = (todo: (typeof todos)[number]) => {
+        // 완료 항목은 완료 시각, 남은 항목은 추가 시각을 보여준다.
+        const dateMs = todo.completed ? todo.completedAt : todo.createdAt
+        return (
+            <div
+                key={todo.id}
+                className={todo.completed ? 'todo-item done' : 'todo-item'}
+            >
+                <div
+                    className={todo.completed ? 'todo-check checked' : 'todo-check'}
+                    onClick={() => {
+                        if (!todo.completed) {
+                            void toggleTodo(todo.id)
+                        }
+                    }}
+                >
+                    {todo.completed ? '✓' : ''}
+                </div>
+                <div className='todo-text'>{todo.text}</div>
+                {dateMs !== undefined && <span className='todo-date'>{formatDateTime(dateMs)}</span>}
+                <button
+                    type='button'
+                    className='todo-del'
+                    onClick={() => void removeTodo(todo.id)}
+                >
+                    ✕
+                </button>
+            </div>
+        )
     }
 
     return (
@@ -85,53 +121,22 @@ export const TodoTab = () => {
                 </button>
             </div>
 
-            {visibleTodos.length === 0 ? (
-                <div className='todo-empty'>
-                    {filter === 'active' ? (
-                        <>
-                            남은 할일이 없어요!
-                            <br />
-                            새 할 일을 추가해봐 🪙
-                        </>
-                    ) : (
-                        <>아직 완료한 할일이 없어요</>
-                    )}
+            <div className='section-title-1'>일정</div>
+            {scheduleTodos.length === 0 ? (
+                <div className='empty-hint'>
+                    {filter === 'active' ? '일정에서 추가한 할일이 없어요' : '완료한 일정이 없어요'}
                 </div>
             ) : (
-                <div className='todo-list'>
-                    {visibleTodos.map((todo) => {
-                        // 완료 항목은 완료 시각, 남은 항목은 추가 시각을 보여준다.
-                        const dateMs = todo.completed ? todo.completedAt : todo.createdAt
-                        return (
-                            <div
-                                key={todo.id}
-                                className={todo.completed ? 'todo-item done' : 'todo-item'}
-                            >
-                                <div
-                                    className={todo.completed ? 'todo-check checked' : 'todo-check'}
-                                    onClick={() => {
-                                        if (!todo.completed) {
-                                            void toggleTodo(todo.id)
-                                        }
-                                    }}
-                                >
-                                    {todo.completed ? '✓' : ''}
-                                </div>
-                                <div className='todo-text'>{todo.text}</div>
-                                {dateMs !== undefined && (
-                                    <span className='todo-date'>{formatDateTime(dateMs)}</span>
-                                )}
-                                <button
-                                    type='button'
-                                    className='todo-del'
-                                    onClick={() => void removeTodo(todo.id)}
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                        )
-                    })}
+                <div className='todo-list'>{scheduleTodos.map(renderTodoItem)}</div>
+            )}
+
+            <div className='section-title-1'>할일</div>
+            {manualTodos.length === 0 ? (
+                <div className='empty-hint'>
+                    {filter === 'active' ? '남은 할일이 없어요' : '완료한 할일이 없어요'}
                 </div>
+            ) : (
+                <div className='todo-list'>{manualTodos.map(renderTodoItem)}</div>
             )}
         </div>
     )

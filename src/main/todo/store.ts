@@ -28,6 +28,12 @@ const isTodo = (value: unknown): value is Todo => {
             return false
         }
     }
+    // source는 optional — 있으면 'manual'|'schedule' (구버전 데이터 호환).
+    if (candidate.source !== undefined) {
+        if (candidate.source !== 'manual' && candidate.source !== 'schedule') {
+            return false
+        }
+    }
     return true
 }
 

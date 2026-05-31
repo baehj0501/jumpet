@@ -7,5 +7,10 @@ export { useStateMachine } from './behaviors/useStateMachine'
 export { useWalking } from './behaviors/useWalking'
 export { useCharacterSpeech } from './behaviors/useCharacterSpeech'
 export { pickRandomClickMessage } from './model/clickMessages'
+export {
+    useSelectedCharacterId,
+    useSelectCharacter,
+    initializeCharacterSelectionSync,
+} from './model/useCharacterSelectionStore'
 export type { CharacterState } from './model/CharacterState'
 export type { CharacterId, Mood } from './model/Character'
