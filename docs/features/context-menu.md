@@ -2,25 +2,37 @@
 
 ## 한 줄 정체성
 
-캐릭터에 우클릭하면 뜨는 OS 네이티브 메뉴. 8개(향후 9개) 패널 진입점.
+캐릭터에 우클릭하면 뜨는 OS 네이티브 메뉴. 모든 패널·기능의 단일 진입점.
 
 ## 명세
 
-### 메뉴 구성 (v2.0 → 신 다이어그램)
+### 메뉴 구성
 
-| 항목 | v2.0 명세 | 신 다이어그램 | 동작 |
-|---|---|---|---|
-| 🍖 먹이주기 | ✓ | ✓ | 먹이 패널 열기 |
-| 🎮 놀아주기 | ✓ | ✓ | 놀이 패널 열기 |
-| ✅ To-Do | ✓ | ✓ | TODO 패널 열기 |
-| 🎰 가챠 | ✓ | ✓ | 가챠 패널 열기 |
-| 🎒 아이템 | ✓ | ✓ | 아이템 패널 열기 |
-| 🔮 **운세** | ✗ | **✓ (신규)** | 운세 팝업 열기 |
-| 📊 정보 | ✓ | ✓ | 정보 패널 열기 |
-| 🔗 링크 관리 | ✓ | ✓ | 링크 추가/삭제 패널 열기 |
-| ❌ 종료 | ✓ | ✓ | 앱 quit |
+> 이 구성은 참조 앱(JUMPET_4)의 메뉴 기능 세트를 현재 레포에 이식하며 확정됐다.
+> 기존 항목 중 겹치는 것은 대체·통합하고, 새 기능은 추가하고, jumpet 고유였던 링크 기능은 폐기했다.
 
-→ **신 다이어그램 반영 시 메뉴 항목 8개 → 9개** (운세 추가).
+| 순서 | 항목 | panelId | 동작 | 비고 |
+|---|---|---|---|---|
+| 1 | 🐾 돌봄 | `care` | 돌봄 패널 열기 (밥/놀이/쓰다듬기/눕기) | 구 '먹이주기'+'놀아주기' 통합 |
+| 2 | ✅ To-Do | `todo` | TODO 패널 열기 | 유지 (구현됨) |
+| 3 | 🌸 운세 | `fortune` | 오늘의 운세 팝업 | 신규 메뉴 연결 ([fortune.md](./fortune.md)) |
+| 4 | 📅 일정 | `schedule` | 일정(캘린더) 패널 열기 | 신규 ([schedule.md](./schedule.md)) |
+| — | (구분선) | | | |
+| 5 | 🎰 가챠 | `gacha` | 뽑기 패널 열기 | 유지 (뽑기 실행) |
+| 6 | 🎒 아이템 | `item` | 아이템 패널 열기 (꾸미기/펫수집 탭) | 인벤토리 보유 현황 |
+| — | (구분선) | | | |
+| 7 | 🎵 유튜브 | `youtube` | 유튜브 창 열기 | 구 '링크 관리' 대체 ([youtube.md](./youtube.md)) |
+| 8 | ⚙️ 설정 | `settings` | 설정 패널 열기 (점수·레벨 + 환경설정) | 구 '정보' 확장 통합 ([settings.md](./settings.md)) |
+| — | (구분선) | | | |
+| 9 | ❌ 종료 | — | 앱 quit | 유지 |
+
+→ **패널 항목 8개 + 종료.** 구분선은 의미 그룹(상시 인터랙션 / 수집 / 외부·환경설정)을 나눈다. 정확한 그룹 경계는 Open Question.
+
+### 폐기된 항목 (이식 결정에 따라 제거)
+
+- **🔗 링크 관리** — jumpet 고유 기능, 참조 앱엔 없음 → 유튜브로 대체.
+- **🔗 즐겨찾기 바 표시 (체크박스 토글)** — 링크 미니 바(`linkBar`) 플로팅 창과 함께 폐기.
+- 관련 코드(`src/main/link/`, `src/main/linkBar/`, `renderer`의 link slice·link-bar·link-manager 페이지)도 제거 대상. 자세한 영향 범위는 [youtube.md](./youtube.md) 참고.
 
 ### 표시 위치
 
@@ -45,7 +57,7 @@
        ↓ ipcRenderer.send('window:showContextMenu')
 [main: ipcMain.on('window:showContextMenu')]
        ↓ webContents.send('menu:state', 'opened')  ← 자율 행동 정지 신호 broadcast
-       ↓ showCharacterContextMenu(win, onClose)
+       ↓ showCharacterContextMenu(win, onClose, deps)
        ↓ Menu.buildFromTemplate([...]).popup({ window, callback: onClose })
 
 [사용자 메뉴 항목 클릭]
@@ -88,16 +100,37 @@ src/main/panels/
 ```ts
 switch (panelId) {
     case 'todo': openTodoPanel(); return
-    case 'feed': /* TODO */; return
+    case 'care': /* TODO */; return
+    case 'gacha': /* TODO */; return
     // ...
     default: console.log(`[panel:open] ${panelId} (not implemented)`)
 }
 ```
 
+### 메뉴 항목별 진입점 매핑
+
+| panelId | 진입 형태 | 명세 문서 |
+|---|---|---|
+| `care` | 별창 패널 | [care.md](./care.md) |
+| `todo` | 별창 패널 (구현됨) | [todo.md](./todo.md) |
+| `fortune` | 캐릭터 위 팝업 또는 별창 (미정) | [fortune.md](./fortune.md) |
+| `schedule` | 별창 패널 | [schedule.md](./schedule.md) |
+| `gacha` | 별창 패널 (뽑기 실행) | [gacha-and-inventory.md](./gacha-and-inventory.md) |
+| `item` | 별창 패널 (꾸미기/펫수집 탭) | [gacha-and-inventory.md](./gacha-and-inventory.md) |
+| `youtube` | 별창 (webview, alwaysOnTop) | [youtube.md](./youtube.md) |
+| `settings` | 별창 패널 | [settings.md](./settings.md) |
+
+### 외부 의존성 주입 (`CharacterContextMenuDeps`)
+
+메뉴 모듈은 다른 도메인을 직접 import하지 않고 콜백으로 받는다 (결합도 하향, 조립은 `src/main/index.ts`).
+
+- 링크/즐겨찾기 바 토글 제거 후, 현재 메뉴는 외부 상태 의존이 없다(모든 항목이 단순 `openPanel`/`app.quit`).
+- 향후 "항목 활성/비활성"(예: 점수 부족 시 가챠 비활성) 같은 동적 상태가 생기면 그때 deps로 주입한다.
+
 ### 새 패널 추가 흐름
 
-1. **`PanelId` union 확장** — `src/main/menu/characterContextMenu.ts`의 `PanelId`에 항목 추가 (예: `'fortune'`)
-2. **메뉴 항목 추가** — `PANEL_MENU_ITEMS` 배열에 한 줄 (`{ label: '🔮  운세', panelId: 'fortune' }`)
+1. **`PanelId` union 확장** — `src/main/menu/characterContextMenu.ts`의 `PanelId`에 항목 추가
+2. **메뉴 항목 추가** — `PANEL_MENU_ITEMS` 배열에 한 줄 (`{ label: '🌸  운세', panelId: 'fortune' }`)
 3. **`src/main/panels/open{Name}Panel.ts`** — BrowserWindow 싱글톤 인스턴스 생성/포커스
 4. **`src/main/panels/index.ts`의 switch** — 새 case 등록
 5. **`src/renderer/{name}.html` + `pages/{name}/`** — 별창의 entry + React tree
@@ -119,12 +152,13 @@ switch (panelId) {
 
 | 의존 방향 | 무엇 |
 |---|---|
-| **호출함** | 각 패널 모듈의 open 함수 (todo, gacha, fortune, ...) |
+| **호출함** | 각 패널 모듈의 open 함수 (care, todo, fortune, schedule, gacha, item, youtube, settings) |
 | **호출됨** | 캐릭터 윈도우의 우클릭 이벤트 |
 | **신호 broadcast** | `menu:state` (opened/closed) → 자율 행동 정지/재개 |
 
 ## Open Questions
 
-- **운세 메뉴 위치** — 현재 8개 메뉴 중 어디에? 다이어그램에선 to-do와 정보 사이에 있는 듯. 의미상 'TODO 다음, 정보 앞'이 자연스러움
-- **운세 패널은 별창인가 캐릭터 위 팝업인가** — 명세에는 "팝업"이라고 적혀 있어 별창보단 캐릭터 위 모달 가능성. [fortune.md](./fortune.md) 참고
-- **메뉴 항목 활성/비활성 상태** — 가챠는 점수 < 50일 때 비활성? 먹이는 인벤토리 없을 때 비활성?
+- **구분선 그룹 경계** — 위 표는 (상시 인터랙션: 돌봄/투두/운세/일정) · (수집: 가챠/아이템) · (외부·환경: 유튜브/설정) 3그룹으로 가정. 실제 그룹핑은 사용자 결정.
+- **운세 패널 형태** — 캐릭터 위 모달 vs 별창. [fortune.md](./fortune.md) Open Question.
+- **메뉴 항목 활성/비활성 상태** — 가챠는 점수 부족 시 비활성? 돌봄 액션은 쿨타임 중 비활성 표시? (쿨타임은 패널 내부에서 처리할 가능성이 큼.)
+- **트레이 메뉴 도입 여부** — 참조 앱은 시스템 트레이 메뉴(펫 보이기/대화창/유튜브/종료)도 있었다. 현재 jumpet은 우클릭 메뉴만 명세. 트레이 도입은 별도 결정.

@@ -132,7 +132,7 @@ src/renderer/
 |---|---|
 | **호출함** | electron-store, player(`onTodoCompleted` 콜백 통해) |
 | **호출됨** | 우클릭 메뉴의 '✅ To-Do' 항목 → 패널 디스패처 |
-| **노출 방향** | (미래) 정보 패널이 todo 통계 보여줄 가능성 |
+| **노출 방향** | (미래) 설정 패널이 todo 통계 보여줄 가능성 |
 
 ## Open Questions
 

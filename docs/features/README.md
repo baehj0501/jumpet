@@ -4,18 +4,23 @@
 
 ## 기능 목록
 
-| 기능 | 문서 |
-|---|---|
-| 캐릭터 (표시·드래그·walking·애니메이션) | [character.md](./character.md) |
-| 우클릭 컨텍스트 메뉴 | [context-menu.md](./context-menu.md) |
-| 점수 (재화) | [player-score.md](./player-score.md) |
-| To-Do | [todo.md](./todo.md) |
-| 가챠 + 아이템 인벤토리 | [gacha-and-inventory.md](./gacha-and-inventory.md) |
-| 먹이주기 + 놀아주기 | [feeding-and-playing.md](./feeding-and-playing.md) |
-| 운세 (오늘의 운세 자동 팝업) | [fortune.md](./fortune.md) |
-| 정보 패널 (점수·레벨) | [info-panel.md](./info-panel.md) |
-| 링크 관리 (별도 플로팅 창) | [link-manager.md](./link-manager.md) |
-| 말풍선 시스템 | [messages.md](./messages.md) |
+> 우클릭 메뉴 구성은 [context-menu.md](./context-menu.md)가 단일 기준(SSOT). 아래는 기능별 명세 문서 인덱스.
+
+| 기능 | 메뉴 | 문서 |
+|---|---|---|
+| 캐릭터 (표시·드래그·walking·애니메이션) | — | [character.md](./character.md) |
+| 우클릭 컨텍스트 메뉴 | — | [context-menu.md](./context-menu.md) |
+| 점수 (재화) | — | [player-score.md](./player-score.md) |
+| 돌봄 (밥/놀이/쓰다듬기/눕기) | 🐾 돌봄 | [care.md](./care.md) |
+| To-Do | ✅ To-Do | [todo.md](./todo.md) |
+| 운세 (오늘의 운세 자동 팝업) | 🌸 운세 | [fortune.md](./fortune.md) |
+| 일정 (캘린더 + 알림 + 생일) | 📅 일정 | [schedule.md](./schedule.md) |
+| 가챠(뽑기) + 아이템 인벤토리(꾸미기/펫수집) | 🎰 가챠 · 🎒 아이템 | [gacha-and-inventory.md](./gacha-and-inventory.md) |
+| 유튜브 (테마 프레임 플레이어 창) | 🎵 유튜브 | [youtube.md](./youtube.md) |
+| 설정 (점수·레벨 + 캐릭터/테마/크기/내정보) | ⚙️ 설정 | [settings.md](./settings.md) |
+| 말풍선 시스템 | — | [messages.md](./messages.md) |
+
+> **폐기됨**: 링크 관리(`link-manager.md`) — 유튜브로 대체. 먹이/놀이(`feeding-and-playing.md`) → 돌봄으로 통합. 정보 패널(`info-panel.md`) → 설정으로 확장 통합.
 
 ## 도메인 간 의존성 그래프
 
@@ -24,28 +29,22 @@
                        │
 character ─→ context-menu ─→ todo ─────┘ (완료 시 점수)
                        │
-                       ├─→ feeding ─→ player-score (점수 가산)
-                       │       │
-                       │       ↓ (소모)
-                       │   inventory (소모성)
-                       │       ↑ (획득)
-                       ├─→ gacha ─→ player-score (50점 소모)
-                       │       │
-                       │       ↓ (영구/소모성 획득)
-                       │   inventory
+                       ├─→ care ─→ player-score (밥/놀이/쓰다듬기/눕기, +5~10 + 쿨타임)
                        │
-                       ├─→ playing ─→ player-score (점수 가산)
+                       ├─→ gacha(뽑기) ─→ player-score (데코 -30 / 펫 -50, 중복 +10 환원)
                        │       │
-                       │       ↓ (소모)
-                       │   inventory (소모성)
-                       │
+                       │       ↓ (영구 획득)
+                       │   item 인벤토리 ─→ character (바탕화면 데코 / 펫 렌더)
+                       │       ↑ (꾸미기/펫수집 탭에서 열람·배치)
                        ├─→ fortune ─→ player-score (60~100점 자동 가산)
                        │
-                       ├─→ info-panel (player-score 읽기 전용)
+                       ├─→ schedule ─→ character (시각 도달 시 알림 말풍선 / 생일 모션)
+                       │       ↑ (생일 값)
+                       ├─→ settings ─→ player-score(점수·레벨 읽기) + character(캐릭터/크기/테마)
                        │
-                       └─→ link-manager (독립)
+                       └─→ youtube (독립 UI 창)
 
-messages 시스템은 가로지름 — 클릭/먹이/놀이/완료/가챠 결과 등 모든 트리거에서 사용
+messages 시스템은 가로지름 — 클릭/돌봄/완료/뽑기 결과/운세/일정 알림 등 모든 트리거에서 사용
 ```
 
 ## 의존성 기반 구현 권장 순서
@@ -54,13 +53,13 @@ messages 시스템은 가로지름 — 클릭/먹이/놀이/완료/가챠 결과
 
 1. **말풍선 시스템** ([messages.md](./messages.md)) — 인프라. 거의 모든 후속 기능이 사용
 2. **캐릭터 PNG 애니메이션** ([character.md](./character.md)) — 독립적
-3. **운세** ([fortune.md](./fortune.md)) — 점수만 의존
-4. **링크 관리** ([link-manager.md](./link-manager.md)) — 완전 독립
-5. **아이템 인벤토리** ([gacha-and-inventory.md](./gacha-and-inventory.md)) — 데이터 모델
-6. **가챠 시스템** ([gacha-and-inventory.md](./gacha-and-inventory.md)) — 인벤토리 + 점수
-7. **먹이주기 / 놀아주기** ([feeding-and-playing.md](./feeding-and-playing.md)) — 인벤토리 + 점수 + 말풍선 + GIF
+3. **유튜브** ([youtube.md](./youtube.md)) — 거의 독립적인 UI 창
+4. **운세** ([fortune.md](./fortune.md)) — 점수만 의존
+5. **돌봄** ([care.md](./care.md)) — 점수 + 말풍선 + 감정/모션 (쿨타임 상태만 자체 보유)
+6. **일정** ([schedule.md](./schedule.md)) — 캐릭터(알림) + 설정(생일)
+7. **아이템 인벤토리 + 가챠(뽑기)** ([gacha-and-inventory.md](./gacha-and-inventory.md)) — 점수 + 바탕화면 데코/펫 렌더
 8. **GIF 표정 모션** ([character.md](./character.md)) — 위 시스템들이 트리거
-9. **정보 패널** ([info-panel.md](./info-panel.md)) — 다른 데이터 읽기
+9. **설정** ([settings.md](./settings.md)) — 점수·레벨 읽기 + 캐릭터/테마/크기/내정보 (레벨 공식 의존)
 
 ## 문서 표준 구조
 
