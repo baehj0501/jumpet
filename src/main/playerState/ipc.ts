@@ -28,6 +28,9 @@ export const applyPlayerEvent = (event: PlayerEvent): PlayerState => {
     if (event.type === 'fortune' && !Number.isFinite(event.amount)) {
         return readPlayerState()
     }
+    if (event.type === 'gachaSpin' && !Number.isFinite(event.cost)) {
+        return readPlayerState()
+    }
     const current = readPlayerState()
     const next = reducePlayerState(current, event)
     writePlayerState(next)

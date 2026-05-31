@@ -3,10 +3,11 @@ import { join } from 'node:path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerWindowIpc } from './window'
 import { registerMenuIpc } from './menu'
-import { applyPlayerEvent, registerPlayerStateIpc } from './playerState'
+import { applyPlayerEvent, readPlayerState, registerPlayerStateIpc } from './playerState'
 import { registerTodoIpc } from './todo'
-import { applyFortuneEvent, readFortuneState, registerFortuneIpc } from './fortune'
-import { openFortunePanel } from './panels'
+import { applyFortuneEvent, registerFortuneIpc } from './fortune'
+import { registerItemIpc } from './item'
+import { GACHA_COST } from '@shared/contracts/itemEvents'
 
 const createWindow = (): BrowserWindow => {
     const mainWindow = new BrowserWindow({
@@ -93,16 +94,20 @@ app.whenReady().then(() => {
     }
     registerFortuneIpc({ onFortuneRolled })
 
+    // 소모성 아이템 인벤토리 + 뽑기 IPC.
+    // 뽑기 비용 차감은 item 도메인이 잔액을 확인한 뒤 player에 위임한다(직접 import 안 함).
+    registerItemIpc({
+        getScore: () => readPlayerState().score,
+        spendForGacha: () => {
+            applyPlayerEvent({ type: 'gachaSpin', cost: GACHA_COST })
+        },
+    })
+
     createWindow()
 
     // 앱 시작 시 오늘 운세를 보장한다(없으면 추첨 + 점수 보상). 날짜당 멱등.
-    // 오늘 운세가 새로 떴다면("아침 팝업") 운세 창을 자동으로 띄운다.
-    const fortuneBefore = readFortuneState().today
+    // (통합 메뉴 창으로 바뀐 뒤 자동 팝업은 없앴다 — 운세는 우클릭 메뉴 → 운세 탭에서 본다.)
     applyFortuneEvent({ type: 'roll' }, onFortuneRolled)
-    const fortuneAfter = readFortuneState().today
-    if (fortuneAfter && fortuneAfter.date !== fortuneBefore?.date) {
-        openFortunePanel()
-    }
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {

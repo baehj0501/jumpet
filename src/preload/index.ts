@@ -3,6 +3,7 @@ import { electronAPI } from '@electron-toolkit/preload'
 import type { PlayerEvent, PlayerState } from '@shared/contracts/playerEvents'
 import type { Todo, TodoEvent, TodoState } from '@shared/contracts/todoEvents'
 import type { FortuneEvent, FortuneState } from '@shared/contracts/fortuneEvents'
+import type { GachaResult, ItemEvent, ItemState } from '@shared/contracts/itemEvents'
 
 const api = {
     startWindowDrag: (mouseX: number, mouseY: number): void => {
@@ -89,6 +90,22 @@ const api = {
             ipcRenderer.on('fortune:changed', listener)
             const unsubscribe = () => {
                 ipcRenderer.removeListener('fortune:changed', listener)
+            }
+            return unsubscribe
+        },
+    },
+    // 소모성 아이템 인벤토리 API. consume은 apply, 뽑기는 결과를 반환하는 별도 invoke.
+    item: {
+        get: (): Promise<ItemState> => ipcRenderer.invoke('item:get'),
+        apply: (event: ItemEvent): Promise<ItemState> => ipcRenderer.invoke('item:apply', event),
+        gacha: (): Promise<GachaResult> => ipcRenderer.invoke('item:gacha'),
+        onChange: (handler: (state: ItemState) => void): (() => void) => {
+            const listener = (_event: unknown, state: ItemState) => {
+                handler(state)
+            }
+            ipcRenderer.on('item:changed', listener)
+            const unsubscribe = () => {
+                ipcRenderer.removeListener('item:changed', listener)
             }
             return unsubscribe
         },

@@ -10,20 +10,20 @@
 
 | 활동 | 보상 |
 |---|---|
-| 🐾 돌봄 (밥/놀이/쓰다듬기/눕기) | +5~10점 랜덤 (액션별 쿨타임, [care.md](./care.md)) |
 | ✅ To-Do 완료 | +1~5점 랜덤 |
 | 🌸 오늘의 운세 | +60~100점 |
-| 🎰 뽑기 중복 시 환원 | +10점 |
 | 짧은 클릭 (말풍선 트리거) | 점수 영향 없음 |
+
+> **돌봄(care)은 점수를 주지 않는다 — 소비처다.** 포인트는 To-Do·운세로 벌어 뽑기에 쓴다(파밍 방지). 경제 루프: 벌기(투두·운세) → 쓰기(뽑기) → 소비(돌봄 아이템). [care.md](./care.md)
 
 ### 점수 소비
 
 | 활동 | 비용 |
 |---|---|
-| 🎰 꾸미기(데코) 뽑기 1회 | -30점 |
-| 🎰 펫 수집 뽑기 1회 | -50점 |
+| 🎰 돌봄 아이템 뽑기 1회 | -20점 |
 
-점수 부족 시 해당 뽑기 버튼 비활성화. ([gacha-and-inventory.md](./gacha-and-inventory.md))
+점수 부족 시 뽑기 버튼 비활성화. ([gacha-and-inventory.md](./gacha-and-inventory.md))
+(꾸미기 데코·펫 수집 뽑기는 후속 — 도입 시 비용 추가.)
 
 ### 도메인 invariant
 
@@ -67,11 +67,10 @@ broadcastPlayerState(next)  // 모든 BrowserWindow에 'player:changed'
 export type PlayerEvent =
     | { type: 'manual'; delta: number }       // 디버그/시드 — production에선 좁힐 예정
     | { type: 'todoComplete' }                // TODO 완료 — reducer가 1~5 랜덤 가산
+    | { type: 'fortune'; amount: number }     // 운세 — 60~100, 금액은 운세 단계가 결정
+    | { type: 'gachaSpin'; cost: number }     // 돌봄 아이템 뽑기 비용 차감(-cost)
     // 미래:
-    // | { type: 'careAction' }               // 돌봄 액션(밥/놀이/쓰다듬기/눕기) — 5~10 랜덤
-    // | { type: 'fortune' }                  // 운세 — 60~100 랜덤
-    // | { type: 'gachaSpin'; pool: 'decor' | 'pet' }  // 뽑기 — 데코 -30 / 펫 -50
-    // | { type: 'gachaRefund' }              // 중복 환원 — +10
+    // | { type: 'gachaRefund' }              // (데코/펫 도입 시) 중복 환원 — +10
 ```
 
 ### 도메인 간 부수효과 조립
@@ -118,7 +117,7 @@ apply({ type: 'manual', delta: 5 })  // dev에서 임시 점수 증가
 | 의존 방향 | 무엇 |
 |---|---|
 | **호출함** | electron-store, IPC |
-| **호출됨** | 거의 모든 인터랙션 시스템 (TODO 완료, 돌봄, 뽑기, 운세) |
+| **호출됨** | TODO 완료(+), 운세(+), 돌봄 아이템 뽑기(−) |
 | **노출 방향** | 설정 패널이 점수·레벨 표시할 때 읽기 전용으로 구독 |
 
 ## Open Questions

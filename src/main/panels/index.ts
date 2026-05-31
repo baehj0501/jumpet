@@ -1,27 +1,3 @@
-import type { PanelId } from '../menu/characterContextMenu'
-import { openTodoPanel } from './openTodoPanel'
-import { openFortunePanel } from './openFortunePanel'
-
-// 메뉴 클릭의 단일 디스패치 진입점.
-// 패널이 추가될 때마다 케이스를 활성화하고 placeholder는 비워둔다.
-export const openPanel = (panelId: PanelId) => {
-    switch (panelId) {
-        case 'todo':
-            openTodoPanel()
-            return
-        case 'fortune':
-            openFortunePanel()
-            return
-        case 'care':
-        case 'schedule':
-        case 'gacha':
-        case 'item':
-        case 'youtube':
-        case 'settings':
-            // 후속 패널 구현 전 placeholder.
-            console.log(`[panel:open] ${panelId} (not implemented)`)
-            return
-    }
-}
-
-export { openFortunePanel }
+// 패널 진입점. 우클릭 시 여는 통합 메뉴 창 하나로 단순화됐다.
+// (예전의 PanelId별 별창 디스패처는 탭형 통합 창으로 대체됨.)
+export { openMenuPanel } from './openMenuPanel'
