@@ -1,5 +1,11 @@
 import { randomUUID } from 'node:crypto'
-import { MAX_TODO_TEXT_LENGTH, type Todo, type TodoEvent, type TodoState } from '@shared/contracts/todoEvents'
+import {
+    MAX_TODO_PROJECT_LENGTH,
+    MAX_TODO_TEXT_LENGTH,
+    type Todo,
+    type TodoEvent,
+    type TodoState,
+} from '@shared/contracts/todoEvents'
 
 // TODO reducer + 도메인 룰 (FIFO 정리, 텍스트 길이 제한 등).
 // 타입/시드는 @shared/contracts에서 import해 main·preload·renderer가 동일 정의를 공유한다.
@@ -41,12 +47,14 @@ export const reduceTodoState = (state: TodoState, event: TodoEvent): TodoState =
             if (trimmed === '') {
                 return state
             }
+            const project = (event.project ?? '').trim().slice(0, MAX_TODO_PROJECT_LENGTH)
             const newTodo: Todo = {
                 id: randomUUID(),
                 text: trimmed,
                 completed: false,
                 createdAt: Date.now(),
                 source: event.source ?? 'manual',
+                project,
             }
             return { todos: [...state.todos, newTodo] }
         }

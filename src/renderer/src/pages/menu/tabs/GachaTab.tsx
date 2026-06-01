@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { usePlayerStore } from '@renderer/entities/player'
 import { CONSUMABLE_ITEMS, GACHA_COST, useItemActions } from '@renderer/entities/item'
 import { PixelArt } from '../PixelArt'
@@ -138,6 +138,25 @@ const SPARKLE = ['..#..', '..#..', '##.##', '..#..', '..#..']
 const SPARKLE_SMALL = ['.#.', '#.#', '.#.']
 const sparklePalette = (color: string): Record<string, string> => ({ '#': color })
 
+// 머신 주변 떠다니는 반짝이 — 형태(프레임)는 JS가 바꾸고 깜빡임은 CSS가 준다(운세와 동일 패턴).
+const AMBIENT_SPARK_FRAMES: string[][] = [
+    ['..#..', '..#..', '#####', '..#..', '..#..'],
+    ['.....', '..#..', '.###.', '..#..', '.....'],
+    ['#...#', '.#.#.', '..#..', '.#.#.', '#...#'],
+    ['..#..', '.###.', '#####', '.###.', '..#..'],
+    ['.....', '.....', '..#..', '.....', '.....'],
+]
+// stage(120×132) 중심 기준 px 오프셋 — 머신 사방으로 퍼지게.
+const AMBIENT_SPARKLES: { x: number; y: number; color: string; cell: number }[] = [
+    { x: -2, y: -78, color: '#f6dd5a', cell: 4 },
+    { x: 66, y: -54, color: '#e88bb8', cell: 3 },
+    { x: 82, y: 6, color: '#7ec8f0', cell: 4 },
+    { x: 64, y: 60, color: '#f6dd5a', cell: 3 },
+    { x: -66, y: 58, color: '#e88bb8', cell: 4 },
+    { x: -84, y: 2, color: '#7ec8f0', cell: 3 },
+    { x: -64, y: -54, color: '#f6dd5a', cell: 3 },
+]
+
 // 뽑기 연출 시간(ms) — 알사탕이 섞이는 시간.
 const SPIN_DURATION_MS = 1000
 // 아이템 공개(반짝이) 유지 시간(ms).
@@ -149,6 +168,13 @@ export const GachaTab = () => {
     const [message, setMessage] = useState('포인트를 모아\n돌봄 아이템을 뽑아 보세요')
     const [spinning, setSpinning] = useState(false)
     const [reveal, setReveal] = useState<{ emoji: string; name: string } | null>(null)
+    const [sparkFrame, setSparkFrame] = useState(0)
+
+    // 머신 주변 반짝이 형태를 천천히 바꾼다(프레임 순환).
+    useEffect(() => {
+        const intervalId = setInterval(() => setSparkFrame((f) => f + 1), 280)
+        return () => clearInterval(intervalId)
+    }, [])
 
     const canSpin = !spinning && score >= GACHA_COST
 
@@ -247,18 +273,41 @@ export const GachaTab = () => {
                                     </span>
                                 ))}
                             </div>
+                            {AMBIENT_SPARKLES.map((spark, index) => (
+                                <span
+                                    key={`spark-${index}`}
+                                    className='gacha-ambient-spark'
+                                    style={{
+                                        left: `calc(50% + ${spark.x}px)`,
+                                        top: `calc(50% + ${spark.y}px)`,
+                                        animationDelay: `${index * 0.22}s`,
+                                    }}
+                                >
+                                    <PixelArt
+                                        pixels={
+                                            AMBIENT_SPARK_FRAMES[
+                                                (sparkFrame + index) % AMBIENT_SPARK_FRAMES.length
+                                            ]
+                                        }
+                                        palette={sparklePalette(spark.color)}
+                                        cell={spark.cell}
+                                    />
+                                </span>
+                            ))}
                         </div>
                     )}
                 </div>
-                <button
-                    type='button'
-                    className='pbtn'
-                    onClick={handleSpin}
-                    disabled={!canSpin}
-                >
-                    {spinning ? '섞는 중…' : `🎲 뽑기 (${GACHA_COST}pt)`}
-                </button>
-                <div className='gacha-points'>내 포인트: {score}pt</div>
+                <div className='gacha-bottom'>
+                    <button
+                        type='button'
+                        className='pbtn'
+                        onClick={handleSpin}
+                        disabled={!canSpin}
+                    >
+                        {spinning ? '섞는 중…' : `🎲 뽑기 (${GACHA_COST}pt)`}
+                    </button>
+                    <div className='gacha-points'>내 포인트: {score}pt</div>
+                </div>
             </div>
         </div>
     )

@@ -4,12 +4,15 @@ import { TodoTab } from './tabs/TodoTab'
 import { FortuneTab } from './tabs/FortuneTab'
 import { GachaTab } from './tabs/GachaTab'
 import { ScheduleTab } from './tabs/ScheduleTab'
+import { TimerTab } from './tabs/TimerTab'
 import { PlaceholderTab } from './tabs/PlaceholderTab'
 import { PixelIcon } from './PixelIcon'
 
 export type TabId =
     | 'care'
+    | 'pet'
     | 'todo'
+    | 'timer'
     | 'fortune'
     | 'gacha'
     | 'schedule'
@@ -19,10 +22,12 @@ export type TabId =
 
 const TABS: { id: TabId; label: string }[] = [
     { id: 'care', label: '홈' },
+    { id: 'schedule', label: '일정' },
     { id: 'todo', label: '할일' },
+    { id: 'timer', label: '타이머' },
     { id: 'fortune', label: '운세' },
     { id: 'gacha', label: '가챠' },
-    { id: 'schedule', label: '일정' },
+    { id: 'pet', label: '펫' },
     { id: 'item', label: '아이템' },
     { id: 'youtube', label: '유튜브' },
     { id: 'settings', label: '설정' },
@@ -31,7 +36,9 @@ const TABS: { id: TabId; label: string }[] = [
 // 탭별 픽셀 아이콘(7×7). '#'=칠함. 그리드만 고치면 모양 변경.
 const TAB_ICON_PIXELS: Record<TabId, string[]> = {
     care: ['...#...', '..###..', '.#####.', '#######', '.#####.', '.##.##.', '.##.##.'],
-    todo: ['.......', '......#', '.....#.', '#...#..', '.#.#...', '..#....', '.......'],
+    pet: ['#.#.#..', '#.#.#..', '.......', '.#####.', '#######', '#######', '.#####.'],
+    todo: ['.......', '......#', '.....##', '##..##.', '.####..', '..##...', '.......'],
+    timer: ['..###..', '.#.#.#.', '#..#..#', '#..####', '#.....#', '.#...#.', '..###..'],
     fortune: ['...#...', '..###..', '#######', '..###..', '...#...', '.#...#.', '#.....#'],
     gacha: ['..###..', '.#####.', '#######', '#######', '.#####.', '..###..', '...#...'],
     schedule: ['.#...#.', '#######', '#######', '#.#.#.#', '#######', '#.#.#.#', '#######'],
@@ -49,8 +56,12 @@ export const MenuPage = () => {
         switch (activeTab) {
             case 'care':
                 return <CareTab />
+            case 'pet':
+                return <PlaceholderTab icon='🐾' label='펫' />
             case 'todo':
                 return <TodoTab />
+            case 'timer':
+                return <TimerTab />
             case 'fortune':
                 return <FortuneTab />
             case 'gacha':

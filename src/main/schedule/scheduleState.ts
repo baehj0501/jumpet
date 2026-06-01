@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import {
+    MAX_SCHEDULE_MEMO_LENGTH,
     MAX_SCHEDULE_TITLE_LENGTH,
     type ScheduleEvent,
     type ScheduleState,
@@ -14,11 +15,20 @@ export const reduceScheduleState = (state: ScheduleState, event: ScheduleEvent):
             if (title === '' || event.date === '') {
                 return state
             }
+            // 종료일이 비었거나 시작보다 빠르면 시작일로 맞춘다(단일 일정).
+            // 'YYYY-MM-DD' ISO 포맷은 문자열 비교가 곧 날짜 비교.
+            const endDate =
+                event.endDate && event.endDate >= event.date ? event.endDate : event.date
+            const memo = (event.memo ?? '').trim().slice(0, MAX_SCHEDULE_MEMO_LENGTH)
+            const time = event.time || '00:00'
             const item = {
                 id: randomUUID(),
                 date: event.date,
-                time: event.time || '00:00',
+                endDate,
+                time,
+                endTime: event.endTime || time,
                 title,
+                memo,
             }
             return { items: [...state.items, item] }
         }

@@ -15,6 +15,8 @@ export type Todo = {
     completedAt?: number
     // 출처(일정/수동). 없으면 'manual'로 본다.
     source?: TodoSource
+    // 프로젝트 태그. 없거나 ''면 '미분류'로 본다. 상단 칩으로 필터링.
+    project?: string
 }
 
 export type TodoState = {
@@ -25,7 +27,7 @@ export type TodoState = {
 // 편집/삭제는 진행·완료 양쪽 모두 가능 (명세 §8).
 // 100개 초과 시 main reducer가 createdAt 기준 가장 오래된 완료 항목부터 FIFO 정리.
 export type TodoEvent =
-    | { type: 'add'; text: string; source?: TodoSource }
+    | { type: 'add'; text: string; source?: TodoSource; project?: string }
     | { type: 'toggle'; id: string }
     | { type: 'remove'; id: string }
     | { type: 'updateText'; id: string; text: string }
@@ -36,3 +38,6 @@ export const INITIAL_TODO_STATE: TodoState = {
 
 // 할 일 텍스트 최대 길이 (명세 §8). UI input의 maxLength + reducer 안전망에 둘 다 적용.
 export const MAX_TODO_TEXT_LENGTH = 40
+
+// 프로젝트 태그 최대 길이.
+export const MAX_TODO_PROJECT_LENGTH = 16

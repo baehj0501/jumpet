@@ -10,7 +10,7 @@ const EVICTION_BANNER_DURATION_MS = 4000
 // usePlayerStore와 같은 패턴 — entrypoint(pages/todo/main.tsx)가 initializeTodoSync()를 1회 호출.
 
 type TodoActions = {
-    addTodo: (text: string, source?: TodoSource) => Promise<void>
+    addTodo: (text: string, source?: TodoSource, project?: string) => Promise<void>
     // 단방향: 완료 처리만 가능하다 (main reducer 정책).
     toggleTodo: (id: string) => Promise<void>
     removeTodo: (id: string) => Promise<void>
@@ -26,8 +26,8 @@ type TodoStore = {
 const useTodoStoreInternal = create<TodoStore>((set) => ({
     todos: [],
     lastEvictedTodo: null,
-    addTodo: async (text, source) => {
-        const next = await window.api.todo.apply({ type: 'add', text, source })
+    addTodo: async (text, source, project) => {
+        const next = await window.api.todo.apply({ type: 'add', text, source, project })
         set({ todos: next.todos })
     },
     toggleTodo: async (id) => {

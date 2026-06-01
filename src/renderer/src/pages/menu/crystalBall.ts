@@ -89,35 +89,7 @@ export const buildCrystal = (phase: number): string[] => {
     bar(30, 9, 22, 'R')
     for (let x = 16; x <= 22; x++) setIf(x, 30, 'Y')
 
-    // 구슬 밖 반짝이(핑크/하늘)
-    const starBig = (x0: number, y0: number, c: string) => {
-        for (const [dx, dy] of [
-            [0, -2],
-            [0, -1],
-            [0, 1],
-            [0, 2],
-            [-2, 0],
-            [-1, 0],
-            [1, 0],
-            [2, 0],
-        ]) {
-            setIf(x0 + dx, y0 + dy, c)
-        }
-    }
-    const starSmall = (x0: number, y0: number, c: string) => {
-        for (const [dx, dy] of [
-            [0, -1],
-            [0, 1],
-            [-1, 0],
-            [1, 0],
-        ]) {
-            setIf(x0 + dx, y0 + dy, c)
-        }
-    }
-    starBig(28, 4, 's')
-    starSmall(3, 9, 'b')
-    starSmall(5, 27, 'b')
-    starSmall(27, 25, 's')
+    // 구슬 밖 반짝이는 FortuneTab의 애니메이션 오버레이로 분리(형태 변화 + 넓은 확산).
 
     // 위/아래 빈 줄 trim
     const rows = grid.map((row) => row.join(''))

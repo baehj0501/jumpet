@@ -200,28 +200,27 @@ body {
 }
 
 /* ── 탭 ── */
+/* 탭바 — 5칸씩 2줄. 2px 간격 + 테두리색 배경으로 칸 사이 구분선을 만든다. */
 .tabs {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 2px;
     border-bottom: 2px solid var(--border);
     flex-shrink: 0;
-    background: var(--panel);
+    background: var(--border);
     overflow-x: hidden;
 }
 .tab {
-    flex: 1;
-    padding: 15px 1px 5px;
+    padding: 12px 1px 6px;
     font-family: var(--pix);
     font-size: 11px;
     color: var(--dim);
     cursor: pointer;
     text-align: center;
+    background: var(--panel);
     border-bottom: 4px solid transparent;
-    border-right: 2px solid var(--border);
     white-space: nowrap;
     line-height: 1.4;
-}
-.tab:last-child {
-    border-right: none;
 }
 .tab .tab-icon {
     display: flex;
@@ -293,8 +292,8 @@ body {
 }
 .home-character {
     display: block;
-    width: 120px;
-    height: 120px;
+    width: 240px;
+    height: 240px;
     object-fit: contain;
     margin: 4px 0 2px;
     image-rendering: pixelated;
@@ -347,6 +346,9 @@ body {
     gap: 8px;
     font-family: var(--pix);
     font-size: 14px;
+    /* Galmuri11은 400/700만 있어 500이 폴백된다. 얇은 외곽선으로 중간 굵기(500 느낌)를 낸다. */
+    font-weight: 400;
+    -webkit-text-stroke: 0.6px currentColor;
     color: var(--accent);
     padding: 2px 0;
 }
@@ -503,6 +505,11 @@ body {
 .fi::placeholder {
     color: var(--dim);
 }
+/* 프로필 편집 입력 — 비우면 기본값을 30% 투명도로 보여준다. */
+.profile-edit::placeholder {
+    color: var(--text);
+    opacity: 0.3;
+}
 .add-btn {
     background: var(--accent);
     border: 2px solid var(--border);
@@ -521,6 +528,84 @@ body {
         inset -2px -2px 0 rgba(255, 255, 255, 0.3),
         inset 2px 2px 0 rgba(0, 0, 0, 0.28);
 }
+/* 상단 프로젝트 선택 칩 줄 */
+.todo-projects {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+}
+.todo-chip {
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--text);
+    background: var(--card);
+    border: 2px solid var(--border);
+    padding: 3px 8px;
+    cursor: pointer;
+    clip-path: var(--pixel-clip);
+}
+.todo-chip:hover {
+    background: var(--btn-bg-hover);
+}
+.todo-chip.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+/* 선택한 프로젝트 삭제 버튼 (칩 줄 끝) */
+.todo-project-del {
+    flex: 0 0 auto;
+    background: none;
+    border: none;
+    color: var(--dim);
+    font-size: 13px;
+    padding: 2px 4px;
+    cursor: pointer;
+}
+.todo-project-del:hover {
+    color: #dc2626;
+}
+
+/* 하단 '프로젝트 추가' 줄 — 목록 아래 바닥에 고정 */
+.todo-add-project {
+    margin-top: auto;
+    padding-top: 10px;
+    display: flex;
+    gap: 8px;
+}
+
+/* 할 일 항목 내 프로젝트 태그 — 블루 박스 + 흰 글씨 + 계단식(끊김 없는) 테두리 */
+.todo-project-tag {
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+    font-family: var(--pix);
+    font-size: 11px;
+    color: #fff;
+    background: var(--accent);
+    padding: 3px 9px;
+    margin-right: 6px;
+    white-space: nowrap;
+    border: none;
+    border-radius: 0;
+    clip-path: var(--pixel-clip);
+}
+.todo-project-tag::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    clip-path: var(--pixel-clip);
+    background: var(--accent2);
+    padding: 2px;
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
 /* 남은 할일 / 완료 필터 토글 */
 .todo-filters {
     display: flex;
@@ -658,6 +743,24 @@ body {
     display: flex;
     justify-content: center;
 }
+/* 구슬 밖 반짝이 — 형태(프레임)는 JS가 바꾸고, 깜빡임/크기는 CSS가 준다. */
+.fortune-spark {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    animation: fortune-twinkle 1.8s ease-in-out infinite;
+}
+@keyframes fortune-twinkle {
+    0%,
+    100% {
+        opacity: 0.15;
+        transform: translate(-50%, -50%) scale(0.65);
+    }
+    50% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+}
 .fortune-orb-score {
     position: absolute;
     top: 47%;
@@ -673,12 +776,13 @@ body {
         1px -1px 0 #fff,
         -1px 1px 0 #fff;
 }
-/* 운세 등급 별 — 점수(단계)만큼, 30px */
+/* 운세 등급 별 — 점수(단계)만큼, 30px. 멘트와의 간격만 30px(카드 gap 60에서 30 당김). */
 .fortune-stars {
     font-size: 30px;
     line-height: 1;
     color: #f6c945;
     letter-spacing: 3px;
+    margin-top: -30px;
 }
 .fortune-score {
     font-family: var(--pix);
@@ -696,9 +800,26 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 14px;
     text-align: center;
+}
+/* 머신 주변 반짝이 — 형태는 JS, 깜빡임/크기는 fortune-twinkle 재사용 */
+.gacha-ambient-spark {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    animation: fortune-twinkle 1.8s ease-in-out infinite;
+}
+/* 뽑기 버튼 + 포인트 — 패널 최하단에서 30px 위로 */
+.gacha-bottom {
+    margin-top: auto;
+    padding-bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
 }
 /* 가챠 제목 — 상단 중앙 정렬. */
 .gacha-title {
@@ -712,8 +833,6 @@ body {
     align-items: center;
     justify-content: center;
     min-height: 132px;
-    /* 안내 텍스트와 함께 윗블록을 60px 위로. */
-    transform: translateY(-60px);
 }
 
 /* 아이템 공개 — 머신이 사라지고 큰 아이템 + 이름 + 반짝이 */
@@ -881,8 +1000,8 @@ body {
     line-height: 1.5;
     max-width: 240px;
     white-space: pre-line;
-    /* 일러스트와 함께 60px 위로. */
-    transform: translateY(-60px);
+    /* 안내 멘트+일러스트를 (하단 버튼 그룹 위) 중앙으로. 하단 그룹도 margin-top:auto라 공간을 균등 분배. */
+    margin-top: auto;
 }
 
 /* placeholder 탭 */
@@ -978,6 +1097,14 @@ body {
 }
 
 /* ── 일정(달력) ── */
+/* 컴퓨터 기준 오늘 일자 라벨 */
+.cal-today {
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--accent2);
+    text-align: center;
+    padding: 2px 0;
+}
 .cal-head {
     display: flex;
     align-items: center;
@@ -1082,24 +1209,122 @@ body {
     background: var(--accent);
     border-radius: 50%;
 }
-/* 일정 있는 날 점 — 숫자보다 10px 아래(숫자 중심 +16px). */
-.cal-dot {
+/* 일정 있는 날 점들 — 일정 개수만큼(최대 3개), 숫자 아래 중앙 정렬. */
+.cal-dots {
     position: absolute;
     left: 50%;
     top: calc(50% + 16px);
     transform: translateX(-50%);
-    width: 4px;
-    height: 4px;
+    display: flex;
+    gap: 2px;
+}
+.cal-dot {
+    width: 5px;
+    height: 5px;
     background: var(--accent2);
+}
+
+/* 캘린더 주(週) 아래로 펼쳐지는 인라인 추가 폼 — grid 전체 폭 차지 */
+.cal-inline-add {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 2px 0;
+    padding: 8px;
+    background: var(--card);
+    border: 2px solid var(--border);
+    clip-path: var(--pixel-clip);
 }
 
 .sched-add-row {
     display: flex;
     gap: 6px;
 }
+/* 시작 / 종료 각각 한 줄 — 라벨 + 날짜 + 시각 */
+.sched-datetime-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: nowrap;
+}
+.sched-dt-label {
+    flex: 0 0 auto;
+    width: 30px;
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--accent);
+}
+.sched-dt {
+    flex: 1 1 0;
+    min-width: 0;
+    font-size: 11px;
+    padding: 4px 4px;
+}
+/* 네이티브 date/time 위젯 내부 여백 축소(가능한 브라우저에서) */
+.sched-dt::-webkit-datetime-edit {
+    padding: 0;
+}
+.sched-dt::-webkit-calendar-picker-indicator {
+    margin: 0;
+    padding: 0;
+}
+.sched-date-sep {
+    font-family: var(--pix);
+    color: var(--dim);
+    flex: 0 0 auto;
+    font-size: 10px;
+}
+/* 제목 입력 — full-width 한 줄 */
+.sched-title-input {
+    display: block;
+    width: 100%;
+}
+/* 메모 입력 — 100자 이내, 여러 줄 */
+.sched-memo-input {
+    display: block;
+    width: 100%;
+    resize: none;
+    line-height: 1.4;
+    font-family: var(--pix);
+}
+/* 추가 폼 하단: 체크박스 + 추가 버튼 */
+.sched-add-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
 .sched-time {
     flex: 0 0 auto;
     width: 84px;
+}
+/* 기간 일정 날짜 범위 배지 */
+.sched-range {
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 1px 5px;
+    flex-shrink: 0;
+}
+/* '할 일에도 추가' 체크박스 줄 */
+.sched-todo-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--dim);
+    cursor: pointer;
+    user-select: none;
+}
+.sched-todo-check input {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--accent);
+    cursor: pointer;
 }
 .sched-list {
     display: flex;
@@ -1123,13 +1348,28 @@ body {
     padding: 2px 6px;
     flex-shrink: 0;
 }
+/* 제목 + 메모 세로 묶음 */
+.sched-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
 .sched-title {
     font-family: var(--pix);
     font-size: 13px;
     color: var(--text);
-    flex: 1;
     line-height: 1.3;
     word-break: break-all;
+}
+.sched-memo {
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--dim);
+    line-height: 1.4;
+    word-break: break-all;
+    white-space: pre-wrap;
 }
 .sched-empty {
     font-family: var(--pix);
@@ -1137,4 +1377,91 @@ body {
     color: var(--dim);
     text-align: center;
     padding: 24px 0;
+}
+/* 추가 폼이 닫혀 있을 때 안내 — 더블클릭 유도 */
+.sched-hint {
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--dim);
+    text-align: center;
+    padding: 4px 0;
+}
+
+/* ── 포모도로 타이머 ── */
+.timer-panel {
+    align-items: center;
+    text-align: center;
+}
+.timer-phase {
+    font-family: var(--pix);
+    font-size: 18px;
+    margin-top: 8px;
+}
+.timer-phase.focus {
+    color: var(--accent);
+}
+.timer-phase.break {
+    color: var(--accent2);
+}
+/* 스톱워치 + 면 가운데 숫자 오버레이 */
+.timer-stopwatch {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    margin: 8px 0 2px;
+}
+.timer-stopwatch-time {
+    position: absolute;
+    /* 시계 면 중심(크라운이 위에 있어 시각 중심은 약간 아래) */
+    top: 60%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--pix);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #0a3050;
+}
+.timer-tomatoes {
+    font-size: 16px;
+    min-height: 20px;
+    line-height: 1.2;
+    word-break: break-all;
+}
+.timer-controls {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    margin-top: 4px;
+}
+.timer-controls .pbtn {
+    flex: 1;
+    padding: 10px 2px;
+    font-size: 13px;
+}
+.timer-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+.timer-setting {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    font-family: var(--pix);
+    font-size: 15px;
+    color: var(--text);
+}
+/* 라벨 '집중'/'휴식'은 고정폭, 입력칸이 남는 폭을 모두 차지(반응형) */
+.timer-setting > span:first-child {
+    flex: 0 0 36px;
+}
+.timer-setting input {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: center;
+    font-size: 18px;
+    padding: 5px 8px;
 }
