@@ -216,6 +216,18 @@ const api = {
             return unsubscribe
         },
     },
+    // 유튜브 별창 — 열기(메뉴) + 창 제어(유튜브 창 자체). fire-and-forget.
+    youtube: {
+        open: (options?: { theme?: number; url?: string }): void =>
+            ipcRenderer.send('youtube:open', options ?? {}),
+        move: (dx: number, dy: number): void => ipcRenderer.send('youtube:move', { dx, dy }),
+        resize: (width: number, height: number): void =>
+            ipcRenderer.send('youtube:resize', { width, height }),
+        // 가장자리/모서리 드래그 리사이즈 — edge 방향 + 화면 좌표 델타.
+        resizeEdge: (edge: string, dx: number, dy: number): void =>
+            ipcRenderer.send('youtube:resizeEdge', { edge, dx, dy }),
+        close: (): void => ipcRenderer.send('youtube:close'),
+    },
 }
 
 if (process.contextIsolated) {

@@ -12,6 +12,7 @@ import { registerCharacterSelectionIpc } from './characterSelection'
 import { registerProfileIpc } from './profile'
 import { registerPetSelectionIpc } from './petSelection'
 import { registerWorldIpc } from './world'
+import { registerYoutubeIpc } from './youtube'
 import { setMenuPanelOnTop } from './panels/openMenuPanel'
 import { broadcastCharacterSpeech, registerCharacterIpc } from './character'
 import { GACHA_COST } from '@shared/contracts/itemEvents'
@@ -197,6 +198,8 @@ app.whenReady().then(() => {
 
     // 동반 펫 장착 IPC — 펫 탭에서 장착한 펫을 펫 창과 공유(SSOT).
     registerPetSelectionIpc()
+
+    registerYoutubeIpc()
 
     registerWorldIpc({
         onModeChange: (mode) => {

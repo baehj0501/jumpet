@@ -4,6 +4,7 @@ import {
     THEME_LABELS,
     THEME_THUMBNAILS,
     decorByTheme,
+    findDecor,
     type DecorTheme,
     type PlacedItem,
     useOwnedDecor,
@@ -19,7 +20,7 @@ export const ItemTab = () => {
     const owned = useOwnedDecor()
     const placed = usePlacedItems()
     const mode = useWorldMode()
-    const { place, commitLayout, reset, setMode } = useWorldActions()
+    const { place, recall, commitLayout, reset, setMode } = useWorldActions()
 
     const editing = mode === 'edit'
 
@@ -96,6 +97,47 @@ export const ItemTab = () => {
                     </>
                 )}
             </div>
+
+            {/* 꾸미기 중 — 바탕화면에 올린 데코 목록(✕로 회수) */}
+            {editing && (
+                <div className='placed-panel'>
+                    <div className='section-title-2'>배치됨 {placed.length}</div>
+                    {placed.length === 0 ? (
+                        <div className='placed-empty'>아직 바탕화면에 올린 데코가 없어요</div>
+                    ) : (
+                        <div className='placed-list'>
+                            {placed.map((item) => {
+                                const decor = findDecor(item.itemId)
+                                if (!decor) {
+                                    return null
+                                }
+                                return (
+                                    <div
+                                        key={item.instanceId}
+                                        className='placed-row'
+                                    >
+                                        <img
+                                            className='placed-thumb'
+                                            src={decor.src}
+                                            alt={decor.name}
+                                            draggable={false}
+                                        />
+                                        <span className='placed-name'>{decor.name}</span>
+                                        <button
+                                            type='button'
+                                            className='placed-x'
+                                            onClick={() => void recall(item.instanceId)}
+                                            title='바탕화면에서 빼기'
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {openTheme === null ? (
                 /* 폴더 목록 */

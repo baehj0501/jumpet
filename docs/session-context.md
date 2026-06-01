@@ -1,96 +1,87 @@
 # JUMPET — 작업 컨텍스트 메모리
 
-> 이 문서는 지금까지의 작업 맥락과 데스크탑 앱 기능을 한눈에 복기하기 위한 메모다.
-> *변하지 않는 명세*는 `docs/`의 각 기능 문서가 SSOT이고, 이 파일은 **현재까지 합의·구현된 상태의 스냅샷**이다.
+> 지금까지의 작업 맥락과 앱 기능 전체 스냅샷. *변하지 않는 명세*는 `docs/features/*.md`가 SSOT, 이 파일은 **현재 구현 상태 + 합의 사항** 요약.
+> (코드가 진실 — 어긋나면 코드 기준으로 갱신.)
 
 ## 1. 앱 정체성
 
-OS 데스크탑 위에 상시 떠 있는 **캐릭터(픽셀 펫)** + 우클릭으로 열리는 **탭형 통합 메뉴 창**으로 구성된 Electron 데스크탑 펫 게임.
-펫 인터랙션 + 일상 도우미(할일·일정·타이머) + 가벼운 수집/가챠 루프의 결합. 영감: Tumblbug "에그덕 키우기".
+OS 데스크탑 위 상시 **캐릭터(픽셀 펫)** + 우클릭으로 열리는 **탭형 통합 메뉴 창** 기반 Electron 데스크탑 펫 게임.
+스택: Electron + electron-vite, React + TS, Zustand, emotion(비즈 UI) / className 기반 `pixel-theme.css`(메뉴·별창). 아키텍처: FSD-lite + 3-tier(main/preload/renderer).
 
-- 스택: Electron + electron-vite, React + TypeScript, Zustand, emotion(비즈 UI) / className 기반 pixel-theme.css(메뉴 창).
-- 아키텍처: FSD-lite + Electron 3-tier(main / preload / renderer).
-- 윈도우 2종: **캐릭터 윈도우**(300×300, transparent·frameless, 일반 z-order) + **통합 메뉴 창**(frameless 싱글톤, 모든 기능이 탭).
+## 2. 윈도우 구성 (4종)
 
-## 2. SSOT 도메인 패턴
+1. **캐릭터 윈도우** (`main/index.ts` createWindow, 300×300, transparent·frameless, 일반 z-order) — `App.tsx`. 드래그/좌클릭 멘트/우클릭 메뉴. 동반 펫 `.pet-companion` 우하단 렌더 + step 바운스.
+2. **통합 메뉴 창** (`panels/openMenuPanel.ts`, frameless 싱글톤) — `pages/menu/MenuPage.tsx` 타이틀바+탭바+탭. 우클릭으로 열림. `setMenuPanelOnTop(flag)`로 꾸미기 중 always-on-top.
+3. **데코(꾸미기) 창** (`createWorldWindow`, 전체화면 투명 오버레이) — `pages/world`. 고정 모드=클릭통과(`setIgnoreMouseEvents(true)`), 편집 모드=마우스 받음. 배치 데코 렌더(원본 배율 scale 0.1).
+4. **유튜브 별창** (`panels/openYoutubePanel.ts`, 560×407, transparent·frameless·alwaysOnTop, `webviewTag:true`) — `pages/youtube`. webview로 유튜브 로드 + 테마 프레임 오버레이.
 
-모든 사용자 영속 데이터는 **main 프로세스가 SSOT** (electron-store 영속화 + IPC broadcast). renderer는 Zustand로 read-only 미러.
+## 3. SSOT 도메인 패턴
 
-각 도메인 구성:
-- `shared/contracts/{domain}Events.ts` — 타입 + INITIAL 시드
-- `main/{domain}/{domain}State.ts` — 순수 reducer
-- `main/{domain}/store.ts` — electron-store wrapper
-- `main/{domain}/ipc.ts` — get/apply/changed broadcast
-- `main/{domain}/index.ts` — barrel
-- renderer `entities/{domain}/model/use{Domain}Store.ts` — Zustand 미러 + `initialize{Domain}Sync()` (각 윈도우 entrypoint에서 1회 명시 호출, HMR은 `import.meta.hot.dispose` 방어)
+`shared/contracts/{domain}Events.ts`(타입+INITIAL) → `main/{domain}/{domain}State.ts`(순수 reducer) + `store.ts`(electron-store) + `ipc.ts`(get/apply/changed broadcast) + `index.ts` → renderer `entities/{domain}/model/use{Domain}Store.ts`(Zustand 미러 + `initialize{Domain}Sync()`). 각 윈도우 entrypoint가 sync 1회 호출. `useXxxActions`는 **반드시 `useShallow`** (안 쓰면 무한 리렌더 — world에서 겪음).
 
-**구현된 도메인**: player(점수/재화), todo, fortune, item(소모 아이템+뽑기), schedule(일정), characterSelection(선택 캐릭터), profile(캐릭터이름/내이름/생일), petSelection(동반 펫 장착).
+**도메인**: player(점수) · todo · fortune · item(소모 아이템+옛 가챠) · schedule · characterSelection · profile(캐릭터이름/내이름/생일) · petSelection · **world(데코 꾸미기)**.
 
-## 3. 메뉴 창 탭 (10개)
+## 4. 메뉴 탭 (10종, `MenuPage.tsx`)
 
-`pages/menu/MenuPage.tsx`의 `TABS`/`renderTab()`에 등록. 순서:
-홈(care) · 일정(schedule) · 할일(todo) · 타이머(timer) · 운세(fortune) · 가챠(gacha) · 펫(pet) · 아이템(item) · 유튜브(youtube) · 설정(settings).
+홈(care) · 일정(schedule) · 할일(todo) · 타이머(timer) · 운세(fortune) · 가챠(gacha) · 펫(pet) · 아이템(item) · 유튜브(youtube) · 설정(settings, placeholder).
 
-- **동작 구현됨**: 홈, 일정, 할일, 타이머, 운세, 가챠, 펫
-- **placeholder**: 아이템, 유튜브, 설정
+- **홈(CareTab)**: 하늘/구름/반짝이 씬 + 캐릭터(좌우 화살표 전환) + 인사 말풍선(꼬리) + 프로필 4행(캐릭터 이름/내 이름/생일/⭐포인트). 돌봄 액션 그리드는 제거됨. 캐릭터+바닥 합본 이미지(`HOME_SCENE_ASSETS`).
+- **일정(ScheduleTab)**: 캘린더 + 년/월 드롭다운 + 일정 추가, todo 양방향 삭제 연동. 상단 제목 없음(오늘 날짜 줄 제거).
+- **할일(TodoTab)**: 프로젝트 칩(전체뿐이면 '+새 프로젝트' 활성) + 상단 드롭다운, 완료 양방향·보상 마이너스(음수 허용).
+- **타이머(TimerTab)**: 포모도로 + 픽셀 스톱워치, 완료 시 캐릭터 상단 배너. tick은 MenuPage 상주(`backgroundThrottling:false`).
+- **운세(FortuneTab)**: 수정구슬 애니메이션. 제목 `🌸 오늘의 운세`(18px) 유지.
+- **가챠(GachaTab)**: 검볼 머신 연출. **데코 121종 추첨**(아래 6번). 20pt(`GACHA_COST`).
+- **펫(PetTab)**: 동반 펫 7종(삐약이/몰랑이/반짝이/나비/깡총이/뒤뚱이/곰곰이), 5열 정사각 카드. 멘트→구분선→그리드.
+- **아이템(ItemTab)**: 데코 꾸미기(아래 5번).
+- **유튜브(YoutubeTab)**: 테마 7종 미리 선택 + 링크 입력 → ▶ 열기(별창).
 
-### 탭별 핵심
-- **홈(CareTab)**: 하늘/구름/반짝이 씬 + 캐릭터(좌우 화살표로 전환) + 인사 말풍선 + ⭐포인트 칩 + 프로필 행(캐릭터 이름 / 내 이름 / 생일 / 생일까지 D-day) + 돌봄 액션 그리드(밥/놀이/쓰다듬기/눕기).
-- **일정(ScheduleTab)**: 캘린더 + 년/월 드롭다운(버튼형) + 일정 추가(시작/종료 날짜·시간 4필드) + 날짜순 정렬. todo와 양방향 삭제 연동(`ScheduleItem.todoId`).
-- **할일(TodoTab)**: '일정'/'할일' heading. 프로젝트(칩) 단위, 상단 드롭다운 선택(기본 전체) + 하단 프로젝트 추가. 칩 수정 버튼→x 삭제 버튼. 칩 삭제 시 안에 할일 있으면 함께 삭제 물어봄(없으면 그냥 삭제). 완료 체크 양방향 토글, 완료 취소 시 보상 마이너스(음수 점수 허용).
-- **타이머(TimerTab)**: 포모도로 + 픽셀 스톱워치. 완료 시 캐릭터가 상단 배너로 떠서 멘트(휴식도 동일). tick 엔진은 MenuPage에 상주(`backgroundThrottling:false`로 가려져도 동작).
-- **운세(FortuneTab)**: 수정구슬(사인파 그라데이션 + 애니메이션), 점수 구슬 안 표시, 등급 별.
-- **가챠(GachaTab)**: 가챠 머신(반짝이 연출), 내 포인트 표시, 마이너스 점수면 뽑기 불가.
-- **펫(PetTab)**: 동반 펫 장착(삐약이/몰랑이/반짝이). 캐릭터와 별개.
+## 5. Desktop World (아이템 꾸미기) — `docs/features/desktop-world.md`
 
-## 4. 캐릭터 / 에셋
+- **데코 = 가챠 획득**, 바탕화면 **전체** 어디든 배치(전체화면 투명 창).
+- 도메인 `world`: `WorldState { owned: Record<id,number>, placed: PlacedItem[], mode: 'fixed'|'edit' }`. mode는 **메모리 비영속**(앱 시작 항상 fixed). 이벤트: acquire/place/move/recall/commitLayout/reset/setMode.
+- mode 바뀌면 main `setWorldEditable` → 데코 창 클릭통과 토글 + 메뉴 always-on-top.
+- 꾸미기 흐름: 아이템 탭 🎨 꾸미기 → 보관함 데코 클릭(바탕화면 중앙 배치) → 바탕화면 드래그 이동/우클릭 회수 → 저장(고정)/취소(스냅샷 복원). 메뉴에 "배치됨 N" 목록 + ✕ 회수.
+- 보관함은 **테마 폴더(썸네일 4장)** → 폴더 진입 → 데코 카드. 데코 121종 PNG `entities/world/assets/{park,shipping,snow,star}/`, `import.meta.glob` 자동 카탈로그(`decorCatalog.ts`), 이름있는 20종 한글 라벨.
+- 데코 크기: 원본 배율(`.world-item { transform: scale(0.1) }`), 박스에 안 맞춤.
 
-- 캐릭터 4종: **piyoo / qupee / suupee / wingpee** (구 'dog' 제거). JUMPET_4에서 이식.
-- 카탈로그: `entities/character/assets/{id}/{mood}.{ext}` → `CHARACTER_ASSETS: Record<CharacterId, Record<Mood,string>>` (매핑 누락이 컴파일 에러).
-- 홈 씬용 **합본 이미지**: `entities/character/assets/{id}/home.png` (캐릭터+잔디 바닥 한 장, 1017×708) → `HOME_SCENE_ASSETS: Record<CharacterId,string>`.
-- 탭 아이콘: `pages/menu/tabIcons.ts` — 10종 16×16 다색 픽셀 아트(`TAB_ICON_ART`), `PixelArt`로 렌더(`cell={1.5}`).
-- 픽셀 렌더러: `PixelArt.tsx`(다색 grid→SVG rects), `PixelIcon`(단색).
+## 6. 가챠 → 데코
 
-## 5. 클릭 멘트 / 호격 규칙
+- `world:gacha`(main): 점수 확인+20pt 차감만 원자적 → `{success}`. renderer `rollGacha`가 데코 121종 균등 추첨 → `world.acquire(id)` 적립 + 결과 reveal(데코 PNG).
+- 옛 돌봄 아이템(item 도메인)은 유지하되 가챠에선 안 나옴.
 
-- 캐릭터 좌클릭 시 멘트. 50% 확률 `"(캐릭터 이름)(이/가) ..."`, 10% `"(이름)(아/야)"` 호격.
-- **주격 '(캐릭터 이름)가'** = 프로필의 **캐릭터 이름**(예: 웰시코기/큐피), **호격**은 **내 이름**(예: 조조/형님).
-- 조사 선택: 받침 유무로 이/가, 아/야 결정 `((code-0xAC00)%28 !== 0)`.
-- 멘트는 우측 정렬. 말풍선 컬러는 하늘색 테마.
+## 7. 유튜브 별창 — `docs/features/youtube.md` (JUMPET_4 이식)
 
-## 6. UI 리디자인 진행 상태 (현재 작업)
+- 단일 창: `<webview>`(youtube) + 테마 프레임 PNG 오버레이(`pages/youtube/assets/theme1~7.png`) + 테마별 구멍 좌표 `THEME_HOLES`.
+- 메뉴 유튜브 탭에서 테마+링크 선택 → `window.api.youtube.open({theme,url})` → main이 `youtube.html?theme=&video=` 쿼리로 로드.
+- 재생: **watch 페이지**(임베드는 오류 153로 일부 막혀 watch 채택). 영상 링크면 추천/댓글/헤더 숨김 CSS(`insertCSS`) + 플레이어 100% + 줌 1 → 꽉 채움. 홈은 헤더만 숨김.
+- 창 제어: **하단 슬라이더(50~200%)** 크기조절, **프레임 드래그(`-webkit-app-region: drag`)로 이동**(webview/슬라이더/메뉴는 no-drag), **프레임 우클릭 → 컨텍스트 메뉴**(테마 7종/미니/닫기). 화면 버튼 없음.
+- preload `window.api.youtube`: open/move/resize/resizeEdge/close. main `youtube/ipc.ts`.
 
-레퍼런스 이미지에 맞춰 메뉴 UI 픽셀아트화 진행 중. 합의: ① 탭 아이콘 = 커스텀 다색 픽셀 일러스트(이모지 X), ② 계단식 픽셀(clip-path) 모서리 유지.
+## 8. 캐릭터 / 인터랙션
 
-- **탭바**: 라운드 카드 5열 그리드 + 컬러 16×16 아이콘 — 완료.
-- **홈 씬**: 하늘 그라데이션 + 구름(`home_cloud2.png`) + 반짝이 + 캐릭터+바닥 합본 이미지(`.home-figure`) + 인사 말풍선 + ⭐포인트 칩 + 프로필 행 — 완료. 미세 조정 반복 중(이미지 크기/위치/말풍선 위치).
-- 현재 `.home-figure`: `bottom:20px; width:calc(100% - 80px)`. 말풍선 `top:58px`.
-- 레퍼런스와 픽셀 단위로 더 맞추려면 **실행 화면 스크린샷**이 필요(나는 화면을 직접 못 봄). `Claude_Preview`/`Claude_in_Chrome` MCP로 직접 스크린샷 캡처도 가능.
+- 캐릭터 4종 piyoo/qupee/suupee/wingpee. 좌클릭 멘트: 50% `(캐릭터 이름)이/가`, 10% `(내 이름)아/야` 호격(받침 기준). 하늘색 말풍선.
+- 탭 아이콘: `tabIcons.ts` 16×16 다색 픽셀.
 
-## 7. 개발 / 빌드 운영 메모
+## 9. 메뉴 픽셀 테마 규칙 (`pixel-theme.css`)
 
-- **dev 핫리로드**: renderer는 HMR 됨. **main/preload 수정은 자동 재시작 안 됨** → `pkill -f electron-vite` + `pkill -f "Desktop/jumpet/node_modules/electron"` 후 `npm run dev`.
-- 타입체크: `npm run typecheck:web`.
-- 배포: 미서명 arm64 dmg 빌드 가능 (`CSC_IDENTITY_AUTO_DISCOVERY=false`) → `dist/game-0.0.1-arm64.dmg`.
-- localStorage는 dev에선 메뉴/펫 창 공유(동일 origin)지만 패키징 시 불안정 → profile을 main SSOT로 이전한 이유.
-- gh CLI 미설치. PR은 GitHub API + `git credential fill` 토큰 사용(토큰 로그 금지).
-- `.claude/launch.json`에 dev/start/static 서버 설정 저장됨.
+- **계단 모서리**: `--pixel-clip`(2px 3단=6px 코너) clip-path 전역 토큰.
+- **테두리**: 테두리 필요한 요소(탭·버튼·태그)는 **바깥=테두리색 staircase + 안쪽 `::before` 채움(inset 2px)** — mask-ring 폐기. 버튼 채움색은 `--btn-fill` 변수.
+- 컬러 베벨(블루 톤 inset), 탭 카드 바탕 `#ebf7ff` + 베벨 4px, 탭 간격 4px.
 
-## 8. 컨벤션
+## 10. 개발/빌드 운영
 
-- 커밋/푸시는 직접 git 금지 → `/commit`, `/pr-description-simple` 스킬 사용.
-- Prettier: tabWidth 4, semi false, singleQuote, singleAttributePerLine.
-- 네이밍: 축약어 금지, 복수/단수 구분, enum PascalCase·값 SNAKE_CASE, 글로벌 상수 SNAKE_CASE.
-- 의존 방향: shared → entities → features → widgets → app/pages (역방향 import 금지), slice는 index.ts barrel.
-- 픽셀 폰트 Galmuri11(400/700만 존재, 중간 weight는 `-webkit-text-stroke`로 흉내).
+- **dev**: renderer는 HMR. **main/preload/vite config 수정은 자동 재시작 안 됨** → `pkill -f electron-vite` + `pkill -f "Desktop/jumpet/node_modules/electron"` + `lsof -ti:5173 | xargs kill -9` 후 `npm run dev`. **dev 서버 중복 주의**(두 개 뜨면 5173 충돌로 IPC/HMR 꼬임 — 펫 선택 안 되던 버그 원인).
+- 프리뷰(Claude Preview MCP)로 menu.html 검증 시 `window.api` stub + 모듈 수동 렌더(singleton sync 오염 주의).
+- 타입체크 `npm run typecheck`(node+web). 빌드 `electron-builder.yml`: mac dmg(arm64+x64) · win nsis(x64) · linux AppImage. 미서명 `CSC_IDENTITY_AUTO_DISCOVERY=false`. `package:mac`/`win` — macOS에서 win도 번들 wine으로 빌드됨. 산출물 `dist/`.
+- 커밋/푸시는 직접 git 금지 → `/commit`, `/pr-description-simple` 스킬.
 
-## 9. 폐기된 것
+## 11. 현재 브랜치 / 커밋
 
-링크 도메인·링크 미니 바·'즐겨찾기 바 표시' 토글, 기능별 별창(todo/fortune/care/gacha.html + `open{Name}Panel`) — 전부 통합 탭 창으로 흡수.
+브랜치 `feat/menu-revamp-remove-link`. 주요 커밋: 홈/탭 정리 → 계단 테두리 통일 → 펫/탭 정리 → `59ad97b feat(world): 데코 꾸미기 + 가챠 데코화 + 폴더 보관함`. **유튜브 별창 + 배치목록 + 유튜브 watch/꽉채움/드래그/슬라이더 작업은 아직 미커밋.**
 
-## 10. 다음 후보 작업
+## 12. 다음 후보
 
-- 홈 씬을 레퍼런스와 픽셀 단위로 마무리(스크린샷 기반).
-- 펫 픽셀 스프라이트를 실제 이미지(`JUMPET_4/app/assets/pets/`)로 교체(사용자 힌트, 미확정).
-- 아이템 / 유튜브 / 설정 탭 실제 구현(현재 placeholder).
-- 최근 UI 리디자인(탭 아이콘·홈 씬·합본 이미지)은 아직 커밋 안 됨.
+- 미커밋분(유튜브 + 데코 배치목록) 커밋.
+- 설정(settings) 탭 실제 구현(현 placeholder).
+- 데코 "최하단 레이어"(다른 앱 뒤로) macOS 정밀화 — 현재 미완.
+- origin 푸시 / PR.

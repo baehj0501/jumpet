@@ -36,6 +36,7 @@ export default defineConfig({
                     index: resolve('src/renderer/index.html'),
                     menu: resolve('src/renderer/menu.html'),
                     world: resolve('src/renderer/world.html'),
+                    youtube: resolve('src/renderer/youtube.html'),
                 },
             },
         },

@@ -1,0 +1,1 @@
+export { registerYoutubeIpc } from './ipc'

@@ -1850,6 +1850,106 @@ body {
     clip-path: var(--pixel-clip);
 }
 
+/* 유튜브 탭 — 테마 선택 + 열기 */
+.yt-theme-pick {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+}
+.yt-pick {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    background: var(--card);
+    border: 2px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.yt-pick img {
+    width: 100%;
+    border-radius: 4px;
+    display: block;
+}
+.yt-pick span {
+    font-family: var(--pix);
+    font-size: 9px;
+    color: var(--dim);
+}
+.yt-pick.active {
+    border-color: var(--accent);
+}
+.yt-pick.active span {
+    color: var(--accent);
+}
+.yt-open-wrap {
+    margin-top: 16px;
+    display: flex;
+    justify-content: center;
+}
+.yt-open-wrap .pbtn {
+    width: auto;
+    padding: 10px 20px;
+}
+
+/* 꾸미기 중 — 배치된 데코 목록(✕ 회수) */
+.placed-panel {
+    background: var(--card);
+    clip-path: var(--pixel-clip);
+    padding: 8px 10px;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.6),
+        inset -2px -2px 0 rgba(96, 150, 210, 0.4);
+}
+.placed-empty {
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--dim);
+    padding: 4px 0;
+}
+.placed-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 132px;
+    overflow-y: auto;
+    margin-top: 4px;
+}
+.placed-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.placed-thumb {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+.placed-name {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.placed-x {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    font-family: var(--pix);
+    font-size: 11px;
+    color: #fff;
+    background: #e0568e;
+    border: none;
+    cursor: pointer;
+    clip-path: var(--pixel-clip);
+}
+
 /* ── 데코 보관함 폴더 ── */
 .decor-folder-grid {
     display: grid;

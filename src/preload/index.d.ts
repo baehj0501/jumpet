@@ -97,6 +97,13 @@ declare global {
                 gacha: () => Promise<{ success: boolean }>
                 onChange: (handler: (state: WorldState) => void) => () => void
             }
+            youtube: {
+                open: (options?: { theme?: number; url?: string }) => void
+                move: (dx: number, dy: number) => void
+                resize: (width: number, height: number) => void
+                resizeEdge: (edge: string, dx: number, dy: number) => void
+                close: () => void
+            }
             character: {
                 say: (text: string) => void
                 onSpeech: (handler: (text: string) => void) => () => void
