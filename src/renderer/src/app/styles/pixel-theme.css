@@ -528,14 +528,59 @@ body {
         inset -2px -2px 0 rgba(255, 255, 255, 0.3),
         inset 2px 2px 0 rgba(0, 0, 0, 0.28);
 }
-/* 상단 프로젝트 선택 칩 줄 */
+/* 입력 줄 — 새 할일 프로젝트 선택 드롭다운 */
+.todo-add-project-select {
+    flex: 0 0 auto;
+    max-width: 84px;
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--text);
+    background: var(--bg);
+    border: 2px solid var(--border);
+    padding: 6px 4px;
+    outline: none;
+    cursor: pointer;
+    box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.2);
+}
+.todo-add-project-select:focus {
+    border-color: var(--accent2);
+}
+
+/* 프로젝트 선택 칩 줄 — '전체'/'수정' 고정 + 가운데 칩 좌우 스크롤 */
 .todo-projects {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     gap: 5px;
+    padding: 8px 0;
+    border-bottom: 2px solid color-mix(in srgb, var(--border) 20%, transparent);
+}
+/* 양끝 고정(전체/수정) */
+.todo-chip-fixed {
+    flex: 0 0 auto;
+}
+/* 가운데 스크롤 영역 — 프로젝트 칩들이 넘치면 좌우로 스크롤 */
+.todo-chip-scroll {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    /* 스크롤바 숨김(스크롤 기능은 유지) */
+    scrollbar-width: none;
+}
+.todo-chip-scroll > * {
+    flex: 0 0 auto;
+}
+.todo-chip-scroll::-webkit-scrollbar {
+    display: none;
 }
 .todo-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font-family: var(--pix);
     font-size: 11px;
     color: var(--text);
@@ -553,18 +598,87 @@ body {
     color: #fff;
     border-color: var(--accent);
 }
-/* 선택한 프로젝트 삭제 버튼 (칩 줄 끝) */
-.todo-project-del {
-    flex: 0 0 auto;
+/* 칩 내부 라벨/삭제(x) — 투명 버튼 */
+.todo-chip-label,
+.todo-chip-x {
     background: none;
     border: none;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+.todo-chip-x {
+    font-size: 9px;
+    opacity: 0.55;
+}
+.todo-chip-x:hover {
+    opacity: 1;
+}
+/* 편집 모드: 칩 줄 안 인라인 '새 프로젝트' 입력 */
+.todo-chip-add {
+    flex: 0 0 110px;
+    min-width: 0;
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--text);
+    background: var(--bg);
+    border: 2px dashed var(--border);
+    padding: 3px 8px;
+    outline: none;
+}
+.todo-chip-add:focus {
+    border-color: var(--accent2);
+    border-style: solid;
+}
+.todo-chip-add::placeholder {
     color: var(--dim);
-    font-size: 13px;
-    padding: 2px 4px;
+}
+
+/* 칩 줄 맨 오른쪽 '수정' 버튼 — 누르면 칩에 x가 나타난다 */
+.todo-chip-edit {
+    margin-left: auto;
+    flex: 0 0 auto;
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--dim);
+    background: none;
+    border: none;
+    padding: 3px 4px;
     cursor: pointer;
 }
-.todo-project-del:hover {
-    color: #dc2626;
+.todo-chip-edit:hover {
+    color: var(--accent);
+}
+.todo-chip-edit.active {
+    color: var(--accent);
+}
+
+/* 프로젝트 삭제 확인 — 할일 함께 삭제 / 남기기 / 취소 */
+.project-delete-confirm {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    background: var(--card);
+    border: 2px solid var(--border);
+}
+.project-delete-msg {
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--text);
+    text-align: center;
+}
+.project-delete-actions {
+    display: flex;
+    gap: 6px;
+}
+.project-delete-actions .pbtn {
+    flex: 1;
+    padding: 8px 2px;
+    font-size: 12px;
 }
 
 /* 하단 '프로젝트 추가' 줄 — 목록 아래 바닥에 고정 */
@@ -736,6 +850,9 @@ body {
     color: var(--text);
     line-height: 1.6;
     max-width: 280px;
+    /* 한글 줄바꿈을 글자 단위가 아닌 단어(띄어쓰기) 단위로. */
+    word-break: keep-all;
+    overflow-wrap: break-word;
 }
 /* 수정구슬 + 안쪽 점수 오버레이 */
 .fortune-orb {
@@ -833,6 +950,8 @@ body {
     align-items: center;
     justify-content: center;
     min-height: 132px;
+    /* 안내 멘트와의 간격 50px (wrap gap 14 + 36). */
+    margin-top: 36px;
 }
 
 /* 아이템 공개 — 머신이 사라지고 큰 아이템 + 이름 + 반짝이 */
@@ -1388,9 +1507,65 @@ body {
 }
 
 /* ── 포모도로 타이머 ── */
+/* 완료 시 상단에 캐릭터가 떠서 멘트하는 배너 */
+.timer-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--accent);
+    color: #fff;
+    border-bottom: 3px solid var(--border);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.22);
+    cursor: pointer;
+    animation: timer-banner-in 0.3s ease-out;
+}
+@keyframes timer-banner-in {
+    from {
+        transform: translateY(-100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+.timer-banner-character {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    flex: 0 0 auto;
+}
+.timer-banner-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-family: var(--pix);
+    text-align: left;
+}
+.timer-banner-title {
+    font-size: 12px;
+    opacity: 0.85;
+}
+.timer-banner-line {
+    font-size: 15px;
+    line-height: 1.3;
+}
 .timer-panel {
     align-items: center;
     text-align: center;
+    /* 간격은 각 블록 margin으로 직접 제어한다. */
+    gap: 0;
+}
+/* 섹션 간 50px(포모도로 타이머 → 일러스트 → 버튼들 → 설정 헤딩)는 각 블록 margin에서 지정. */
+/* 가운데 정렬 패널이라 헤딩1(인라인 구분선)이 줄어든다 — 전체 폭으로 펴 주고, 버튼들과 20px. */
+.timer-panel .section-title-1 {
+    width: 100%;
+    margin-top: 20px;
 }
 .timer-phase {
     font-family: var(--pix);
@@ -1403,12 +1578,12 @@ body {
 .timer-phase.break {
     color: var(--accent2);
 }
-/* 스톱워치 + 면 가운데 숫자 오버레이 */
+/* 스톱워치 + 면 가운데 숫자 오버레이 — 일러스트 위 40px */
 .timer-stopwatch {
     position: relative;
     display: flex;
     justify-content: center;
-    margin: 8px 0 2px;
+    margin: 40px 0 2px;
 }
 .timer-stopwatch-time {
     position: absolute;
@@ -1432,7 +1607,8 @@ body {
     display: flex;
     gap: 8px;
     width: 100%;
-    margin-top: 4px;
+    /* 일러스트(아래)와 40px */
+    margin-top: 40px;
 }
 .timer-controls .pbtn {
     flex: 1;
@@ -1444,6 +1620,7 @@ body {
     flex-direction: column;
     gap: 10px;
     width: 100%;
+    margin-top: 14px;
 }
 .timer-setting {
     display: flex;

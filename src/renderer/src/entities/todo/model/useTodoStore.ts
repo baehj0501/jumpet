@@ -15,6 +15,8 @@ type TodoActions = {
     toggleTodo: (id: string) => Promise<void>
     removeTodo: (id: string) => Promise<void>
     updateTodoText: (id: string, text: string) => Promise<void>
+    // 프로젝트 태그 변경/해제(빈 문자열이면 미분류).
+    setTodoProject: (id: string, project: string) => Promise<void>
 }
 
 type TodoStore = {
@@ -40,6 +42,10 @@ const useTodoStoreInternal = create<TodoStore>((set) => ({
     },
     updateTodoText: async (id, text) => {
         const next = await window.api.todo.apply({ type: 'updateText', id, text })
+        set({ todos: next.todos })
+    },
+    setTodoProject: async (id, project) => {
+        const next = await window.api.todo.apply({ type: 'setProject', id, project })
         set({ todos: next.todos })
     },
 }))
@@ -111,6 +117,7 @@ export const useTodoActions = (): TodoActions =>
             toggleTodo: state.toggleTodo,
             removeTodo: state.removeTodo,
             updateTodoText: state.updateTodoText,
+            setTodoProject: state.setTodoProject,
         })),
     )
 // evict banner 전용 selector — 한 슬라이스만 구독해 다른 변경에 묻어 재렌더되지 않게.

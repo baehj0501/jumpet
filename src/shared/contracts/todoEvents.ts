@@ -31,6 +31,7 @@ export type TodoEvent =
     | { type: 'toggle'; id: string }
     | { type: 'remove'; id: string }
     | { type: 'updateText'; id: string; text: string }
+    | { type: 'setProject'; id: string; project: string }
 
 export const INITIAL_TODO_STATE: TodoState = {
     todos: [],

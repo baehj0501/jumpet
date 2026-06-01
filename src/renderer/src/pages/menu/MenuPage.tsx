@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { CHARACTER_ASSETS, useSelectedCharacterId } from '@renderer/entities/character'
 import { CareTab } from './tabs/CareTab'
 import { TodoTab } from './tabs/TodoTab'
 import { FortuneTab } from './tabs/FortuneTab'
@@ -7,6 +8,7 @@ import { ScheduleTab } from './tabs/ScheduleTab'
 import { TimerTab } from './tabs/TimerTab'
 import { PlaceholderTab } from './tabs/PlaceholderTab'
 import { PixelIcon } from './PixelIcon'
+import { useTimerStore } from './timerStore'
 
 export type TabId =
     | 'care'
@@ -52,6 +54,22 @@ const TAB_ICON_PIXELS: Record<TabId, string[]> = {
 export const MenuPage = () => {
     const [activeTab, setActiveTab] = useState<TabId>('care')
 
+    // 포모도로 타이머 tick 엔진 — 탭과 무관하게 항상 마운트된 MenuPage에서 1초마다 진행.
+    const timerRunning = useTimerStore((state) => state.running)
+    const tickTimer = useTimerStore((state) => state.tick)
+    useEffect(() => {
+        if (!timerRunning) {
+            return
+        }
+        const intervalId = setInterval(() => tickTimer(), 1000)
+        return () => clearInterval(intervalId)
+    }, [timerRunning, tickTimer])
+
+    // 타이머 완료 시 상단에 캐릭터가 떠서 멘트하는 배너.
+    const banner = useTimerStore((state) => state.banner)
+    const dismissBanner = useTimerStore((state) => state.dismissBanner)
+    const characterId = useSelectedCharacterId()
+
     const renderTab = () => {
         switch (activeTab) {
             case 'care':
@@ -79,6 +97,31 @@ export const MenuPage = () => {
 
     return (
         <>
+            {banner && (
+                <div
+                    className='timer-banner'
+                    onClick={dismissBanner}
+                >
+                    <img
+                        className='timer-banner-character'
+                        src={CHARACTER_ASSETS[characterId].default}
+                        alt='캐릭터'
+                        draggable={false}
+                    />
+                    <div className='timer-banner-text'>
+                        <div className='timer-banner-title'>{banner.title}</div>
+                        {banner.lines.map((line, index) => (
+                            <div
+                                key={index}
+                                className='timer-banner-line'
+                            >
+                                {line}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div className='titlebar'>
                 <div className='title'>
                     <div className='dot' />

@@ -45,13 +45,19 @@ const formatDateTime = (epochMs: number): string => {
 
 export const TodoTab = () => {
     const todos = useTodos()
-    const { addTodo, toggleTodo, removeTodo } = useTodoActions()
+    const { addTodo, toggleTodo, removeTodo, setTodoProject } = useTodoActions()
     const [text, setText] = useState('')
     const [view, setView] = useState<TodoView>('active')
     const [selectedProject, setSelectedProject] = useState<string>(PROJECT_ALL)
+    // 새 할일을 넣을 프로젝트(입력 줄 드롭다운). 기본 '전체'(=미지정). 필터(selectedProject)와 별개.
+    const [addProject, setAddProject] = useState<string>(PROJECT_ALL)
     // 사용자가 만든 프로젝트 목록(빈 프로젝트 포함). 할일에 달린 태그와 합쳐 보여준다.
     const [createdProjects, setCreatedProjects] = useState<string[]>(() => readStoredProjects())
     const [newProject, setNewProject] = useState('')
+    // 삭제 확인 중인 프로젝트(null이면 확인창 닫힘).
+    const [deletingProject, setDeletingProject] = useState<string | null>(null)
+    // 프로젝트 편집 모드 — 켜면 칩에 'x' 삭제 버튼이 나타난다.
+    const [editingProjects, setEditingProjects] = useState(false)
 
     // 출처·완료 기준 분류.
     const { activeManual, activeSchedule, completedTodos } = useMemo(() => {
@@ -80,10 +86,6 @@ export const TodoTab = () => {
         }
         return Array.from(set).sort()
     }, [todos, createdProjects])
-    const hasUnassigned = useMemo(
-        () => todos.some((todo) => todo.source !== 'schedule' && !todo.project),
-        [todos],
-    )
 
     const matchesProject = (todo: (typeof todos)[number]): boolean => {
         if (selectedProject === PROJECT_ALL) {
@@ -103,35 +105,64 @@ export const TodoTab = () => {
               ? activeSchedule
               : activeManual.filter(matchesProject)
 
-    // 특정 프로젝트가 선택돼 있으면 새 할일은 그 프로젝트로 들어간다.
-    const targetProject =
-        selectedProject !== PROJECT_ALL && selectedProject !== PROJECT_NONE
-            ? selectedProject
-            : undefined
+    // 입력 줄 드롭다운에서 고른 프로젝트로 새 할일을 넣는다. '전체'면 미지정.
+    const addTargetProject = addProject !== PROJECT_ALL ? addProject : undefined
 
     const handleAdd = () => {
         const trimmed = text.trim()
         if (trimmed === '') {
             return
         }
-        void addTodo(trimmed, undefined, targetProject)
+        void addTodo(trimmed, undefined, addTargetProject)
         setText('')
+        // 추가 후 프로젝트 선택은 '전체'로 초기화.
+        setAddProject(PROJECT_ALL)
     }
 
-    const handleDeleteProject = () => {
-        if (selectedProject === PROJECT_ALL || selectedProject === PROJECT_NONE) {
-            return
-        }
-        const next = createdProjects.filter((name) => name !== selectedProject)
+    // 프로젝트를 만든 목록에서 제거하고 선택을 전체로 되돌린다.
+    const removeProjectFromList = (name: string) => {
+        const next = createdProjects.filter((projectName) => projectName !== name)
         setCreatedProjects(next)
         writeStoredProjects(next)
-        setSelectedProject(PROJECT_ALL)
+        if (selectedProject === name) {
+            setSelectedProject(PROJECT_ALL)
+        }
+    }
+
+    // 확인창 — 할일까지 함께 삭제.
+    const deleteProjectWithTodos = () => {
+        const name = deletingProject
+        if (!name) {
+            return
+        }
+        for (const todo of todos) {
+            if (todo.project === name) {
+                void removeTodo(todo.id)
+            }
+        }
+        removeProjectFromList(name)
+        setDeletingProject(null)
+    }
+
+    // 확인창 — 할일은 남기고(미분류로) 프로젝트만 삭제.
+    const deleteProjectKeepTodos = () => {
+        const name = deletingProject
+        if (!name) {
+            return
+        }
+        for (const todo of todos) {
+            if (todo.project === name) {
+                void setTodoProject(todo.id, '')
+            }
+        }
+        removeProjectFromList(name)
+        setDeletingProject(null)
     }
 
     const handleAddProject = () => {
         const name = newProject.trim().slice(0, MAX_TODO_PROJECT_LENGTH)
         if (name === '' || projectNames.includes(name)) {
-            // 빈 이름/중복이면 입력만 비우고, 이미 있으면 선택만 옮긴다.
+            // 빈 이름/중복이면 입력만 비우고, 이미 있으면 필터만 옮긴다.
             if (name !== '') {
                 setSelectedProject(name)
             }
@@ -189,11 +220,25 @@ export const TodoTab = () => {
     return (
         <div className='panel'>
             <div className='todo-add-row'>
+                <select
+                    className='todo-add-project-select'
+                    value={addProject}
+                    onChange={(event) => setAddProject(event.target.value)}
+                    title='추가할 프로젝트'
+                >
+                    <option value={PROJECT_ALL}>전체</option>
+                    {projectNames.map((name) => (
+                        <option
+                            key={name}
+                            value={name}
+                        >
+                            {name}
+                        </option>
+                    ))}
+                </select>
                 <input
                     className='fi'
-                    placeholder={
-                        targetProject ? `'${targetProject}'에 할 일 추가...` : '할 일 입력...'
-                    }
+                    placeholder='할 일 입력 후 Enter'
                     maxLength={40}
                     value={text}
                     onChange={(event) => setText(event.target.value)}
@@ -204,13 +249,6 @@ export const TodoTab = () => {
                         }
                     }}
                 />
-                <button
-                    type='button'
-                    className='add-btn'
-                    onClick={handleAdd}
-                >
-                    추가
-                </button>
             </div>
 
             <div className='todo-filters'>
@@ -242,43 +280,98 @@ export const TodoTab = () => {
                     <button
                         type='button'
                         className={
-                            selectedProject === PROJECT_ALL ? 'todo-chip active' : 'todo-chip'
+                            selectedProject === PROJECT_ALL
+                                ? 'todo-chip todo-chip-fixed active'
+                                : 'todo-chip todo-chip-fixed'
                         }
                         onClick={() => setSelectedProject(PROJECT_ALL)}
                     >
                         전체
                     </button>
-                    {hasUnassigned && (
+                    <div className='todo-chip-scroll'>
+                        {projectNames.map((name) => (
+                            <span
+                                key={name}
+                                className={
+                                    selectedProject === name ? 'todo-chip active' : 'todo-chip'
+                                }
+                            >
+                                <button
+                                    type='button'
+                                    className='todo-chip-label'
+                                    onClick={() => setSelectedProject(name)}
+                                >
+                                    {name}
+                                </button>
+                                {editingProjects && (
+                                    <button
+                                        type='button'
+                                        className='todo-chip-x'
+                                        onClick={() => setDeletingProject(name)}
+                                        title='프로젝트 삭제'
+                                    >
+                                        ✕
+                                    </button>
+                                )}
+                            </span>
+                        ))}
+                        {editingProjects && (
+                            <input
+                                className='todo-chip-add'
+                                placeholder='+ 새 프로젝트'
+                                maxLength={MAX_TODO_PROJECT_LENGTH}
+                                value={newProject}
+                                onChange={(event) => setNewProject(event.target.value)}
+                                onKeyDown={(event) => {
+                                    if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+                                        handleAddProject()
+                                    }
+                                }}
+                            />
+                        )}
+                    </div>
+                    <button
+                        type='button'
+                        className={
+                            editingProjects
+                                ? 'todo-chip-edit todo-chip-fixed active'
+                                : 'todo-chip-edit todo-chip-fixed'
+                        }
+                        onClick={() => setEditingProjects((value) => !value)}
+                    >
+                        {editingProjects ? '완료' : '수정'}
+                    </button>
+                </div>
+            )}
+
+            {deletingProject !== null && (
+                <div className='project-delete-confirm'>
+                    <div className='project-delete-msg'>
+                        '{deletingProject}' 프로젝트의 할일은?
+                    </div>
+                    <div className='project-delete-actions'>
                         <button
                             type='button'
-                            className={
-                                selectedProject === PROJECT_NONE ? 'todo-chip active' : 'todo-chip'
-                            }
-                            onClick={() => setSelectedProject(PROJECT_NONE)}
+                            className='pbtn'
+                            onClick={deleteProjectWithTodos}
                         >
-                            미분류
+                            함께 삭제
                         </button>
-                    )}
-                    {projectNames.map((name) => (
                         <button
                             type='button'
-                            key={name}
-                            className={selectedProject === name ? 'todo-chip active' : 'todo-chip'}
-                            onClick={() => setSelectedProject(name)}
+                            className='pbtn ghost'
+                            onClick={deleteProjectKeepTodos}
                         >
-                            {name}
+                            남기기
                         </button>
-                    ))}
-                    {targetProject !== undefined && (
                         <button
                             type='button'
-                            className='todo-project-del'
-                            onClick={handleDeleteProject}
-                            title='선택한 프로젝트 삭제'
+                            className='pbtn ghost'
+                            onClick={() => setDeletingProject(null)}
                         >
-                            🗑
+                            취소
                         </button>
-                    )}
+                    </div>
                 </div>
             )}
 
@@ -288,27 +381,6 @@ export const TodoTab = () => {
                 <div className='todo-list'>{listTodos.map(renderTodoItem)}</div>
             )}
 
-            <div className='todo-add-project'>
-                <input
-                    className='fi'
-                    placeholder='새 프로젝트 이름'
-                    maxLength={MAX_TODO_PROJECT_LENGTH}
-                    value={newProject}
-                    onChange={(event) => setNewProject(event.target.value)}
-                    onKeyDown={(event) => {
-                        if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
-                            handleAddProject()
-                        }
-                    }}
-                />
-                <button
-                    type='button'
-                    className='add-btn'
-                    onClick={handleAddProject}
-                >
-                    프로젝트+
-                </button>
-            </div>
         </div>
     )
 }

@@ -73,6 +73,15 @@ export const reduceTodoState = (state: TodoState, event: TodoEvent): TodoState =
         case 'remove': {
             return { todos: state.todos.filter((todo) => todo.id !== event.id) }
         }
+        case 'setProject': {
+            // 프로젝트 태그 변경/해제(빈 문자열이면 미분류).
+            const project = event.project.trim().slice(0, MAX_TODO_PROJECT_LENGTH)
+            return {
+                todos: state.todos.map((todo) =>
+                    todo.id === event.id ? { ...todo, project } : todo,
+                ),
+            }
+        }
         case 'updateText': {
             // 빈 텍스트로 저장하면 삭제로 간주 (TodoMVC 표준).
             // 텍스트 변경 시 completed/completedAt는 보존 (spread).
