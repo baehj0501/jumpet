@@ -5,6 +5,11 @@ import piyooIdle from './piyoo/idle.png'
 import qupeeIdle from './qupee/idle.png'
 import suupeeIdle from './suupee/idle.png'
 import wingpeeIdle from './wingpee/idle.png'
+// 홈 씬용 합본(캐릭터 + 잔디 바닥) 이미지.
+import piyooHome from './piyoo/home.png'
+import qupeeHome from './qupee/home.png'
+import suupeeHome from './suupee/home.png'
+import wingpeeHome from './wingpee/home.png'
 // 에셋 도착 시 mood별 이미지를 추가하고 폴백을 교체:
 // import piyooHappy from './piyoo/play.png' 등.
 
@@ -32,4 +37,12 @@ export const CHARACTER_ASSETS: Record<CharacterId, Record<Mood, string>> = {
         happy: wingpeeIdle,
         sad: wingpeeIdle,
     },
+}
+
+// 홈 씬 합본(캐릭터 + 바닥) 이미지. CareTab 홈에서 캐릭터+바닥을 한 장으로 렌더.
+export const HOME_SCENE_ASSETS: Record<CharacterId, string> = {
+    piyoo: piyooHome,
+    qupee: qupeeHome,
+    suupee: suupeeHome,
+    wingpee: wingpeeHome,
 }

@@ -17,6 +17,41 @@
 
 이 CLAUDE.md는 컨벤션·작업 우선순위·금지 사항을 다루고, **상세 기능 명세는 docs/에 산다**.
 
+## 구현된 기능 현황 (스냅샷)
+
+> 현재까지 구현·합의된 기능 요약. 상세 맥락은 [`docs/session-context.md`](./docs/session-context.md), 명세는 각 `docs/features/*.md`. (코드가 진실 — 어긋나면 코드 기준으로 이 표를 갱신한다.)
+
+### SSOT 도메인 (main 영속 + IPC broadcast + Zustand 미러)
+
+`player`(점수/재화) · `todo` · `fortune` · `item`(소모 아이템+뽑기) · `schedule`(일정) · `characterSelection`(선택 캐릭터) · `profile`(캐릭터이름/내이름/생일) · `petSelection`(동반 펫).
+
+### 메뉴 창 탭 10종 (`pages/menu/MenuPage.tsx`)
+
+홈(care) · 일정(schedule) · 할일(todo) · 타이머(timer) · 운세(fortune) · 가챠(gacha) · 펫(pet) · 아이템(item) · 유튜브(youtube) · 설정(settings).
+
+| 탭 | 상태 | 핵심 |
+|---|---|---|
+| 홈 | ✅ | 하늘/구름/반짝이 씬 + 캐릭터 좌우 전환 + 인사 말풍선 + ⭐포인트 칩 + 프로필 행(캐릭터 이름/내 이름/생일/생일까지 D-day) + 돌봄 액션 그리드 |
+| 일정 | ✅ | 캘린더 + 년/월 드롭다운(버튼형) + 일정 추가(시작/종료 날짜·시간) + 날짜순 정렬, todo와 양방향 삭제 연동(`ScheduleItem.todoId`) |
+| 할일 | ✅ | 프로젝트(칩) 단위, 상단 드롭다운 선택(기본 전체) + 하단 프로젝트 추가, 칩 수정→x 삭제(내부 할일 동반 삭제 확인), 완료 양방향 토글·완료취소 시 보상 마이너스(음수 허용) |
+| 타이머 | ✅ | 포모도로 + 픽셀 스톱워치, 완료 시 상단 캐릭터 배너 멘트(휴식 동일), tick은 MenuPage 상주(`backgroundThrottling:false`) |
+| 운세 | ✅ | 수정구슬(사인파 그라데이션+애니메이션), 점수 구슬 내 표시, 등급 별 |
+| 가챠 | ✅ | 가챠 머신 반짝이 연출, 내 포인트 표시, 음수 점수면 뽑기 불가 |
+| 펫 | ✅ | 동반 펫 장착(삐약이/몰랑이/반짝이), 캐릭터와 별개 축 |
+| 아이템 | ⬜ placeholder | |
+| 유튜브 | ⬜ placeholder | |
+| 설정 | ⬜ placeholder | |
+
+### 캐릭터 / 인터랙션
+
+- 캐릭터 4종: **piyoo / qupee / suupee / wingpee** (구 'dog' 제거). `CHARACTER_ASSETS`(감정별) + `HOME_SCENE_ASSETS`(홈 합본 이미지 `home.png`).
+- 좌클릭 멘트: 50% `"(캐릭터 이름)(이/가) …"`, 10% `"(내 이름)(아/야)"` 호격. 조사는 받침 유무로 결정. 우측 정렬, 하늘색 말풍선.
+- 탭 아이콘: `pages/menu/tabIcons.ts` 10종 16×16 다색 픽셀(`TAB_ICON_ART`), `PixelArt`로 렌더.
+
+### 진행 중
+
+- 메뉴 UI 픽셀아트 리디자인(레퍼런스 기준): 탭바·홈 씬 완료, 미세 조정 반복 중.
+
 ## 프로젝트 개요
 
 ### 한 줄 정체성

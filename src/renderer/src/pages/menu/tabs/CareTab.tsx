@@ -1,58 +1,31 @@
 import { useState } from 'react'
-import {
-    CONSUMABLE_ITEMS,
-    type ConsumableCategory,
-    useItemActions,
-    useItemCounts,
-} from '@renderer/entities/item'
 import { usePlayerStore } from '@renderer/entities/player'
 import {
     CHARACTER_ASSETS,
     CHARACTER_DISPLAY_NAMES,
+    HOME_SCENE_ASSETS,
     type CharacterId,
     useSelectedCharacterId,
     useSelectCharacter,
 } from '@renderer/entities/character'
 import { useProfile, useProfileActions } from '@renderer/entities/profile'
-import { PixelIcon } from '../PixelIcon'
+import homeCloud from '../assets/home_cloud2.png'
 
 // 카탈로그에 등록된 캐릭터 ID 목록(좌우 전환 대상).
 const CHARACTER_IDS = Object.keys(CHARACTER_ASSETS) as CharacterId[]
 
-// 돌봄 액션 픽셀 아이콘(7×7).
-const ACTION_ICON_PIXELS: Record<string, string[]> = {
-    feed: ['.......', '.......', '#######', '.#####.', '.#####.', '..###..', '.......'], // 밥그릇
-    play: ['..###..', '.#####.', '#######', '#######', '.#####.', '..###..', '.......'], // 공
-    pet: ['.##.##.', '#######', '#######', '#######', '.#####.', '..###..', '...#...'], // 하트
-    rest: ['#####..', '....#..', '...#...', '..#....', '.#.....', '#####..', '.......'], // Z(잠)
-}
-
-// 4개 돌봄 액션. category가 있으면 해당 소모 아이템 1개를 쓰고(없으면 비활성),
-// null이면 아이템 없이 항상 가능한 무료 상호작용.
-const ACTIONS: {
-    key: string
-    category: ConsumableCategory | null
-    emoji: string
-    label: string
-    speech: string
-}[] = [
-    { key: 'feed', category: 'food', emoji: '🍚', label: '밥 주기', speech: '냠냠! 🍖' },
-    { key: 'play', category: 'toy', emoji: '🎮', label: '놀아주기', speech: '신난다! ⚡' },
-    { key: 'pet', category: null, emoji: '🤗', label: '쓰다듬기', speech: '좋아 ✨' },
-    { key: 'rest', category: null, emoji: '🛋️', label: '눕기', speech: '편안해~ 🛋️' },
-]
-
-// 라벨(헤딩) + 클릭하면 인라인 편집되는 디스플레이 텍스트.
-const ProfileField = ({
+// 프로필 한 줄 — 아이콘 + 라벨 + 값 박스 + 연필(클릭 시 인라인 편집).
+const ProfileRow = ({
+    icon,
     label,
     value,
     onChange,
     placeholder,
 }: {
+    icon: string
     label: string
     value: string
     onChange: (value: string) => void
-    // 입력을 비웠을 때 흐리게(30%) 보여줄 기본값.
     placeholder?: string
 }) => {
     const [editing, setEditing] = useState(false)
@@ -71,23 +44,12 @@ const ProfileField = ({
     }
 
     return (
-        <div className='profile-field'>
-            <div className='profile-head'>
-                <span className='section-title-2'>{label}</span>
-                {!editing && (
-                    <button
-                        type='button'
-                        className='edit-btn'
-                        onClick={startEdit}
-                        title='수정'
-                    >
-                        ✎
-                    </button>
-                )}
-            </div>
+        <div className='profile-row'>
+            <span className='profile-row-icon'>{icon}</span>
+            <span className='profile-row-label'>{label}</span>
             {editing ? (
                 <input
-                    className='fi profile-edit'
+                    className='fi profile-row-input'
                     autoFocus
                     placeholder={placeholder}
                     value={draft}
@@ -102,15 +64,21 @@ const ProfileField = ({
                     }}
                 />
             ) : (
-                <div className='profile-value'>{value}</div>
+                <span className='profile-row-value'>{value}</span>
             )}
+            <button
+                type='button'
+                className='profile-row-edit'
+                onClick={startEdit}
+                title='수정'
+            >
+                ✎
+            </button>
         </div>
     )
 }
 
 export const CareTab = () => {
-    const counts = useItemCounts()
-    const { consume } = useItemActions()
     const score = usePlayerStore((state) => state.player.score)
 
     // 홈 프로필(SSOT) — 메뉴 창·펫 창이 공유. 좌클릭 멘트의 '이름'도 이 값을 쓴다.
@@ -139,34 +107,29 @@ export const CareTab = () => {
         void selectCharacter(CHARACTER_IDS[nextIndex])
     }
 
-    const say = (text: string) => {
-        window.api.character.say(text)
-    }
-
-    const availableCount = (category: ConsumableCategory): number =>
-        CONSUMABLE_ITEMS.filter((item) => item.category === category).reduce(
-            (sum, item) => sum + (counts[item.id] ?? 0),
-            0,
-        )
-
-    const handleAction = (action: (typeof ACTIONS)[number]) => {
-        if (action.category === null) {
-            say(action.speech)
-            return
-        }
-        const item = CONSUMABLE_ITEMS.find(
-            (candidate) => candidate.category === action.category && (counts[candidate.id] ?? 0) > 0,
-        )
-        if (!item) {
-            return
-        }
-        void consume(item.id)
-        say(action.speech)
-    }
-
     return (
         <div className='panel'>
-            <div className='home-character-row'>
+            <div className='home-scene'>
+                <img
+                    className='home-cloud c1'
+                    src={homeCloud}
+                    alt=''
+                    draggable={false}
+                />
+                <img
+                    className='home-cloud c2'
+                    src={homeCloud}
+                    alt=''
+                    draggable={false}
+                />
+                <span className='home-sparkle s1'>✦</span>
+                <span className='home-sparkle s2'>✦</span>
+                <span className='home-sparkle s3'>✦</span>
+                <span className='home-sparkle s4'>✦</span>
+
+                <div className='home-bubble'>{petName} 안녕! 💗</div>
+                <span className='home-bubble-tail' />
+
                 <button
                     type='button'
                     className='char-nav'
@@ -177,8 +140,8 @@ export const CareTab = () => {
                     ‹
                 </button>
                 <img
-                    className='home-character'
-                    src={CHARACTER_ASSETS[CHARACTER_IDS[currentCharacterIndex]].default}
+                    className='home-figure'
+                    src={HOME_SCENE_ASSETS[CHARACTER_IDS[currentCharacterIndex]]}
                     alt='캐릭터'
                     draggable={false}
                 />
@@ -193,57 +156,33 @@ export const CareTab = () => {
                 </button>
             </div>
 
-            <div className='section-title-1'>정보</div>
-            <div className='profile'>
-                <ProfileField
+            <div className='profile-rows'>
+                <ProfileRow
+                    icon='🌿'
                     label='캐릭터 이름'
                     value={characterName}
                     onChange={setCharacterName}
                     placeholder={CHARACTER_DISPLAY_NAMES[currentCharacterId] ?? currentCharacterId}
                 />
-                <ProfileField
-                    label='이름'
+                <ProfileRow
+                    icon='💗'
+                    label='내 이름'
                     value={petName}
                     onChange={setPetName}
                 />
-                <ProfileField
+                <ProfileRow
+                    icon='🎂'
                     label='생일'
                     value={birthday}
                     onChange={setBirthday}
                 />
+                <div className='profile-row'>
+                    <span className='profile-row-icon'>⭐</span>
+                    <span className='profile-row-label'>포인트</span>
+                    <span className='profile-row-value points'>{score}P</span>
+                    <span className='profile-row-edit-placeholder' />
+                </div>
             </div>
-
-            <div className='divider' />
-
-            <div className='section-title-1'>돌봄</div>
-            <div className='agrid'>
-                {ACTIONS.map((action) => {
-                    const available = action.category === null ? null : availableCount(action.category)
-                    const disabled = available === 0
-                    return (
-                        <div
-                            key={action.key}
-                            className={disabled ? 'ac disabled' : 'ac'}
-                            onClick={() => {
-                                if (!disabled) {
-                                    handleAction(action)
-                                }
-                            }}
-                        >
-                            <div className='ic'>
-                                <PixelIcon
-                                    pixels={ACTION_ICON_PIXELS[action.key]}
-                                    size={24}
-                                />
-                            </div>
-                            <div className='nm'>{action.label}</div>
-                            {available !== null && <div className='ct'>×{available}</div>}
-                        </div>
-                    )
-                })}
-            </div>
-
-            <div className='points-bar'>🪙 총 포인트: {score}pt</div>
         </div>
     )
 }

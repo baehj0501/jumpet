@@ -343,7 +343,7 @@ export const TodoTab = () => {
                                 )}
                             </span>
                         ))}
-                        {editingProjects && (
+                        {(editingProjects || projectNames.length === 0) && (
                             <input
                                 className='todo-chip-add'
                                 placeholder='+ 새 프로젝트'

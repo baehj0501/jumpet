@@ -8,7 +8,8 @@ import { ScheduleTab } from './tabs/ScheduleTab'
 import { TimerTab } from './tabs/TimerTab'
 import { PetTab } from './tabs/PetTab'
 import { PlaceholderTab } from './tabs/PlaceholderTab'
-import { PixelIcon } from './PixelIcon'
+import { PixelArt } from './PixelArt'
+import { TAB_ICON_ART } from './tabIcons'
 import { useTimerStore } from './timerStore'
 
 export type TabId =
@@ -35,20 +36,6 @@ const TABS: { id: TabId; label: string }[] = [
     { id: 'youtube', label: '유튜브' },
     { id: 'settings', label: '설정' },
 ]
-
-// 탭별 픽셀 아이콘(7×7). '#'=칠함. 그리드만 고치면 모양 변경.
-const TAB_ICON_PIXELS: Record<TabId, string[]> = {
-    care: ['...#...', '..###..', '.#####.', '#######', '.#####.', '.##.##.', '.##.##.'],
-    pet: ['#.#.#..', '#.#.#..', '.......', '.#####.', '#######', '#######', '.#####.'],
-    todo: ['.......', '......#', '.....##', '##..##.', '.####..', '..##...', '.......'],
-    timer: ['..###..', '.#.#.#.', '#..#..#', '#..####', '#.....#', '.#...#.', '..###..'],
-    fortune: ['...#...', '..###..', '#######', '..###..', '...#...', '.#...#.', '#.....#'],
-    gacha: ['..###..', '.#####.', '#######', '#######', '.#####.', '..###..', '...#...'],
-    schedule: ['.#...#.', '#######', '#######', '#.#.#.#', '#######', '#.#.#.#', '#######'],
-    item: ['.#####.', '#######', '##.#.##', '##.#.##', '#######', '#######', '.#####.'],
-    youtube: ['..#....', '..##...', '..###..', '..####.', '..###..', '..##...', '..#....'],
-    settings: ['.#.#.#.', '.#####.', '###.###', '##...##', '###.###', '.#####.', '.#.#.#.'],
-}
 
 // 통합 메뉴 창의 루트. 우클릭으로 열리며 탭으로 각 기능을 전환한다.
 // 별창 패턴을 대체 — 모든 패널이 이 한 창의 탭으로 산다.
@@ -125,8 +112,9 @@ export const MenuPage = () => {
 
             <div className='titlebar'>
                 <div className='title'>
-                    <div className='dot' />
+                    <span className='title-leaf'>🌱</span>
                     JUMPET
+                    <span className='title-sparkle'>✨</span>
                 </div>
                 <button
                     type='button'
@@ -145,7 +133,11 @@ export const MenuPage = () => {
                         onClick={() => setActiveTab(tab.id)}
                     >
                         <span className='tab-icon'>
-                            <PixelIcon pixels={TAB_ICON_PIXELS[tab.id]} />
+                            <PixelArt
+                                pixels={TAB_ICON_ART[tab.id].pixels}
+                                palette={TAB_ICON_ART[tab.id].palette}
+                                cell={1.5}
+                            />
                         </span>
                         {tab.label}
                     </div>
