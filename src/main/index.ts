@@ -1,4 +1,5 @@
-import { app, shell, BrowserWindow, screen } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, screen } from 'electron'
+import Store from 'electron-store'
 import { join } from 'node:path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerWindowIpc } from './window'
@@ -11,6 +12,7 @@ import { registerScheduleIpc } from './schedule'
 import { registerCharacterSelectionIpc } from './characterSelection'
 import { registerProfileIpc } from './profile'
 import { registerPetSelectionIpc } from './petSelection'
+import { registerSettingsIpc } from './settings'
 import { registerWorldIpc } from './world'
 import { registerYoutubeIpc } from './youtube'
 import { setMenuPanelOnTop } from './panels/openMenuPanel'
@@ -198,6 +200,21 @@ app.whenReady().then(() => {
 
     // 동반 펫 장착 IPC — 펫 탭에서 장착한 펫을 펫 창과 공유(SSOT).
     registerPetSelectionIpc()
+
+    // 환경설정(테마·캐릭터 크기) IPC — 설정 탭에서 바꾸면 메뉴/캐릭터 창이 구독해 반영.
+    registerSettingsIpc()
+
+    // 앱 유틸 IPC — 버전 표시 + 데이터 초기화(전체 영속 데이터 삭제 후 재시작) + 전체 종료.
+    ipcMain.handle('app:getVersion', (): string => app.getVersion())
+    ipcMain.handle('app:resetAll', (): void => {
+        // 모든 도메인 store는 같은 config.json을 공유하므로 한 번의 clear로 전부 비운다.
+        new Store().clear()
+        app.relaunch()
+        app.exit(0)
+    })
+    ipcMain.handle('app:quit', (): void => {
+        app.quit()
+    })
 
     registerYoutubeIpc()
 

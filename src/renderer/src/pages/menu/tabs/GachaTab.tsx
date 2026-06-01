@@ -41,16 +41,19 @@ const MACHINE: string[] = [
     '.......oHPPPPkkkkkPPPPDo......',
     '.......ooooookkkkkoooooo......',
 ]
+// 머신 몸체/유리/외곽선은 테마 색을 따라간다(PixelArt style fill로 var()/color-mix 해석).
+// 유리(g/G/d)는 옅은 톤, 몸체(P/H/D)는 accent2 중심, 외곽선/배출구(o/k)는 진한 accent.
+// 알사탕(DOME_BALLS/FLOOR_BALLS)은 사탕이라 다색 그대로 둔다.
 const MACHINE_PALETTE: Record<string, string> = {
-    o: '#2f6aa8',
-    g: '#cdebf8',
-    G: '#e8f8ff',
-    d: '#a9d4ec',
-    P: '#7ab8ec',
-    H: '#b3dbf7',
-    D: '#4a8fd0',
-    b: '#dfeefb',
-    k: '#15406e',
+    o: 'color-mix(in srgb, var(--accent) 72%, #000)',
+    g: 'color-mix(in srgb, var(--accent2) 30%, #fff)',
+    G: 'color-mix(in srgb, var(--accent2) 12%, #fff)',
+    d: 'color-mix(in srgb, var(--accent2) 45%, #fff)',
+    P: 'var(--accent2)',
+    H: 'color-mix(in srgb, var(--accent2) 50%, #fff)',
+    D: 'var(--accent)',
+    b: 'color-mix(in srgb, var(--accent2) 20%, #fff)',
+    k: 'color-mix(in srgb, var(--accent) 55%, #000)',
 }
 
 // 유리돔 안 알사탕(오버레이). left/top은 stage(120×132px) 기준 px. 돔 내부에 배치.

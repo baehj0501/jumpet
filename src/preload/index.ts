@@ -11,6 +11,7 @@ import type {
 } from '@shared/contracts/characterEvents'
 import type { ProfileEvent, ProfileState } from '@shared/contracts/profileEvents'
 import type { PetSelectionEvent, PetSelectionState } from '@shared/contracts/petEvents'
+import type { SettingsEvent, SettingsState } from '@shared/contracts/settingsEvents'
 import type { WorldEvent, WorldState } from '@shared/contracts/worldEvents'
 
 const api = {
@@ -25,6 +26,10 @@ const api = {
     },
     moveWindowTo: (x: number, y: number): void => {
         ipcRenderer.send('window:moveTo', x, y)
+    },
+    // 캐릭터 윈도우 크기 조절(petScale) — 중심 고정으로 제자리에서 커진다.
+    setWindowSize: (width: number, height: number): void => {
+        ipcRenderer.send('window:setSize', width, height)
     },
     getWindowBounds: (): Promise<{ x: number; y: number; width: number; height: number } | null> =>
         ipcRenderer.invoke('window:getBounds'),
@@ -198,6 +203,28 @@ const api = {
             }
             return unsubscribe
         },
+    },
+    // 환경설정(테마·캐릭터 크기) API. 설정 탭에서 바꾸면 메뉴(테마)·캐릭터(크기) 창이 구독.
+    settings: {
+        get: (): Promise<SettingsState> => ipcRenderer.invoke('settings:get'),
+        apply: (event: SettingsEvent): Promise<SettingsState> =>
+            ipcRenderer.invoke('settings:apply', event),
+        onChange: (handler: (state: SettingsState) => void): (() => void) => {
+            const listener = (_event: unknown, state: SettingsState) => {
+                handler(state)
+            }
+            ipcRenderer.on('settings:changed', listener)
+            const unsubscribe = () => {
+                ipcRenderer.removeListener('settings:changed', listener)
+            }
+            return unsubscribe
+        },
+    },
+    // 앱 유틸 — 버전 표시 + 전체 데이터 초기화(영속 데이터 삭제 후 재시작).
+    app: {
+        getVersion: (): Promise<string> => ipcRenderer.invoke('app:getVersion'),
+        resetAll: (): Promise<void> => ipcRenderer.invoke('app:resetAll'),
+        quit: (): Promise<void> => ipcRenderer.invoke('app:quit'),
     },
     // 데스크탑 월드(아이템 꾸미기) API. 보유/배치 상태를 메뉴 창·월드 창이 공유(SSOT).
     world: {

@@ -22,7 +22,9 @@ export const PixelArt = ({ pixels, palette, cell = 6 }: PixelArtProps) => {
                         y={y}
                         width={1}
                         height={1}
-                        fill={color}
+                        // fill 속성 대신 style로 — palette 값이 var(--accent)/color-mix()여도
+                        // CSS 변수가 해석되어 테마 색을 따라간다(fill 속성은 var()를 못 푼다).
+                        style={{ fill: color }}
                     />,
                 )
             }

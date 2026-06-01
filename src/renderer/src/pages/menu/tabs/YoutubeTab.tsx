@@ -13,10 +13,8 @@ export const YoutubeTab = () => {
 
     return (
         <div className='panel'>
-            <div className='section-title-1'>유튜브</div>
+            <div className='section-title-1'>프레임 테마</div>
             <div className='hint'>프레임을 고르고 링크를 넣어 캐릭터 옆에 띄워요</div>
-
-            <div className='section-title-2'>프레임 테마</div>
             <div className='yt-theme-pick'>
                 {YOUTUBE_THEMES.map((t) => (
                     <button
@@ -36,7 +34,7 @@ export const YoutubeTab = () => {
                 ))}
             </div>
 
-            <div className='section-title-2'>유튜브 링크 (선택)</div>
+            <div className='section-title-1'>유튜브 링크 (선택)</div>
             <input
                 className='fi'
                 placeholder='https://youtube.com/watch?v=...  (비우면 홈)'

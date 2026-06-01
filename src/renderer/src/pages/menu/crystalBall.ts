@@ -8,20 +8,22 @@ const CX = 15.5
 const CY = 14
 const R = 13
 
+// 테마 색을 따라가는 램프(PixelArt가 style fill로 칠해 var()/color-mix가 해석됨).
+// 구슬 그라데이션 1→5는 옅은 톤 → accent2, 받침은 accent 톤. 하이라이트(L/w)만 흰색 유지.
 export const CRYSTAL_PALETTE: Record<string, string> = {
-    o: '#9d8fd6',
-    '1': '#f7b0d4',
-    '2': '#fcd2e6',
-    '3': '#f4ecf8',
-    '4': '#cfeaf8',
-    '5': '#a6daf2',
+    o: 'color-mix(in srgb, var(--accent) 60%, #000)',
+    '1': 'color-mix(in srgb, var(--accent2) 30%, #fff)',
+    '2': 'color-mix(in srgb, var(--accent2) 18%, #fff)',
+    '3': 'color-mix(in srgb, var(--accent2) 8%, #fff)',
+    '4': 'color-mix(in srgb, var(--accent2) 42%, #fff)',
+    '5': 'var(--accent2)',
     L: '#ffffff',
     w: '#ffffff',
-    s: '#f5a8d2',
-    b: '#a6d6f2',
-    R: '#2f6aa8',
-    O: '#5a9fd8',
-    Y: '#a6d6f2',
+    s: 'color-mix(in srgb, var(--accent2) 35%, #fff)',
+    b: 'var(--accent2)',
+    R: 'color-mix(in srgb, var(--accent) 70%, #000)',
+    O: 'var(--accent)',
+    Y: 'var(--accent2)',
 }
 
 const GRADIENT = ['1', '2', '3', '4', '5']

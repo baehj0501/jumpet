@@ -9,10 +9,11 @@ import { TimerTab } from './tabs/TimerTab'
 import { PetTab } from './tabs/PetTab'
 import { ItemTab } from './tabs/ItemTab'
 import { YoutubeTab } from './tabs/YoutubeTab'
-import { PlaceholderTab } from './tabs/PlaceholderTab'
+import { SettingsTab } from './tabs/SettingsTab'
 import { PixelArt } from './PixelArt'
 import { TAB_ICON_ART } from './tabIcons'
 import { useTimerStore } from './timerStore'
+import { useTheme } from '@renderer/entities/settings'
 
 export type TabId =
     | 'care'
@@ -60,6 +61,12 @@ export const MenuPage = () => {
     const dismissBanner = useTimerStore((state) => state.dismissBanner)
     const characterId = useSelectedCharacterId()
 
+    // 설정 탭에서 고른 테마(SSOT)를 문서 루트에 반영 — pixel-theme.css의 [data-theme] 토큰 전환.
+    const theme = useTheme()
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme)
+    }, [theme])
+
     const renderTab = () => {
         switch (activeTab) {
             case 'care':
@@ -81,7 +88,7 @@ export const MenuPage = () => {
             case 'youtube':
                 return <YoutubeTab />
             case 'settings':
-                return <PlaceholderTab icon='⚙️' label='설정' />
+                return <SettingsTab />
         }
     }
 

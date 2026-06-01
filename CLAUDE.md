@@ -23,7 +23,7 @@
 
 ### SSOT 도메인 (main 영속 + IPC broadcast + Zustand 미러)
 
-`player`(점수/재화) · `todo` · `fortune` · `item`(소모 아이템+뽑기) · `schedule`(일정) · `characterSelection`(선택 캐릭터) · `profile`(캐릭터이름/내이름/생일) · `petSelection`(동반 펫).
+`player`(점수/재화) · `todo` · `fortune` · `item`(소모 아이템+뽑기) · `schedule`(일정) · `characterSelection`(선택 캐릭터) · `profile`(캐릭터이름/내이름/생일) · `petSelection`(동반 펫) · `world`(데코 꾸미기) · `settings`(테마/캐릭터 크기).
 
 ### 메뉴 창 탭 10종 (`pages/menu/MenuPage.tsx`)
 
@@ -40,7 +40,7 @@
 | 펫 | ✅ | 동반 펫 장착(삐약이/몰랑이/반짝이), 캐릭터와 별개 축 |
 | 아이템 | ⬜ placeholder | |
 | 유튜브 | ⬜ placeholder | |
-| 설정 | ⬜ placeholder | |
+| 설정 | ✅ | 테마 6종(`data-theme` 전환) + 캐릭터 크기 슬라이더(50~200%, 캐릭터 창 리사이즈) + 내 정보(profile 재사용, `ProfileRow` 공유) + 앱(버전/데이터 초기화/종료). 새 `settings` 도메인 |
 
 홈 탭의 돌봄(밥/놀이/쓰다듬기/눕기) 액션 그리드는 제거됨 — 홈은 씬 + 프로필 4행(캐릭터 이름/내 이름/생일/⭐포인트)만.
 

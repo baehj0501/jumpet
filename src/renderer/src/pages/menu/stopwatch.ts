@@ -9,17 +9,17 @@ const CY = 25.0
 const R_OUT = 15.0 // 바깥 링 외곽 반지름
 const R_RING = 12.2 // 시계 면(face) 반지름
 
-// 메뉴 기본 테마(하늘색)에 맞춘 스카이블루 톤.
+// 테마 색을 따라가는 톤(PixelArt가 style fill로 칠해 var()/color-mix 해석).
 export const STOPWATCH_PALETTE: Record<string, string> = {
-    o: '#2f6aa8', // 링 안쪽 진한 파랑
-    R: '#8fd0f4', // 링 바깥 밝은 하늘
-    f: '#eef8ff', // 시계 면 (아주 옅은 하늘)
-    t: '#4a9fd8', // 눈금
-    h: '#2f6aa8', // 바늘
-    c: '#2f6aa8', // 중심축
-    b: '#8fd0f4', // 상단 크라운 링
-    s: '#4a9fd8', // 크라운 연결 스템
-    u: '#5ab0e8', // 양옆 버튼
+    o: 'color-mix(in srgb, var(--accent) 75%, #000)', // 링 안쪽 진한 색
+    R: 'var(--accent2)', // 링 바깥 밝은 색
+    f: 'color-mix(in srgb, var(--accent2) 16%, #fff)', // 시계 면 (아주 옅음)
+    t: 'var(--accent)', // 눈금
+    h: 'color-mix(in srgb, var(--accent) 75%, #000)', // 바늘
+    c: 'color-mix(in srgb, var(--accent) 75%, #000)', // 중심축
+    b: 'var(--accent2)', // 상단 크라운 링
+    s: 'var(--accent)', // 크라운 연결 스템
+    u: 'var(--accent2)', // 양옆 버튼
 }
 
 // handAngleDeg가 null이면 바늘·중심축을 그리지 않는다(면 가운데에 숫자를 올리는 용도).

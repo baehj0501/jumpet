@@ -19,11 +19,11 @@ OS 데스크탑 위 상시 **캐릭터(픽셀 펫)** + 우클릭으로 열리는
 
 `shared/contracts/{domain}Events.ts`(타입+INITIAL) → `main/{domain}/{domain}State.ts`(순수 reducer) + `store.ts`(electron-store) + `ipc.ts`(get/apply/changed broadcast) + `index.ts` → renderer `entities/{domain}/model/use{Domain}Store.ts`(Zustand 미러 + `initialize{Domain}Sync()`). 각 윈도우 entrypoint가 sync 1회 호출. `useXxxActions`는 **반드시 `useShallow`** (안 쓰면 무한 리렌더 — world에서 겪음).
 
-**도메인**: player(점수) · todo · fortune · item(소모 아이템+옛 가챠) · schedule · characterSelection · profile(캐릭터이름/내이름/생일) · petSelection · **world(데코 꾸미기)**.
+**도메인**: player(점수) · todo · fortune · item(소모 아이템+옛 가챠) · schedule · characterSelection · profile(캐릭터이름/내이름/생일) · petSelection · **world(데코 꾸미기)** · **settings(테마/캐릭터 크기)**.
 
 ## 4. 메뉴 탭 (10종, `MenuPage.tsx`)
 
-홈(care) · 일정(schedule) · 할일(todo) · 타이머(timer) · 운세(fortune) · 가챠(gacha) · 펫(pet) · 아이템(item) · 유튜브(youtube) · 설정(settings, placeholder).
+홈(care) · 일정(schedule) · 할일(todo) · 타이머(timer) · 운세(fortune) · 가챠(gacha) · 펫(pet) · 아이템(item) · 유튜브(youtube) · 설정(settings).
 
 - **홈(CareTab)**: 하늘/구름/반짝이 씬 + 캐릭터(좌우 화살표 전환) + 인사 말풍선(꼬리) + 프로필 4행(캐릭터 이름/내 이름/생일/⭐포인트). 돌봄 액션 그리드는 제거됨. 캐릭터+바닥 합본 이미지(`HOME_SCENE_ASSETS`).
 - **일정(ScheduleTab)**: 캘린더 + 년/월 드롭다운 + 일정 추가, todo 양방향 삭제 연동. 상단 제목 없음(오늘 날짜 줄 제거).
@@ -34,6 +34,7 @@ OS 데스크탑 위 상시 **캐릭터(픽셀 펫)** + 우클릭으로 열리는
 - **펫(PetTab)**: 동반 펫 7종(삐약이/몰랑이/반짝이/나비/깡총이/뒤뚱이/곰곰이), 5열 정사각 카드. 멘트→구분선→그리드.
 - **아이템(ItemTab)**: 데코 꾸미기(아래 5번).
 - **유튜브(YoutubeTab)**: 테마 7종 미리 선택 + 링크 입력 → ▶ 열기(별창).
+- **설정(SettingsTab)**: 테마 6종(`settings.theme` → `data-theme`) + 캐릭터 크기 슬라이더(`settings.petScale`, 캐릭터 창 `window:setSize` 중심고정 리사이즈) + 내 정보(`profile` 재사용, `ProfileRow` 공유 추출) + 앱(버전/데이터 초기화 `app:resetAll`/종료 `app:quit`). 새 `settings` 도메인.
 
 ## 5. Desktop World (아이템 꾸미기) — `docs/features/desktop-world.md`
 
@@ -82,6 +83,6 @@ OS 데스크탑 위 상시 **캐릭터(픽셀 펫)** + 우클릭으로 열리는
 ## 12. 다음 후보
 
 - 미커밋분(유튜브 + 데코 배치목록) 커밋.
-- 설정(settings) 탭 실제 구현(현 placeholder).
+- ~~설정(settings) 탭 실제 구현~~ ✅ 완료(테마/크기/내정보/앱). 레벨 시스템은 보류.
 - 데코 "최하단 레이어"(다른 앱 뒤로) macOS 정밀화 — 현재 미완.
 - origin 푸시 / PR.

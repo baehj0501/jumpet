@@ -10,6 +10,7 @@ import type {
 } from '@shared/contracts/characterEvents'
 import type { ProfileEvent, ProfileState } from '@shared/contracts/profileEvents'
 import type { PetSelectionEvent, PetSelectionState } from '@shared/contracts/petEvents'
+import type { SettingsEvent, SettingsState } from '@shared/contracts/settingsEvents'
 import type { WorldEvent, WorldState } from '@shared/contracts/worldEvents'
 
 // renderer 전용 외부 타입 보강. window.api 시그니처는 src/preload/index.ts와 한 쌍.
@@ -44,6 +45,7 @@ declare global {
             dragWindowTo: (mouseX: number, mouseY: number) => void
             endWindowDrag: () => void
             moveWindowTo: (x: number, y: number) => void
+            setWindowSize: (width: number, height: number) => void
             getWindowBounds: () => Promise<Rect | null>
             getDisplayWorkArea: () => Promise<Rect>
             showContextMenu: () => void
@@ -90,6 +92,16 @@ declare global {
                 get: () => Promise<PetSelectionState>
                 apply: (event: PetSelectionEvent) => Promise<PetSelectionState>
                 onChange: (handler: (state: PetSelectionState) => void) => () => void
+            }
+            settings: {
+                get: () => Promise<SettingsState>
+                apply: (event: SettingsEvent) => Promise<SettingsState>
+                onChange: (handler: (state: SettingsState) => void) => () => void
+            }
+            app: {
+                getVersion: () => Promise<string>
+                resetAll: () => Promise<void>
+                quit: () => Promise<void>
             }
             world: {
                 get: () => Promise<WorldState>

@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { usePlayerStore } from '@renderer/entities/player'
 import {
     CHARACTER_ASSETS,
@@ -9,74 +8,11 @@ import {
     useSelectCharacter,
 } from '@renderer/entities/character'
 import { useProfile, useProfileActions } from '@renderer/entities/profile'
+import { ProfileRow } from '../ProfileRow'
 import homeCloud from '../assets/home_cloud2.png'
 
 // 카탈로그에 등록된 캐릭터 ID 목록(좌우 전환 대상).
 const CHARACTER_IDS = Object.keys(CHARACTER_ASSETS) as CharacterId[]
-
-// 프로필 한 줄 — 아이콘 + 라벨 + 값 박스 + 연필(클릭 시 인라인 편집).
-const ProfileRow = ({
-    icon,
-    label,
-    value,
-    onChange,
-    placeholder,
-}: {
-    icon: string
-    label: string
-    value: string
-    onChange: (value: string) => void
-    placeholder?: string
-}) => {
-    const [editing, setEditing] = useState(false)
-    const [draft, setDraft] = useState(value)
-
-    const startEdit = () => {
-        setDraft(value)
-        setEditing(true)
-    }
-    const commit = () => {
-        const trimmed = draft.trim()
-        if (trimmed !== '') {
-            onChange(trimmed)
-        }
-        setEditing(false)
-    }
-
-    return (
-        <div className='profile-row'>
-            <span className='profile-row-icon'>{icon}</span>
-            <span className='profile-row-label'>{label}</span>
-            {editing ? (
-                <input
-                    className='fi profile-row-input'
-                    autoFocus
-                    placeholder={placeholder}
-                    value={draft}
-                    onChange={(event) => setDraft(event.target.value)}
-                    onBlur={commit}
-                    onKeyDown={(event) => {
-                        if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
-                            commit()
-                        } else if (event.key === 'Escape') {
-                            setEditing(false)
-                        }
-                    }}
-                />
-            ) : (
-                <span className='profile-row-value'>{value}</span>
-            )}
-            <button
-                type='button'
-                className='profile-row-edit'
-                onClick={startEdit}
-                title='수정'
-            >
-                ✎
-            </button>
-        </div>
-    )
-}
 
 export const CareTab = () => {
     const score = usePlayerStore((state) => state.player.score)
@@ -89,13 +25,8 @@ export const CareTab = () => {
     const currentCharacterId = useSelectedCharacterId()
     const selectCharacter = useSelectCharacter()
 
-    // '캐릭터 이름' — profile.characterName이 ''이면 선택된 캐릭터의 기본명을 따라가고,
-    // 한 번 수정하면 그 값으로 고정.
-    const characterName =
-        profile.characterName !== ''
-            ? profile.characterName
-            : (CHARACTER_DISPLAY_NAMES[currentCharacterId] ?? currentCharacterId)
-    const setCharacterName = (value: string) => void setField('characterName', value)
+    // '캐릭터 이름' — 선택된 캐릭터의 고정 종류명(슈피/피요/쿠피/윙피). 수정 불가.
+    const characterName = CHARACTER_DISPLAY_NAMES[currentCharacterId] ?? currentCharacterId
     const petName = profile.petName
     const setPetName = (value: string) => void setField('petName', value)
     const birthday = profile.birthday
@@ -161,8 +92,6 @@ export const CareTab = () => {
                     icon='🌿'
                     label='캐릭터 이름'
                     value={characterName}
-                    onChange={setCharacterName}
-                    placeholder={CHARACTER_DISPLAY_NAMES[currentCharacterId] ?? currentCharacterId}
                 />
                 <ProfileRow
                     icon='💗'

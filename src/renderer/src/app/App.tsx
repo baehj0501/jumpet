@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import {
     CHARACTER_DISPLAY_NAMES,
     CharacterView,
@@ -14,12 +14,16 @@ import {
 import type { Mood } from '@renderer/entities/character'
 import { getProfileSnapshot } from '@renderer/entities/profile'
 import { PetSprite, useSelectedPetId } from '@renderer/entities/pet'
+import { usePetScale } from '@renderer/entities/settings'
 import { useWindowDrag } from '@renderer/features/drag'
 import { useContextMenu } from '@renderer/features/context-menu'
 
 // 감정 전환 UI는 Phase 1B 이후 인터랙션에서 결정 — 지금은 default 고정.
 // 캐릭터(펫) 종류는 홈 탭 좌우 버튼이 바꾸는 SSOT(useSelectedCharacterId)에서 읽는다.
 const CURRENT_MOOD: Mood = 'default'
+
+// 캐릭터 윈도우 기본 한 변 길이(px). petScale 1.0 기준. main createWindow와 일치해야 한다.
+const BASE_WINDOW_SIZE = 300
 
 export const App = () => {
     // 사용자 인터랙션(드래그, 메뉴 열림) 동안 자율 이동(walking)을 멈추기 위한 공유 신호.
@@ -70,6 +74,18 @@ export const App = () => {
 
     // 장착된 동반 펫(SSOT). 없으면 ''.
     const petId = useSelectedPetId()
+
+    // 캐릭터 크기(SSOT) — 설정 탭에서 바꾸면 캐릭터 윈도우 자체를 키워 제자리에서 커진다.
+    // 이미지가 objectFit:contain으로 창을 채우므로 창 크기가 곧 캐릭터 크기.
+    const petScale = usePetScale()
+    useEffect(() => {
+        // preload가 아직 setWindowSize를 노출하지 않으면(dev에서 preload 미재시작) 건너뛴다.
+        if (!window.api?.setWindowSize) {
+            return
+        }
+        const size = Math.round(BASE_WINDOW_SIZE * petScale)
+        window.api.setWindowSize(size, size)
+    }, [petScale])
 
     return (
         <>

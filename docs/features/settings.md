@@ -2,6 +2,17 @@
 
 > 구 `info-panel.md`(정보 패널)를 **설정으로 확장 통합**한다. 기존의 점수·레벨 표시(읽기 전용)에 더해, 참조 앱(JUMPET_4)의 설정 기능(캐릭터/테마/크기/호칭/생일)을 한 패널에 담는다.
 
+## 구현 현황 (코드가 진실 — 아래 명세는 원래 계획)
+
+설정은 **별창이 아니라 메뉴 창의 `설정` 탭**(`pages/menu/tabs/SettingsTab.tsx`)으로 산다. 현재 4섹션:
+
+1. **테마** — 6종(`skyblue`/`green`/`babypink`/`brown`/`light`/`dark`) 칩 그리드. 새 `settings` 도메인(SSOT)의 `theme`. `MenuPage`가 `document.documentElement[data-theme]`로 반영. `skyblue`는 `:root` 기본값(별도 블록 없음).
+2. **캐릭터 크기** — 슬라이더 50~200%(`PET_SCALE_MIN/MAX`). `settings.petScale`. 캐릭터 창(`App.tsx`)이 구독해 `window:setSize`로 윈도우 자체를 중심 고정 리사이즈(기본 300px×scale). 이미지가 `objectFit:contain`이라 창 크기=캐릭터 크기.
+3. **내 정보** — `profile` 도메인(캐릭터 이름/내 이름/생일) 재사용. 홈 탭과 같은 SSOT 편집. `ProfileRow`는 `pages/menu/ProfileRow.tsx`로 추출해 홈/설정이 공유.
+4. **앱** — 버전(`app:getVersion`), 데이터 초기화(`app:resetAll` — 전체 store clear 후 relaunch, confirm 가드), 앱 종료(`app:quit`).
+
+새 도메인: `shared/contracts/settingsEvents.ts` + `main/settings/` + `entities/settings/`. **레벨 시스템은 아직 미구현**(아래 명세는 보류).
+
 ## 한 줄 정체성
 
 플레이어 상태(점수·레벨)를 보여주고, 캐릭터·테마·크기·내 정보(호칭/생일) 같은 **앱 환경설정**을 한 곳에서 바꾸는 패널.

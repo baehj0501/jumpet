@@ -8,6 +8,7 @@ import { initializeScheduleSync } from '@renderer/entities/schedule'
 import { initializeCharacterSelectionSync } from '@renderer/entities/character'
 import { initializeProfileSync } from '@renderer/entities/profile'
 import { initializePetSync } from '@renderer/entities/pet'
+import { initializeSettingsSync } from '@renderer/entities/settings'
 import { initializeWorldSync } from '@renderer/entities/world'
 import { MenuPage } from './MenuPage'
 import '@renderer/app/styles/pixel-theme.css'
@@ -21,6 +22,7 @@ initializeScheduleSync()
 initializeCharacterSelectionSync()
 initializeProfileSync()
 initializePetSync()
+initializeSettingsSync()
 initializeWorldSync()
 
 const rootElement = document.getElementById('root')

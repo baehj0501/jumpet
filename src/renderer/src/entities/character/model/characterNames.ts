@@ -3,8 +3,8 @@ import type { CharacterId } from './Character'
 // 캐릭터별 기본 표시 이름(종류명). 프로필 '캐릭터 이름'을 비워두면 이 값을 따라간다.
 export const CHARACTER_DISPLAY_NAMES: Record<CharacterId, string> = {
     piyoo: '피요',
-    qupee: '큐피',
-    suupee: '수피',
+    qupee: '쿠피',
+    suupee: '슈피',
     wingpee: '윙피',
 }
 
