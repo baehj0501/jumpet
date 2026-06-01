@@ -6,6 +6,7 @@ import { FortuneTab } from './tabs/FortuneTab'
 import { GachaTab } from './tabs/GachaTab'
 import { ScheduleTab } from './tabs/ScheduleTab'
 import { TimerTab } from './tabs/TimerTab'
+import { PetTab } from './tabs/PetTab'
 import { PlaceholderTab } from './tabs/PlaceholderTab'
 import { PixelIcon } from './PixelIcon'
 import { useTimerStore } from './timerStore'
@@ -75,7 +76,7 @@ export const MenuPage = () => {
             case 'care':
                 return <CareTab />
             case 'pet':
-                return <PlaceholderTab icon='🐾' label='펫' />
+                return <PetTab />
             case 'todo':
                 return <TodoTab />
             case 'timer':

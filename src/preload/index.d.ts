@@ -9,6 +9,7 @@ import type {
     CharacterSelectionState,
 } from '@shared/contracts/characterEvents'
 import type { ProfileEvent, ProfileState } from '@shared/contracts/profileEvents'
+import type { PetSelectionEvent, PetSelectionState } from '@shared/contracts/petEvents'
 
 // renderer 전용 외부 타입 보강. window.api 시그니처는 src/preload/index.ts와 한 쌍.
 
@@ -83,6 +84,11 @@ declare global {
                 get: () => Promise<ProfileState>
                 apply: (event: ProfileEvent) => Promise<ProfileState>
                 onChange: (handler: (state: ProfileState) => void) => () => void
+            }
+            petSelection: {
+                get: () => Promise<PetSelectionState>
+                apply: (event: PetSelectionEvent) => Promise<PetSelectionState>
+                onChange: (handler: (state: PetSelectionState) => void) => () => void
             }
             character: {
                 say: (text: string) => void

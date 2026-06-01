@@ -12,3 +12,13 @@ body,
     background: transparent;
     overflow: hidden;
 }
+
+/* 캐릭터 옆 동반 펫 — 창 하단 우측에 배치. 장식이라 드래그/클릭을 막지 않는다. */
+.pet-companion {
+    position: fixed;
+    right: 40px;
+    bottom: 40px;
+    pointer-events: none;
+    z-index: 5;
+    image-rendering: pixelated;
+}

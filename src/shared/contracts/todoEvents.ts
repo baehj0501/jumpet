@@ -17,13 +17,15 @@ export type Todo = {
     source?: TodoSource
     // 프로젝트 태그. 없거나 ''면 '미분류'로 본다. 상단 칩으로 필터링.
     project?: string
+    // 완료 시 지급된 보상 점수(1~5). 완료 취소 시 이 값을 그대로 차감한다. 미완료/구버전은 undefined.
+    reward?: number
 }
 
 export type TodoState = {
     todos: Todo[]
 }
 
-// 'toggle'은 단방향 (완료 처리만, 되돌릴 수 없음).
+// 'toggle'은 양방향 — 완료/완료 취소 토글(취소 시 원래 섹션으로 복귀, 보상은 완료 시에만).
 // 편집/삭제는 진행·완료 양쪽 모두 가능 (명세 §8).
 // 100개 초과 시 main reducer가 createdAt 기준 가장 오래된 완료 항목부터 FIFO 정리.
 export type TodoEvent =

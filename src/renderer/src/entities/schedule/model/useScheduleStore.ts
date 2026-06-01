@@ -15,6 +15,7 @@ type ScheduleActions = {
         endTime: string,
         title: string,
         memo: string,
+        todoId?: string,
     ) => Promise<void>
     // 일정 1개 삭제.
     remove: (id: string) => Promise<void>
@@ -26,7 +27,7 @@ type ScheduleStore = {
 
 const useScheduleStoreInternal = create<ScheduleStore>((set) => ({
     items: [],
-    add: async (date, endDate, time, endTime, title, memo) => {
+    add: async (date, endDate, time, endTime, title, memo, todoId) => {
         const next = await window.api.schedule.apply({
             type: 'add',
             date,
@@ -35,6 +36,7 @@ const useScheduleStoreInternal = create<ScheduleStore>((set) => ({
             endTime,
             title,
             memo,
+            todoId,
         })
         set({ items: next.items })
     },

@@ -13,6 +13,7 @@ import {
 } from '@renderer/entities/character'
 import type { Mood } from '@renderer/entities/character'
 import { getProfileSnapshot } from '@renderer/entities/profile'
+import { PetSprite, useSelectedPetId } from '@renderer/entities/pet'
 import { useWindowDrag } from '@renderer/features/drag'
 import { useContextMenu } from '@renderer/features/context-menu'
 
@@ -67,6 +68,9 @@ export const App = () => {
     })
     const { handleContextMenu } = useContextMenu({ isInteractingRef })
 
+    // 장착된 동반 펫(SSOT). 없으면 ''.
+    const petId = useSelectedPetId()
+
     return (
         <>
             <SpeechBubble
@@ -80,6 +84,14 @@ export const App = () => {
                 onMouseDown={handleMouseDown}
                 onContextMenu={handleContextMenu}
             />
+            {petId && (
+                <div className='pet-companion'>
+                    <PetSprite
+                        petId={petId}
+                        cell={5}
+                    />
+                </div>
+            )}
         </>
     )
 }

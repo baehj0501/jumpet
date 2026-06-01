@@ -14,6 +14,12 @@ import {
 // 완료한 to-do 보관 상한 (명세). 초과 시 createdAt 기준 가장 오래된 완료 항목부터 제거.
 const MAX_COMPLETED_TODOS = 100
 
+// 완료 보상 점수 범위(둘 다 포함). 완료 시 이 범위에서 랜덤 지급하고 todo에 저장한다.
+const TODO_REWARD_MIN = 1
+const TODO_REWARD_MAX = 5
+const pickTodoReward = (): number =>
+    TODO_REWARD_MIN + Math.floor(Math.random() * (TODO_REWARD_MAX - TODO_REWARD_MIN + 1))
+
 // 완료 보관 상한 정리.
 // 'toggle'은 단방향(+1)이라 한 호출당 완료 항목이 최대 1개만 늘어난다 — 초과는 정확히 1건.
 // 따라서 정렬 없이 단일 패스로 가장 오래된 완료 항목 1건만 찾아 evict.
@@ -60,13 +66,26 @@ export const reduceTodoState = (state: TodoState, event: TodoEvent): TodoState =
         }
         case 'toggle': {
             const target = state.todos.find((todo) => todo.id === event.id)
-            if (!target || target.completed) {
-                // 없는 id이거나 이미 완료된 항목 — 단방향 정책상 변경 없음.
+            if (!target) {
                 return state
             }
+            if (target.completed) {
+                // 완료 취소 → 미완료로 되돌린다(완료 시각 제거). 원래 섹션(할일/일정)으로 복귀.
+                return {
+                    todos: state.todos.map((todo) =>
+                        todo.id === event.id
+                            ? { ...todo, completed: false, completedAt: undefined }
+                            : todo,
+                    ),
+                }
+            }
             const now = Date.now()
+            // 완료 시 보상 점수를 뽑아 todo에 저장 — 완료 취소 시 정확히 같은 값을 차감하기 위함.
+            const reward = pickTodoReward()
             const updated = state.todos.map((todo) =>
-                todo.id === event.id ? { ...todo, completed: true, completedAt: now } : todo,
+                todo.id === event.id
+                    ? { ...todo, completed: true, completedAt: now, reward }
+                    : todo,
             )
             return { todos: pruneOldestCompleted(updated) }
         }

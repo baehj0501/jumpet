@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTodos, useTodoActions } from '@renderer/entities/todo'
+import { useScheduleItems, useScheduleActions } from '@renderer/entities/schedule'
 import { MAX_TODO_PROJECT_LENGTH } from '@shared/contracts/todoEvents'
 
 // 상단 탭 — 할 일(진행 중 수동) / 지난 할 일(완료) / 일정(진행 중 일정).
@@ -46,6 +47,9 @@ const formatDateTime = (epochMs: number): string => {
 export const TodoTab = () => {
     const todos = useTodos()
     const { addTodo, toggleTodo, removeTodo, setTodoProject } = useTodoActions()
+    // 일정 연동: 일정에서 만든 할일을 지우면 연결된 일정도 함께 삭제한다.
+    const scheduleItems = useScheduleItems()
+    const { remove: removeSchedule } = useScheduleActions()
     const [text, setText] = useState('')
     const [view, setView] = useState<TodoView>('active')
     const [selectedProject, setSelectedProject] = useState<string>(PROJECT_ALL)
@@ -97,12 +101,21 @@ export const TodoTab = () => {
         return todo.project === selectedProject
     }
 
-    // 현재 탭에 보일 목록.
+    // 일정 todo 정렬 키 — 연결된 일정의 시작일+시각(YYYY-MM-DD HH:MM, 문자열 정렬=시간순).
+    // 연결 일정이 없으면(구버전) 생성 시각 기반으로 맨 뒤에.
+    const scheduleDateKey = (todo: (typeof todos)[number]): string => {
+        const linked = scheduleItems.find((item) => item.todoId === todo.id)
+        return linked ? `${linked.date} ${linked.time}` : `~${todo.createdAt}`
+    }
+
+    // 현재 탭에 보일 목록. (일정은 날짜순 정렬)
     const listTodos =
         view === 'completed'
             ? completedTodos
             : view === 'schedule'
-              ? activeSchedule
+              ? [...activeSchedule].sort((a, b) =>
+                    scheduleDateKey(a).localeCompare(scheduleDateKey(b)),
+                )
               : activeManual.filter(matchesProject)
 
     // 입력 줄 드롭다운에서 고른 프로젝트로 새 할일을 넣는다. '전체'면 미지정.
@@ -126,6 +139,16 @@ export const TodoTab = () => {
         writeStoredProjects(next)
         if (selectedProject === name) {
             setSelectedProject(PROJECT_ALL)
+        }
+    }
+
+    // 칩 ✕ — 그 프로젝트에 할일이 있으면 확인창(함께 삭제/남기기), 없으면 바로 삭제.
+    const requestDeleteProject = (name: string) => {
+        const hasTodos = todos.some((todo) => todo.project === name)
+        if (hasTodos) {
+            setDeletingProject(name)
+        } else {
+            removeProjectFromList(name)
         }
     }
 
@@ -176,6 +199,15 @@ export const TodoTab = () => {
         setNewProject('')
     }
 
+    // 할일 삭제 — 일정에서 만든 할일(연결된 일정 있음)이면 그 일정도 함께 삭제.
+    const handleRemoveTodo = (todoId: string) => {
+        const linkedSchedule = scheduleItems.find((item) => item.todoId === todoId)
+        if (linkedSchedule) {
+            void removeSchedule(linkedSchedule.id)
+        }
+        void removeTodo(todoId)
+    }
+
     // 할 일 한 줄 렌더.
     const renderTodoItem = (todo: (typeof todos)[number]) => {
         const dateMs = todo.completed ? todo.completedAt : todo.createdAt
@@ -186,11 +218,7 @@ export const TodoTab = () => {
             >
                 <div
                     className={todo.completed ? 'todo-check checked' : 'todo-check'}
-                    onClick={() => {
-                        if (!todo.completed) {
-                            void toggleTodo(todo.id)
-                        }
-                    }}
+                    onClick={() => void toggleTodo(todo.id)}
                 >
                     {todo.completed ? '✓' : ''}
                 </div>
@@ -202,7 +230,7 @@ export const TodoTab = () => {
                 <button
                     type='button'
                     className='todo-del'
-                    onClick={() => void removeTodo(todo.id)}
+                    onClick={() => handleRemoveTodo(todo.id)}
                 >
                     ✕
                 </button>
@@ -261,17 +289,17 @@ export const TodoTab = () => {
                 </button>
                 <button
                     type='button'
-                    className={view === 'completed' ? 'todo-filter active' : 'todo-filter'}
-                    onClick={() => setView('completed')}
-                >
-                    지난 할 일 {completedTodos.length}
-                </button>
-                <button
-                    type='button'
                     className={view === 'schedule' ? 'todo-filter active' : 'todo-filter'}
                     onClick={() => setView('schedule')}
                 >
                     일정 {activeSchedule.length}
+                </button>
+                <button
+                    type='button'
+                    className={view === 'completed' ? 'todo-filter active' : 'todo-filter'}
+                    onClick={() => setView('completed')}
+                >
+                    완료됨 {completedTodos.length}
                 </button>
             </div>
 
@@ -307,7 +335,7 @@ export const TodoTab = () => {
                                     <button
                                         type='button'
                                         className='todo-chip-x'
-                                        onClick={() => setDeletingProject(name)}
+                                        onClick={() => requestDeleteProject(name)}
                                         title='프로젝트 삭제'
                                     >
                                         ✕

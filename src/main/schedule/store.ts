@@ -39,6 +39,7 @@ const normalizeScheduleItem = (value: Record<string, unknown>): ScheduleItem => 
         typeof value.memo === 'string' ? value.memo.slice(0, MAX_SCHEDULE_MEMO_LENGTH) : ''
     const time = value.time as string
     const endTime = typeof value.endTime === 'string' && value.endTime ? value.endTime : time
+    const todoId = typeof value.todoId === 'string' ? value.todoId : undefined
     return {
         id: value.id as string,
         date,
@@ -47,6 +48,7 @@ const normalizeScheduleItem = (value: Record<string, unknown>): ScheduleItem => 
         endTime,
         title: value.title as string,
         memo,
+        todoId,
     }
 }
 

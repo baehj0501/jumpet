@@ -10,6 +10,7 @@ import type {
     CharacterSelectionState,
 } from '@shared/contracts/characterEvents'
 import type { ProfileEvent, ProfileState } from '@shared/contracts/profileEvents'
+import type { PetSelectionEvent, PetSelectionState } from '@shared/contracts/petEvents'
 
 const api = {
     startWindowDrag: (mouseX: number, mouseY: number): void => {
@@ -177,6 +178,22 @@ const api = {
             ipcRenderer.on('profile:changed', listener)
             const unsubscribe = () => {
                 ipcRenderer.removeListener('profile:changed', listener)
+            }
+            return unsubscribe
+        },
+    },
+    // 동반 펫 장착 API. 펫 탭에서 장착하면 펫 창이 구독해 캐릭터 옆에 렌더한다.
+    petSelection: {
+        get: (): Promise<PetSelectionState> => ipcRenderer.invoke('petSelection:get'),
+        apply: (event: PetSelectionEvent): Promise<PetSelectionState> =>
+            ipcRenderer.invoke('petSelection:apply', event),
+        onChange: (handler: (state: PetSelectionState) => void): (() => void) => {
+            const listener = (_event: unknown, state: PetSelectionState) => {
+                handler(state)
+            }
+            ipcRenderer.on('petSelection:changed', listener)
+            const unsubscribe = () => {
+                ipcRenderer.removeListener('petSelection:changed', listener)
             }
             return unsubscribe
         },

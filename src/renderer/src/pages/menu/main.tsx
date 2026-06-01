@@ -7,6 +7,7 @@ import { initializeFortuneSync } from '@renderer/entities/fortune'
 import { initializeScheduleSync } from '@renderer/entities/schedule'
 import { initializeCharacterSelectionSync } from '@renderer/entities/character'
 import { initializeProfileSync } from '@renderer/entities/profile'
+import { initializePetSync } from '@renderer/entities/pet'
 import { MenuPage } from './MenuPage'
 import '@renderer/app/styles/pixel-theme.css'
 
@@ -18,6 +19,7 @@ initializeFortuneSync()
 initializeScheduleSync()
 initializeCharacterSelectionSync()
 initializeProfileSync()
+initializePetSync()
 
 const rootElement = document.getElementById('root')
 

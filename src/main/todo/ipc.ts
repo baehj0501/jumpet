@@ -37,6 +37,16 @@ const wasNewlyCompleted = (id: string, before: TodoState, after: TodoState): boo
     return wasIncomplete && isNowCompleted
 }
 
+// 완료 → 미완료 전환(완료 취소) 여부.
+const wasNewlyUncompleted = (id: string, before: TodoState, after: TodoState): boolean => {
+    const wasCompleted = before.todos.some((todo) => todo.id === id && todo.completed)
+    const isNowIncomplete = after.todos.some((todo) => todo.id === id && !todo.completed)
+    return wasCompleted && isNowIncomplete
+}
+
+const rewardOf = (id: string, state: TodoState): number =>
+    state.todos.find((todo) => todo.id === id)?.reward ?? 0
+
 // 100개 한도 초과로 FIFO 정리된 todo를 추출. toggle 시점에만 발생 가능.
 // before/after id 차이로 추론 — reducer는 같은 ipc 호출 안에서 한 todo를 추가/변경하므로
 // 그 id 외에 사라진 항목이 곧 evict 대상.
@@ -48,11 +58,13 @@ const findEvictedTodos = (before: TodoState, after: TodoState): Todo[] => {
 // 의존성 주입 — todo 도메인이 점수 / 사운드 / 업적 등 다른 도메인을 직접 import하지 않게 한다.
 // 부수효과의 조립은 main/index.ts에서 일어나고, todo는 "이런 일이 일어났다"는 사실만 호출한다.
 type TodoIpcDeps = {
-    // 새로 완료된 todo의 id. 호출자가 점수 가산 등 부수효과를 자유롭게 합성한다.
-    onTodoCompleted: (id: string) => void
+    // 새로 완료된 todo의 보상 점수. 호출자가 점수 가산 등 부수효과를 합성한다.
+    onTodoCompleted: (reward: number) => void
+    // 완료 취소된 todo의 보상 점수. 호출자가 점수 차감(음수 허용)을 합성한다.
+    onTodoUncompleted: (reward: number) => void
 }
 
-export const registerTodoIpc = ({ onTodoCompleted }: TodoIpcDeps): void => {
+export const registerTodoIpc = ({ onTodoCompleted, onTodoUncompleted }: TodoIpcDeps): void => {
     ipcMain.handle('todo:get', (): TodoState => {
         return readTodoState()
     })
@@ -71,7 +83,10 @@ export const registerTodoIpc = ({ onTodoCompleted }: TodoIpcDeps): void => {
 
         if (eventInput.type === 'toggle') {
             if (wasNewlyCompleted(eventInput.id, current, next)) {
-                onTodoCompleted(eventInput.id)
+                onTodoCompleted(rewardOf(eventInput.id, next))
+            } else if (wasNewlyUncompleted(eventInput.id, current, next)) {
+                // 완료 취소 — 완료 때 저장해둔 보상을 차감(음수 허용).
+                onTodoUncompleted(rewardOf(eventInput.id, current))
             }
             // 100개 한도 초과로 자동 정리된 todo가 있으면 별도 알림 broadcast.
             // toggle 시점에만 evict 가능하므로 다른 이벤트 타입은 검사 생략.

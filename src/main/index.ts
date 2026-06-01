@@ -10,6 +10,7 @@ import { registerItemIpc } from './item'
 import { registerScheduleIpc } from './schedule'
 import { registerCharacterSelectionIpc } from './characterSelection'
 import { registerProfileIpc } from './profile'
+import { registerPetSelectionIpc } from './petSelection'
 import { broadcastCharacterSpeech, registerCharacterIpc } from './character'
 import { GACHA_COST } from '@shared/contracts/itemEvents'
 
@@ -77,11 +78,15 @@ app.whenReady().then(() => {
     // todo 완료 시 일어날 부수효과들은 todo 도메인 외부에서 조립한다.
     // (todo는 점수/사운드/업적 등을 직접 import하지 않고, 사건 사실만 콜백으로 위임.)
     registerTodoIpc({
-        onTodoCompleted: () => {
-            // 완료 시 1~5점 랜덤 지급. 지급량을 계산해 캐릭터 말풍선으로 알린다.
-            const before = readPlayerState().score
-            const after = applyPlayerEvent({ type: 'todoComplete' }).score
-            broadcastCharacterSpeech(`할일 완료! +${after - before}pt 🎉`)
+        onTodoCompleted: (reward) => {
+            // 완료 시 todo에 저장된 보상(1~5점)을 지급하고 말풍선으로 알린다.
+            applyPlayerEvent({ type: 'manual', delta: reward })
+            broadcastCharacterSpeech(`할일 완료! +${reward}pt 🎉`)
+        },
+        onTodoUncompleted: (reward) => {
+            // 완료 취소 시 같은 보상을 차감(점수가 음수로 내려갈 수 있음).
+            applyPlayerEvent({ type: 'manual', delta: -reward })
+            broadcastCharacterSpeech(`완료 취소 -${reward}pt`)
         },
     })
 
@@ -114,6 +119,9 @@ app.whenReady().then(() => {
 
     // 홈 프로필(캐릭터 이름·이름·생일) IPC — 메뉴 창과 펫 창이 공유(SSOT).
     registerProfileIpc()
+
+    // 동반 펫 장착 IPC — 펫 탭에서 장착한 펫을 펫 창과 공유(SSOT).
+    registerPetSelectionIpc()
 
     // 캐릭터 위 말풍선 중계 — 메뉴 창의 돌봄 멘트 등을 캐릭터 창으로 보낸다.
     registerCharacterIpc()

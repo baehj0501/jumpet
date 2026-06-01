@@ -9,6 +9,8 @@ export type ScheduleItem = {
     endTime: string // 종료 시각 'HH:MM'
     title: string
     memo: string // 100자 이내 간단 메모 (없으면 '')
+    // '할 일에도 추가'로 함께 만든 todo의 id. 일정 삭제 시 이 todo도 같이 지운다. 없으면 undefined.
+    todoId?: string
 }
 
 export type ScheduleState = {
@@ -24,6 +26,7 @@ export type ScheduleEvent =
           endTime: string
           title: string
           memo: string
+          todoId?: string
       }
     | { type: 'remove'; id: string }
 

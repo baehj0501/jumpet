@@ -29,6 +29,7 @@ export const reduceScheduleState = (state: ScheduleState, event: ScheduleEvent):
                 endTime: event.endTime || time,
                 title,
                 memo,
+                todoId: event.todoId,
             }
             return { items: [...state.items, item] }
         }

@@ -1506,6 +1506,60 @@ body {
     padding: 4px 0;
 }
 
+/* ── 펫 컬렉션 ── */
+.pet-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+.pet-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 6px 10px;
+    background: var(--card);
+    border: 2px solid var(--border);
+    cursor: pointer;
+    clip-path: var(--pixel-clip);
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.5),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.12);
+}
+.pet-card:hover {
+    background: var(--btn-bg-hover);
+}
+.pet-card.active {
+    background: var(--btn-bg);
+    border-color: var(--accent);
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.5),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.12),
+        0 0 0 2px var(--accent);
+}
+.pet-card-sprite {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 72px;
+}
+.pet-card-name {
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--text);
+}
+.pet-card-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-family: var(--pix);
+    font-size: 10px;
+    color: #fff;
+    background: var(--accent);
+    padding: 2px 5px;
+}
+
 /* ── 포모도로 타이머 ── */
 /* 완료 시 상단에 캐릭터가 떠서 멘트하는 배너 */
 .timer-banner {

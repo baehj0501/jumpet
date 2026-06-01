@@ -41,7 +41,7 @@ const eachDateInRange = (startKey: string, endKey: string): string[] => {
 export const ScheduleTab = () => {
     const items = useScheduleItems()
     const { add, remove } = useScheduleActions()
-    const { addTodo } = useTodoActions()
+    const { addTodo, removeTodo } = useTodoActions()
 
     // 오늘 — 렌더 시점 1회 고정(탭이 떠 있는 동안 날짜 경계를 넘는 일은 드묾).
     const today = useMemo(() => new Date(), [])
@@ -139,18 +139,20 @@ export const ScheduleTab = () => {
         }
     }
 
-    const handleAdd = () => {
+    const handleAdd = async () => {
         const trimmed = title.trim()
         if (trimmed === '' || startDate === '') {
             return
         }
         // 종료일이 시작보다 빠르면 시작일로 맞춘다(단일 일정).
         const normalizedEnd = endDate && endDate >= startDate ? endDate : startDate
-        void add(startDate, normalizedEnd, time, endTime, trimmed, memo.trim())
-        // 체크된 경우에만 '할 일' 탭에도 등록(날짜 + 시각 + 제목). source로 '일정' 섹션에 묶인다.
+        // 체크된 경우 '할 일' 탭에도 등록(날짜 + 시각 + 제목)하고, 그 todo id를 일정에 연결한다.
+        // → 나중에 일정을 삭제하면 연결된 todo도 함께 삭제된다.
+        let linkedTodoId: string | undefined
         if (addToTodo) {
-            void addTodo(`${formatShortDate(startDate)} ${time} ${trimmed}`, 'schedule')
+            linkedTodoId = await addTodo(`${formatShortDate(startDate)} ${time} ${trimmed}`, 'schedule')
         }
+        await add(startDate, normalizedEnd, time, endTime, trimmed, memo.trim(), linkedTodoId)
         setTitle('')
         setMemo('')
     }
@@ -417,7 +419,13 @@ export const ScheduleTab = () => {
                             <button
                                 type='button'
                                 className='todo-del'
-                                onClick={() => void remove(item.id)}
+                                onClick={() => {
+                                    // 일정 삭제 시 연결된 할일도 함께 삭제.
+                                    if (item.todoId) {
+                                        void removeTodo(item.todoId)
+                                    }
+                                    void remove(item.id)
+                                }}
                             >
                                 ✕
                             </button>

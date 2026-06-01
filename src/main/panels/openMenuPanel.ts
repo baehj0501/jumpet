@@ -31,6 +31,9 @@ export const openMenuPanel = () => {
             contextIsolation: true,
             nodeIntegration: false,
             partition: 'persist:menu',
+            // 창이 다른 창에 가려져도(occluded) 타이머(setInterval)가 throttle/중지되지 않게 한다.
+            // 포모도로 타이머가 백그라운드에서도 계속 돌아야 하므로 필수.
+            backgroundThrottling: false,
         },
     })
 

@@ -20,9 +20,10 @@ const pickTodoCompleteReward = (): number => {
 export const reducePlayerState = (state: PlayerState, event: PlayerEvent): PlayerState => {
     switch (event.type) {
         case 'manual': {
+            // manual은 음수 잔액을 허용한다(예: 할일 완료 취소 시 보상 차감으로 0 미만 가능).
             return {
                 ...state,
-                score: Math.max(MIN_SCORE, state.score + event.delta),
+                score: state.score + event.delta,
             }
         }
         case 'todoComplete': {
