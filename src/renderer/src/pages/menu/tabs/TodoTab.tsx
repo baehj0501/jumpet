@@ -247,6 +247,7 @@ export const TodoTab = () => {
 
     return (
         <div className='panel'>
+            <div className='menu-heading'>📝 할 일</div>
             <div className='todo-add-row'>
                 <select
                     className='todo-add-project-select'

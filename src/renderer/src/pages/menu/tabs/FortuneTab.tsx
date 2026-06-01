@@ -53,7 +53,7 @@ export const FortuneTab = () => {
     return (
         <div className='panel'>
             <div className='fortune-card'>
-                <div className='section-title'>🌸 오늘의 운세</div>
+                <div className='menu-heading'>🌸 오늘의 운세</div>
                 <div className='fortune-orb'>
                     <PixelArt
                         pixels={crystal}

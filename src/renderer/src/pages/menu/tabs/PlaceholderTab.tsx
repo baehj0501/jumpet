@@ -6,6 +6,9 @@ type PlaceholderTabProps = {
 export const PlaceholderTab = ({ icon, label }: PlaceholderTabProps) => {
     return (
         <div className='panel'>
+            <div className='menu-heading'>
+                {icon} {label}
+            </div>
             <div className='placeholder'>
                 <span className='big'>{icon}</span>
                 <span>{label}</span>

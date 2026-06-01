@@ -164,12 +164,9 @@ export const ScheduleTab = () => {
         return `${month}월 ${day}일 (${weekday})`
     }, [selectedDate])
 
-    // 컴퓨터 기준 오늘 일자 표시.
-    const todayLabel = `오늘 ${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 (${WEEKDAY_LABELS[today.getDay()]})`
-
     return (
         <div className='panel'>
-            <div className='cal-today'>📅 {todayLabel}</div>
+            <div className='menu-heading'>📅 일정 관리</div>
             <div className='cal-head'>
                 <button
                     type='button'

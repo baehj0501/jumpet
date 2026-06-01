@@ -20,11 +20,14 @@
     --pix: 'Galmuri11', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
     /* 계단(픽셀) 라운드 모서리 — 3px×2단으로 깎음. 부드러운 radius가 아닌 픽셀 블록. */
     --pixel-clip: polygon(
-        0 6px, 3px 6px, 3px 3px, 6px 3px, 6px 0,
-        calc(100% - 6px) 0, calc(100% - 6px) 3px, calc(100% - 3px) 3px, calc(100% - 3px) 6px, 100% 6px,
-        100% calc(100% - 6px), calc(100% - 3px) calc(100% - 6px), calc(100% - 3px) calc(100% - 3px),
-        calc(100% - 6px) calc(100% - 3px), calc(100% - 6px) 100%,
-        6px 100%, 6px calc(100% - 3px), 3px calc(100% - 3px), 3px calc(100% - 6px), 0 calc(100% - 6px)
+        0 6px, 2px 6px, 2px 4px, 4px 4px, 4px 2px, 6px 2px, 6px 0,
+        calc(100% - 6px) 0, calc(100% - 6px) 2px, calc(100% - 4px) 2px, calc(100% - 4px) 4px,
+        calc(100% - 2px) 4px, calc(100% - 2px) 6px, 100% 6px,
+        100% calc(100% - 6px), calc(100% - 2px) calc(100% - 6px), calc(100% - 2px) calc(100% - 4px),
+        calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) calc(100% - 2px),
+        calc(100% - 6px) calc(100% - 2px), calc(100% - 6px) 100%,
+        6px 100%, 6px calc(100% - 2px), 4px calc(100% - 2px), 4px calc(100% - 4px),
+        2px calc(100% - 4px), 2px calc(100% - 6px), 0 calc(100% - 6px)
     );
     --bg: #e8f4ff;
     --panel: #d4eaff;
@@ -215,7 +218,7 @@ body {
 .tabs {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
+    gap: 4px;
     padding: 10px;
     border-bottom: 2px solid var(--border);
     flex-shrink: 0;
@@ -223,6 +226,7 @@ body {
 }
 .tab {
     position: relative;
+    isolation: isolate;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -235,38 +239,39 @@ body {
     text-align: center;
     white-space: nowrap;
     line-height: 1.3;
-    background: var(--card);
+    /* 바깥 면 = 테두리색 staircase. 안쪽 ::before가 2px 작게 덮어 외곽 2px만 테두리로 남는다. */
+    background: var(--border);
     border: none;
     clip-path: var(--pixel-clip);
 }
-/* 계단 모서리를 따라가는 끊김 없는 테두리 링 */
+/* 흰색 카드 안쪽 면 — staircase 외곽을 2px 따라가는 테두리를 남긴다. */
 .tab::before {
     content: '';
     position: absolute;
-    inset: 0;
+    inset: 2px;
+    z-index: -1;
     clip-path: var(--pixel-clip);
-    background: var(--border);
-    padding: 2px;
-    -webkit-mask:
-        linear-gradient(#000 0 0) content-box,
-        linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
+    background: #ebf7ff;
+    box-shadow:
+        inset 4px 4px 0 rgba(255, 255, 255, 0.9),
+        inset -4px -4px 0 rgba(96, 150, 210, 0.5);
     pointer-events: none;
 }
 .tab .tab-icon {
     display: flex;
     justify-content: center;
 }
-.tab:hover {
-    background: var(--btn-bg-hover);
+.tab:hover::before {
+    background: #88c0f6;
 }
 .tab.active {
     color: #fff;
-    background: var(--accent);
 }
 .tab.active::before {
-    background: var(--border);
+    background: var(--accent);
+    box-shadow:
+        inset 4px 4px 0 rgba(255, 255, 255, 0.42),
+        inset -4px -4px 0 rgba(74, 140, 195, 0.45);
 }
 
 /* ── 패널 공통 ── */
@@ -561,6 +566,15 @@ body {
     color: var(--accent);
     padding: 2px 0;
 }
+/* 헤딩3 — 각 탭 최상단 중앙 제목(가챠 '🎰 돌봄 아이템 뽑기' 스타일 통일). */
+.menu-heading {
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--accent);
+    text-align: center;
+    padding: 2px 0 6px;
+    flex-shrink: 0;
+}
 /* 헤딩1 — 텍스트 옆에 인라인 구분선("텍스트  ──────"). 14px */
 .section-title-1 {
     display: flex;
@@ -588,8 +602,7 @@ body {
     padding: 1px 0;
 }
 .ac {
-    background: var(--btn-bg);
-    border: 2px solid var(--border);
+    --btn-fill: var(--btn-bg);
     padding: 8px 2px;
     cursor: pointer;
     text-align: center;
@@ -604,7 +617,7 @@ body {
         inset -2px -2px 0 rgba(0, 0, 0, 0.22);
 }
 .ac:hover {
-    background: var(--btn-bg-hover);
+    --btn-fill: var(--btn-bg-hover);
 }
 /* 아이템 없는 액션 — 그레이 비활성 */
 .ac.disabled {
@@ -613,7 +626,7 @@ body {
     opacity: 0.45;
 }
 .ac.disabled:hover {
-    background: var(--btn-bg);
+    --btn-fill: var(--btn-bg);
 }
 .ac:active {
     box-shadow:
@@ -674,8 +687,7 @@ body {
 /* 공통 버튼 */
 .pbtn {
     width: 100%;
-    background: var(--accent);
-    border: 2px solid var(--border);
+    --btn-fill: var(--accent);
     color: #fff;
     font-family: var(--pix);
     font-size: 14px;
@@ -686,7 +698,7 @@ body {
         inset -2px -2px 0 rgba(0, 0, 0, 0.3);
 }
 .pbtn:hover {
-    background: var(--accent2);
+    --btn-fill: var(--accent2);
 }
 .pbtn:active {
     box-shadow:
@@ -698,11 +710,11 @@ body {
     cursor: not-allowed;
 }
 .pbtn.ghost {
-    background: var(--card);
+    --btn-fill: var(--card);
     color: var(--accent);
 }
 .pbtn.ghost:hover {
-    background: var(--panel);
+    --btn-fill: var(--panel);
 }
 
 /* TODO */
@@ -733,8 +745,7 @@ body {
     opacity: 0.3;
 }
 .add-btn {
-    background: var(--accent);
-    border: 2px solid var(--border);
+    --btn-fill: var(--accent);
     color: #fff;
     font-family: var(--pix);
     font-size: 13px;
@@ -914,12 +925,14 @@ body {
 /* 할 일 항목 내 프로젝트 태그 — 블루 박스 + 흰 글씨 + 계단식(끊김 없는) 테두리 */
 .todo-project-tag {
     position: relative;
+    isolation: isolate;
     display: inline-block;
     vertical-align: middle;
     font-family: var(--pix);
     font-size: 11px;
     color: #fff;
-    background: var(--accent);
+    /* 바깥 면 = 테두리색(accent2) staircase, 안쪽 ::before가 accent 채움 */
+    background: var(--accent2);
     padding: 3px 9px;
     margin-right: 6px;
     white-space: nowrap;
@@ -930,15 +943,10 @@ body {
 .todo-project-tag::before {
     content: '';
     position: absolute;
-    inset: 0;
+    inset: 2px;
+    z-index: -1;
     clip-path: var(--pixel-clip);
-    background: var(--accent2);
-    padding: 2px;
-    -webkit-mask:
-        linear-gradient(#000 0 0) content-box,
-        linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
+    background: var(--accent);
     pointer-events: none;
 }
 
@@ -953,19 +961,15 @@ body {
     font-family: var(--pix);
     font-size: 12px;
     color: var(--text);
-    background: var(--btn-bg);
-    border: 2px solid var(--border);
+    --btn-fill: var(--btn-bg);
     cursor: pointer;
     box-shadow:
         inset 2px 2px 0 rgba(255, 255, 255, 0.4),
         inset -2px -2px 0 rgba(0, 0, 0, 0.2);
 }
 .todo-filter.active {
-    background: var(--accent);
+    --btn-fill: var(--accent);
     color: #fff;
-    box-shadow:
-        inset -2px -2px 0 rgba(255, 255, 255, 0.25),
-        inset 2px 2px 0 rgba(0, 0, 0, 0.22);
 }
 .todo-list {
     display: flex;
@@ -1172,8 +1176,10 @@ body {
     align-items: center;
     justify-content: center;
     min-height: 132px;
-    /* 안내 멘트와의 간격 50px (wrap gap 14 + 36). */
-    margin-top: 36px;
+    /* 멘트↔일러스트 간격을 고정 px 대신 auto로 — 멘트/일러스트/하단버튼이
+       남는 높이를 균등 분배하도록(반응형). 창 높이에 따라 여백이 늘고 준다. */
+    margin-top: auto;
+    margin-bottom: auto;
 }
 
 /* 아이템 공개 — 머신이 사라지고 큰 아이템 + 이름 + 반짝이 */
@@ -1388,20 +1394,13 @@ body {
 }
 
 /* ── 엠보 — 회색(흰/검) 대신 테마 컬러로 ── */
-.ac,
-.pbtn,
-.add-btn,
-.close-btn,
-.todo-filter {
+/* close-btn은 자체에, 나머지 버튼은 안쪽 면(::before)에 엠보를 준다. */
+.close-btn {
     box-shadow:
         inset 2px 2px 0 var(--emboss-hi),
         inset -2px -2px 0 var(--emboss-lo);
 }
-.ac:active,
-.pbtn:active,
-.add-btn:active,
-.close-btn:active,
-.todo-filter.active {
+.close-btn:active {
     box-shadow:
         inset -2px -2px 0 var(--emboss-hi),
         inset 2px 2px 0 var(--emboss-lo);
@@ -1409,15 +1408,19 @@ body {
 
 /* ── 버튼 계단(픽셀) 라운드 모서리 ──
    테두리가 있는 버튼은 clip-path만 쓰면 모서리에서 테두리선이 끊긴다.
-   그래서 clip-path(채움 모양) + ::before 마스크 테두리 링으로 계단 테두리를 그린다. */
+   그래서 바깥 면 = 테두리색 staircase, 안쪽 ::before(2px 작은 staircase) = 채움색.
+   채움색은 상태별로 --btn-fill 변수로 전달한다. */
 .ac,
 .pbtn,
 .add-btn,
 .todo-filter {
     position: relative;
+    isolation: isolate;
     border: none;
     border-radius: 0;
     clip-path: var(--pixel-clip);
+    background: var(--border);
+    box-shadow: none;
 }
 .ac::before,
 .pbtn::before,
@@ -1425,16 +1428,22 @@ body {
 .todo-filter::before {
     content: '';
     position: absolute;
-    inset: 0;
+    inset: 2px;
+    z-index: -1;
     clip-path: var(--pixel-clip);
-    background: var(--border);
-    padding: 2px;
-    -webkit-mask:
-        linear-gradient(#000 0 0) content-box,
-        linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
+    background: var(--btn-fill, var(--card));
+    box-shadow:
+        inset 2px 2px 0 var(--emboss-hi),
+        inset -2px -2px 0 var(--emboss-lo);
     pointer-events: none;
+}
+.ac:active::before,
+.pbtn:active::before,
+.add-btn:active::before,
+.todo-filter.active::before {
+    box-shadow:
+        inset -2px -2px 0 var(--emboss-hi),
+        inset 2px 2px 0 var(--emboss-lo);
 }
 
 /* ── 일정(달력) ── */
@@ -1528,8 +1537,8 @@ body {
     cursor: default;
 }
 .cal-cell .cal-day-num {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1731,7 +1740,7 @@ body {
 /* ── 펫 컬렉션 ── */
 .pet-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 10px;
 }
 .pet-card {

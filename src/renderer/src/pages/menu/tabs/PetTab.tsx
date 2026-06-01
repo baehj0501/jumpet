@@ -7,7 +7,7 @@ export const PetTab = () => {
 
     return (
         <div className='panel'>
-            <div className='section-title-1'>동반 펫</div>
+            <div className='menu-heading'>🐾 동반 펫</div>
 
             <div className='hint'>
                 펫을 누르면 캐릭터 옆에 따라다녀요
@@ -29,7 +29,7 @@ export const PetTab = () => {
                             <span className='pet-card-sprite'>
                                 <PetSprite
                                     petId={pet.id}
-                                    cell={7}
+                                    cell={3.5}
                                 />
                             </span>
                             <span className='pet-card-name'>{pet.name}</span>
