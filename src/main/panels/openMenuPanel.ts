@@ -5,6 +5,13 @@ import { is } from '@electron-toolkit/utils'
 // 싱글톤 ref. 우클릭을 다시 해도 새 창을 만들지 않고 기존 창에 포커스한다.
 let menuWindow: BrowserWindow | null = null
 
+// 꾸미기 모드 중에는 전체화면 데코 창 위로 메뉴를 띄워 메뉴 클릭이 가려지지 않게 한다.
+export const setMenuPanelOnTop = (flag: boolean): void => {
+    if (menuWindow && !menuWindow.isDestroyed()) {
+        menuWindow.setAlwaysOnTop(flag)
+    }
+}
+
 // 통합 메뉴 창을 연다(우클릭 진입점). 네이티브 드롭다운을 대체하는 탭형 창.
 // frameless — 자체 픽셀 타이틀바(-webkit-app-region:drag)로 이동/닫기를 처리한다.
 export const openMenuPanel = () => {

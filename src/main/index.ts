@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, screen } from 'electron'
 import { join } from 'node:path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerWindowIpc } from './window'
@@ -11,6 +11,8 @@ import { registerScheduleIpc } from './schedule'
 import { registerCharacterSelectionIpc } from './characterSelection'
 import { registerProfileIpc } from './profile'
 import { registerPetSelectionIpc } from './petSelection'
+import { registerWorldIpc } from './world'
+import { setMenuPanelOnTop } from './panels/openMenuPanel'
 import { broadcastCharacterSpeech, registerCharacterIpc } from './character'
 import { GACHA_COST } from '@shared/contracts/itemEvents'
 
@@ -56,6 +58,79 @@ const createWindow = (): BrowserWindow => {
     }
 
     return mainWindow
+}
+
+// 데코(꾸미기) 창 — 화면 전체를 덮는 투명 오버레이. 고정 모드에선 클릭 통과(바탕화면처럼),
+// 꾸미기 모드에선 마우스를 받아 배치/드래그. "항상 최하단"은 macOS 제약이 있어 후속 과제.
+
+// 데코 창 싱글톤 ref — 꾸미기 모드 토글 시 클릭통과를 조작한다.
+let worldWindow: BrowserWindow | null = null
+
+// 꾸미기 모드에 따라 데코 창의 상호작용을 토글한다.
+// edit: 클릭/드래그 받음. fixed: 클릭 통과(데스크탑/다른 창 클릭 가능).
+// 전체화면 창이라 포커스를 뺏으면 메뉴 창을 덮으므로 focus()는 호출하지 않는다.
+const setWorldEditable = (editable: boolean): void => {
+    if (!worldWindow || worldWindow.isDestroyed()) {
+        return
+    }
+    worldWindow.setIgnoreMouseEvents(!editable)
+    if (editable) {
+        // 편집 중엔 데코 창을 앞으로(캐릭터 위), 메뉴는 그보다 위로 띄운다.
+        worldWindow.moveTop()
+    }
+    // 메뉴 창을 데코 창 위로 — 편집 중 메뉴 버튼/보관함 클릭이 가려지지 않게.
+    setMenuPanelOnTop(editable)
+}
+
+const createWorldWindow = (): BrowserWindow => {
+    const primary = screen.getPrimaryDisplay()
+    const { x, y, width, height } = primary.bounds
+
+    const win = new BrowserWindow({
+        x,
+        y,
+        width,
+        height,
+        show: false,
+        frame: false,
+        transparent: true,
+        resizable: false,
+        movable: false,
+        focusable: false,
+        hasShadow: false,
+        skipTaskbar: true,
+        fullscreenable: false,
+        autoHideMenuBar: true,
+        webPreferences: {
+            preload: join(__dirname, '../preload/index.mjs'),
+            sandbox: false,
+            contextIsolation: true,
+            nodeIntegration: false,
+            partition: 'persist:world',
+        },
+    })
+
+    worldWindow = win
+    win.on('closed', () => {
+        worldWindow = null
+    })
+
+    // 고정 모드: 마우스 이벤트 통과(바탕화면/다른 창 클릭 가능). 꾸미기 모드에서 토글.
+    win.setIgnoreMouseEvents(true)
+    // 모든 워크스페이스에 표시하고, always-on-top은 쓰지 않아 일반 창 아래로 깔린다.
+    win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: false })
+
+    win.on('ready-to-show', () => {
+        win.showInactive()
+    })
+
+    if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+        win.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/world.html`)
+    } else {
+        win.loadFile(join(__dirname, '../renderer/world.html'))
+    }
+
+    return win
 }
 
 app.whenReady().then(() => {
@@ -123,10 +198,24 @@ app.whenReady().then(() => {
     // 동반 펫 장착 IPC — 펫 탭에서 장착한 펫을 펫 창과 공유(SSOT).
     registerPetSelectionIpc()
 
+    registerWorldIpc({
+        onModeChange: (mode) => {
+            setWorldEditable(mode === 'edit')
+        },
+        // 데코 가챠 비용 차감 — item 가챠와 동일하게 player에 위임.
+        getScore: () => readPlayerState().score,
+        spendForGacha: () => {
+            applyPlayerEvent({ type: 'gachaSpin', cost: GACHA_COST })
+        },
+    })
+
     // 캐릭터 위 말풍선 중계 — 메뉴 창의 돌봄 멘트 등을 캐릭터 창으로 보낸다.
     registerCharacterIpc()
 
     createWindow()
+
+    // 데스크탑 하단 월드 창 — 배치된 데코를 고정 표시.
+    createWorldWindow()
 
     // 앱 시작 시 오늘 운세를 보장한다(없으면 추첨 + 점수 보상). 날짜당 멱등.
     // (통합 메뉴 창으로 바뀐 뒤 자동 팝업은 없앴다 — 운세는 우클릭 메뉴 → 운세 탭에서 본다.)

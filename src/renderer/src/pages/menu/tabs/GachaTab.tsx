@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { usePlayerStore } from '@renderer/entities/player'
-import { CONSUMABLE_ITEMS, GACHA_COST, useItemActions } from '@renderer/entities/item'
+import { GACHA_COST } from '@renderer/entities/item'
+import { useWorldActions } from '@renderer/entities/world'
 import { PixelArt } from '../PixelArt'
 
 // 검볼(가챠) 머신 — 정면/수평. 유리돔은 비워두고 알사탕은 오버레이로 그려 섞이는 모션을 준다.
@@ -164,10 +165,10 @@ const REVEAL_DURATION_MS = 2600
 
 export const GachaTab = () => {
     const score = usePlayerStore((state) => state.player.score)
-    const { gacha } = useItemActions()
-    const [message, setMessage] = useState('포인트를 모아\n아이템을 뽑아 보세요')
+    const { rollGacha } = useWorldActions()
+    const [message, setMessage] = useState('포인트를 모아\n데코를 뽑아 보세요')
     const [spinning, setSpinning] = useState(false)
-    const [reveal, setReveal] = useState<{ emoji: string; name: string } | null>(null)
+    const [reveal, setReveal] = useState<{ src: string; name: string } | null>(null)
     const [sparkFrame, setSparkFrame] = useState(0)
 
     // 머신 주변 반짝이 형태를 천천히 바꾼다(프레임 순환).
@@ -184,22 +185,19 @@ export const GachaTab = () => {
         }
         setSpinning(true)
         setReveal(null)
-        const outcome = await gacha()
+        const won = await rollGacha()
         // 유리돔 알사탕이 섞이는 연출 (~1초).
         await new Promise((resolve) => setTimeout(resolve, SPIN_DURATION_MS))
         setSpinning(false)
 
-        if (!outcome.success) {
+        if (!won) {
             setMessage('포인트가 부족해요')
             return
         }
-        const wonItem = CONSUMABLE_ITEMS.find((item) => item.id === outcome.wonItemId)
-        if (wonItem) {
-            // 획득 멘트는 표시하지 않는다(아래 reveal로 충분). 안내 멘트는 그대로 둔다.
-            setMessage('포인트를 모아\n아이템을 뽑아 보세요')
-            setReveal({ emoji: wonItem.emoji, name: wonItem.name })
-            setTimeout(() => setReveal(null), REVEAL_DURATION_MS)
-        }
+        // 획득한 데코를 reveal로 보여준다. 안내 멘트는 그대로.
+        setMessage('포인트를 모아\n데코를 뽑아 보세요')
+        setReveal({ src: won.src, name: won.name })
+        setTimeout(() => setReveal(null), REVEAL_DURATION_MS)
     }
 
     return (
@@ -230,7 +228,13 @@ export const GachaTab = () => {
                                     cell={3}
                                 />
                             </span>
-                            <span className='reveal-emoji'>{reveal.emoji}</span>
+                            <span className='reveal-emoji'>
+                                <img
+                                    src={reveal.src}
+                                    alt={reveal.name}
+                                    draggable={false}
+                                />
+                            </span>
                             <span className='reveal-name'>{reveal.name}</span>
                         </div>
                     ) : (

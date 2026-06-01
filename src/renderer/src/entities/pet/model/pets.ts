@@ -62,7 +62,79 @@ const STAR: PetDef = {
     palette: { s: '#f6c945', o: '#c79a3a' },
 }
 
-export const PET_CATALOG: PetDef[] = [CHICK, SLIME, STAR]
+// 고양이 — 회색 + 뾰족 귀 + 분홍 코.
+const CAT: PetDef = {
+    id: 'cat',
+    name: '나비',
+    pixels: [
+        '.o.....o.',
+        '.ogo.ogo.',
+        '.ooooooo.',
+        '.ogggggo.',
+        '.ogegego.',
+        '.oggpggo.',
+        '.ogggggo.',
+        '..ooooo..',
+        '.........',
+    ],
+    palette: { o: '#7a7e8a', g: '#c8ccd6', e: '#2a2a2a', p: '#f08aa6' },
+}
+
+// 토끼 — 흰 몸 + 긴 귀 + 분홍 코.
+const RABBIT: PetDef = {
+    id: 'rabbit',
+    name: '깡총이',
+    pixels: [
+        '.owo.owo.',
+        '.owo.owo.',
+        '.owo.owo.',
+        '.ooooooo.',
+        '.owwwwwo.',
+        '.owewewo.',
+        '.owwpwwo.',
+        '..ooooo..',
+        '.........',
+    ],
+    palette: { o: '#b59db0', w: '#fdfdff', e: '#2a2a2a', p: '#f3a6c2' },
+}
+
+// 펭귄 — 네이비 몸 + 흰 배 + 주황 부리/발.
+const PENGUIN: PetDef = {
+    id: 'penguin',
+    name: '뒤뚱이',
+    pixels: [
+        '..ooooo..',
+        '.obbbbbo.',
+        'obwbbbwbo',
+        'obbbkbbbo',
+        'obwwwwwbo',
+        'obwwwwwbo',
+        '.owwwwwo.',
+        '..okkko..',
+        '.........',
+    ],
+    palette: { o: '#243a5e', b: '#41557e', w: '#f2f6ff', k: '#f3961e' },
+}
+
+// 곰 — 갈색 + 둥근 귀 + 진한 코.
+const BEAR: PetDef = {
+    id: 'bear',
+    name: '곰곰이',
+    pixels: [
+        '.oo...oo.',
+        'obbo.obbo',
+        '.ooooooo.',
+        '.obbbbbo.',
+        '.obebebo.',
+        '.obbkbbo.',
+        '.obbbbbo.',
+        '..ooooo..',
+        '.........',
+    ],
+    palette: { o: '#6b4a2a', b: '#bb8350', e: '#2a2a2a', k: '#4a2e18' },
+}
+
+export const PET_CATALOG: PetDef[] = [CHICK, SLIME, STAR, CAT, RABBIT, PENGUIN, BEAR]
 
 export const findPet = (petId: string): PetDef | undefined =>
     PET_CATALOG.find((pet) => pet.id === petId)

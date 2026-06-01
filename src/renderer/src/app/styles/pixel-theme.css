@@ -668,6 +668,8 @@ body {
     color: var(--dim);
     text-align: center;
     line-height: 1.6;
+    /* 탭바↔멘트(위)와 멘트↔카드(아래) 여백을 16px로 동일하게. */
+    padding: 6px 0 8px;
 }
 
 /* 포인트 표시 줄 — 박스 없이 텍스트만. */
@@ -1192,6 +1194,12 @@ body {
     font-size: 46px;
     line-height: 1;
     animation: reveal-pop 0.4s ease-out;
+}
+.reveal-emoji img {
+    display: block;
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
 }
 .reveal-name {
     font-family: var(--pix);
@@ -1786,6 +1794,182 @@ body {
     color: #fff;
     background: var(--accent);
     padding: 2px 5px;
+}
+
+/* ── 아이템 인벤토리 ── */
+.item-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+.item-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1;
+    gap: 4px;
+    padding: 6px 4px;
+    background: var(--card);
+    clip-path: var(--pixel-clip);
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.5),
+        inset -2px -2px 0 rgba(96, 150, 210, 0.4);
+}
+.item-card.empty {
+    filter: grayscale(1);
+    opacity: 0.4;
+}
+.item-emoji {
+    font-size: 26px;
+    line-height: 1;
+}
+.item-emoji img {
+    display: block;
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+.item-name {
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--text);
+}
+.item-count {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-family: var(--pix);
+    font-size: 11px;
+    color: #fff;
+    background: var(--accent);
+    padding: 1px 5px;
+    clip-path: var(--pixel-clip);
+}
+
+/* ── 데코 보관함 폴더 ── */
+.decor-folder-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+.decor-folder {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 8px 10px;
+    background: var(--card);
+    cursor: pointer;
+    clip-path: var(--pixel-clip);
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.6),
+        inset -2px -2px 0 rgba(96, 150, 210, 0.4);
+}
+.decor-folder:hover {
+    background: var(--btn-bg);
+}
+.decor-folder-thumb {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    image-rendering: pixelated;
+    clip-path: var(--pixel-clip);
+}
+.decor-folder-name {
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--text);
+}
+.decor-folder-count {
+    font-family: var(--pix);
+    font-size: 10px;
+    color: var(--dim);
+}
+/* 폴더 안 헤더 — 뒤로 + 제목 */
+.decor-folder-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.decor-back {
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--accent);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 4px;
+}
+.decor-folder-title {
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--text);
+    -webkit-text-stroke: 0.5px currentColor;
+}
+
+/* ── 월드 꾸미기 캔버스 ── */
+.world-canvas {
+    position: relative;
+    width: 100%;
+    height: 150px;
+    /* 하늘→잔디 느낌의 월드 미리보기 배경 */
+    background: linear-gradient(#cdeeff 0%, #cdeeff 62%, #bfe6a8 62%, #aadd92 100%);
+    clip-path: var(--pixel-clip);
+    overflow: hidden;
+    flex-shrink: 0;
+    touch-action: none;
+}
+.world-canvas.editing {
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.7),
+        inset -2px -2px 0 rgba(96, 150, 210, 0.5),
+        0 0 0 2px var(--accent);
+}
+.world-canvas-empty {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--dim);
+    white-space: nowrap;
+    pointer-events: none;
+}
+.world-token {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    font-size: 30px;
+    line-height: 1;
+    user-select: none;
+}
+.world-canvas.editing .world-token {
+    cursor: grab;
+}
+.world-token.selected {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+.world-toolbar {
+    display: flex;
+    gap: 8px;
+}
+.world-reset {
+    align-self: center;
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--dim);
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 4px;
 }
 
 /* ── 포모도로 타이머 ── */

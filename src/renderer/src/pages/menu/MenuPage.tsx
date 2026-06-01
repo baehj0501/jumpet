@@ -7,6 +7,7 @@ import { GachaTab } from './tabs/GachaTab'
 import { ScheduleTab } from './tabs/ScheduleTab'
 import { TimerTab } from './tabs/TimerTab'
 import { PetTab } from './tabs/PetTab'
+import { ItemTab } from './tabs/ItemTab'
 import { PlaceholderTab } from './tabs/PlaceholderTab'
 import { PixelArt } from './PixelArt'
 import { TAB_ICON_ART } from './tabIcons'
@@ -75,7 +76,7 @@ export const MenuPage = () => {
             case 'schedule':
                 return <ScheduleTab />
             case 'item':
-                return <PlaceholderTab icon='🎒' label='아이템' />
+                return <ItemTab />
             case 'youtube':
                 return <PlaceholderTab icon='🎵' label='유튜브' />
             case 'settings':

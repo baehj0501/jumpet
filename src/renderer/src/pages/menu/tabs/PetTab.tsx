@@ -13,8 +13,6 @@ export const PetTab = () => {
                 장착된 펫을 다시 누르면 해제돼요
             </div>
 
-            <div className='divider' />
-
             <div className='pet-grid'>
                 {PET_CATALOG.map((pet) => {
                     const equipped = pet.id === selectedPetId

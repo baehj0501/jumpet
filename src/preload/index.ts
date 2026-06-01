@@ -11,6 +11,7 @@ import type {
 } from '@shared/contracts/characterEvents'
 import type { ProfileEvent, ProfileState } from '@shared/contracts/profileEvents'
 import type { PetSelectionEvent, PetSelectionState } from '@shared/contracts/petEvents'
+import type { WorldEvent, WorldState } from '@shared/contracts/worldEvents'
 
 const api = {
     startWindowDrag: (mouseX: number, mouseY: number): void => {
@@ -194,6 +195,23 @@ const api = {
             ipcRenderer.on('petSelection:changed', listener)
             const unsubscribe = () => {
                 ipcRenderer.removeListener('petSelection:changed', listener)
+            }
+            return unsubscribe
+        },
+    },
+    // 데스크탑 월드(아이템 꾸미기) API. 보유/배치 상태를 메뉴 창·월드 창이 공유(SSOT).
+    world: {
+        get: (): Promise<WorldState> => ipcRenderer.invoke('world:get'),
+        apply: (event: WorldEvent): Promise<WorldState> => ipcRenderer.invoke('world:apply', event),
+        // 가챠 비용 차감(원자적). 데코 추첨은 renderer가 한다.
+        gacha: (): Promise<{ success: boolean }> => ipcRenderer.invoke('world:gacha'),
+        onChange: (handler: (state: WorldState) => void): (() => void) => {
+            const listener = (_event: unknown, state: WorldState) => {
+                handler(state)
+            }
+            ipcRenderer.on('world:changed', listener)
+            const unsubscribe = () => {
+                ipcRenderer.removeListener('world:changed', listener)
             }
             return unsubscribe
         },
