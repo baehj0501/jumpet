@@ -6,6 +6,7 @@ import { initializeTodoSync } from '@renderer/entities/todo'
 import { initializeFortuneSync } from '@renderer/entities/fortune'
 import { initializeScheduleSync } from '@renderer/entities/schedule'
 import { initializeCharacterSelectionSync } from '@renderer/entities/character'
+import { initializeProfileSync } from '@renderer/entities/profile'
 import { MenuPage } from './MenuPage'
 import '@renderer/app/styles/pixel-theme.css'
 
@@ -16,6 +17,7 @@ initializeTodoSync()
 initializeFortuneSync()
 initializeScheduleSync()
 initializeCharacterSelectionSync()
+initializeProfileSync()
 
 const rootElement = document.getElementById('root')
 

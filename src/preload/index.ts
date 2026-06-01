@@ -9,6 +9,7 @@ import type {
     CharacterSelectionEvent,
     CharacterSelectionState,
 } from '@shared/contracts/characterEvents'
+import type { ProfileEvent, ProfileState } from '@shared/contracts/profileEvents'
 
 const api = {
     startWindowDrag: (mouseX: number, mouseY: number): void => {
@@ -160,6 +161,22 @@ const api = {
             ipcRenderer.on('characterSelection:changed', listener)
             const unsubscribe = () => {
                 ipcRenderer.removeListener('characterSelection:changed', listener)
+            }
+            return unsubscribe
+        },
+    },
+    // 홈 프로필(캐릭터 이름·이름·생일) API. 메뉴 창·펫 창이 같은 값을 공유(SSOT).
+    profile: {
+        get: (): Promise<ProfileState> => ipcRenderer.invoke('profile:get'),
+        apply: (event: ProfileEvent): Promise<ProfileState> =>
+            ipcRenderer.invoke('profile:apply', event),
+        onChange: (handler: (state: ProfileState) => void): (() => void) => {
+            const listener = (_event: unknown, state: ProfileState) => {
+                handler(state)
+            }
+            ipcRenderer.on('profile:changed', listener)
+            const unsubscribe = () => {
+                ipcRenderer.removeListener('profile:changed', listener)
             }
             return unsubscribe
         },

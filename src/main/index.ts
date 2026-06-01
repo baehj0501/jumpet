@@ -9,6 +9,7 @@ import { applyFortuneEvent, registerFortuneIpc } from './fortune'
 import { registerItemIpc } from './item'
 import { registerScheduleIpc } from './schedule'
 import { registerCharacterSelectionIpc } from './characterSelection'
+import { registerProfileIpc } from './profile'
 import { broadcastCharacterSpeech, registerCharacterIpc } from './character'
 import { GACHA_COST } from '@shared/contracts/itemEvents'
 
@@ -110,6 +111,9 @@ app.whenReady().then(() => {
 
     // 선택된 캐릭터(펫) IPC — 홈 탭에서 바꾼 캐릭터를 펫 윈도우와 공유(SSOT).
     registerCharacterSelectionIpc()
+
+    // 홈 프로필(캐릭터 이름·이름·생일) IPC — 메뉴 창과 펫 창이 공유(SSOT).
+    registerProfileIpc()
 
     // 캐릭터 위 말풍선 중계 — 메뉴 창의 돌봄 멘트 등을 캐릭터 창으로 보낸다.
     registerCharacterIpc()

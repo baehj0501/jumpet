@@ -8,6 +8,11 @@ export { useWalking } from './behaviors/useWalking'
 export { useCharacterSpeech } from './behaviors/useCharacterSpeech'
 export { pickRandomClickMessage } from './model/clickMessages'
 export {
+    CHARACTER_DISPLAY_NAMES,
+    withSubjectParticle,
+    withVocativeParticle,
+} from './model/characterNames'
+export {
     useSelectedCharacterId,
     useSelectCharacter,
     initializeCharacterSelectionSync,

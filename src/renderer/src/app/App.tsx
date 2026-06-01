@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import {
+    CHARACTER_DISPLAY_NAMES,
     CharacterView,
     SpeechBubble,
     pickRandomClickMessage,
@@ -7,8 +8,11 @@ import {
     useSelectedCharacterId,
     useStateMachine,
     useWalking,
+    withSubjectParticle,
+    withVocativeParticle,
 } from '@renderer/entities/character'
 import type { Mood } from '@renderer/entities/character'
+import { getProfileSnapshot } from '@renderer/entities/profile'
 import { useWindowDrag } from '@renderer/features/drag'
 import { useContextMenu } from '@renderer/features/context-menu'
 
@@ -28,6 +32,12 @@ export const App = () => {
     // 캐릭터의 현재 상태에 따라 걷기 애니메이션을 적용한다.
     useWalking(characterState, isInteractingRef)
 
+    // 홈 탭에서 선택한 캐릭터(SSOT) — 바뀌면 펫도 즉시 교체된다.
+    const selectedCharacterId = useSelectedCharacterId()
+
+    // 말풍선 상태 — 다른 창(메뉴 돌봄 등)의 멘트 구독 + 같은 창(좌클릭) 멘트는 showSpeech로 즉시 표시.
+    const { speech, showSpeech } = useCharacterSpeech()
+
     // useWindowDrag는 자율 행동 정책을 모른다 — 호출자가 콜백에서 ref를 토글하고 자율 상태도 멈춘다.
     const { handleMouseDown } = useWindowDrag({
         onDragStart: () => {
@@ -38,21 +48,31 @@ export const App = () => {
             isInteractingRef.current = false
         },
         // 드래그가 아닌 단순 좌클릭 → 랜덤 멘트를 머리 위 말풍선으로.
+        // 클릭 시점의 최신 프로필(SSOT)을 읽는다.
+        // 50% 확률 우측 정렬 태그 "(캐릭터 이름)이/가" — 정보의 '캐릭터 이름'(비우면 캐릭터 기본명).
+        // 10% 확률 제일 윗줄 "(이름)아/야" — 정보의 '이름'.
         onClick: () => {
-            window.api.character.say(pickRandomClickMessage())
+            const profile = getProfileSnapshot()
+            const characterName =
+                profile.characterName !== ''
+                    ? profile.characterName
+                    : (CHARACTER_DISPLAY_NAMES[selectedCharacterId] ?? selectedCharacterId)
+            let message = pickRandomClickMessage()
+            if (Math.random() < 0.1) {
+                message = `${withVocativeParticle(profile.petName)}\n${message}`
+            }
+            const tag = Math.random() < 0.5 ? withSubjectParticle(characterName) : undefined
+            showSpeech(message, tag)
         },
     })
     const { handleContextMenu } = useContextMenu({ isInteractingRef })
 
-    // 다른 창(메뉴의 돌봄 등)에서 보낸 멘트를 캐릭터 머리 위 말풍선으로 띄운다.
-    const speech = useCharacterSpeech()
-
-    // 홈 탭에서 선택한 캐릭터(SSOT) — 바뀌면 펫도 즉시 교체된다.
-    const selectedCharacterId = useSelectedCharacterId()
-
     return (
         <>
-            <SpeechBubble text={speech} />
+            <SpeechBubble
+                text={speech.text}
+                tag={speech.tag}
+            />
             <CharacterView
                 characterId={selectedCharacterId}
                 mood={CURRENT_MOOD}

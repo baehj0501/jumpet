@@ -1,7 +1,9 @@
 import { css } from '@emotion/react'
 
-const BORDER_COLOR = '#2a2a2a'
-const FILL_COLOR = '#fffdf5'
+// 메뉴 테마(하늘색)에 맞춘 말풍선 색.
+const BORDER_COLOR = '#2f6aa8' // 테두리(진한 파랑)
+const FILL_COLOR = '#eaf6ff' // 채움(옅은 하늘)
+const TEXT_COLOR = '#0a3050' // 본문 텍스트(네이비)
 
 // 계단(픽셀) 라운드 모서리 — 각 모서리를 3px×2단으로 깎는다(총 ~6px).
 // 부드러운 border-radius가 아니라 사각 블록으로 깎인 픽셀아트 모서리.
@@ -40,9 +42,19 @@ export const fillStyle = css({
     fontFamily: "'Galmuri11', 'Apple SD Gothic Neo', sans-serif",
     fontSize: 13,
     lineHeight: 1.4,
-    color: BORDER_COLOR,
+    color: TEXT_COLOR,
     textAlign: 'center',
     whiteSpace: 'pre-wrap',
+})
+
+// 본문 아래 우측 정렬 이름 태그(예: "윙피가").
+export const tagStyle = css({
+    display: 'block',
+    textAlign: 'right',
+    fontSize: 12,
+    opacity: 0.7,
+    marginTop: 2,
+    whiteSpace: 'nowrap',
 })
 
 // 픽셀 꼬리 — 계단형(아래로 좁아지는) 블록. 채움색 + 좌우 어두운 테두리.

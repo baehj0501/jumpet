@@ -8,25 +8,16 @@ import {
 import { usePlayerStore } from '@renderer/entities/player'
 import {
     CHARACTER_ASSETS,
+    CHARACTER_DISPLAY_NAMES,
     type CharacterId,
     useSelectedCharacterId,
     useSelectCharacter,
 } from '@renderer/entities/character'
+import { useProfile, useProfileActions } from '@renderer/entities/profile'
 import { PixelIcon } from '../PixelIcon'
 
 // 카탈로그에 등록된 캐릭터 ID 목록(좌우 전환 대상).
 const CHARACTER_IDS = Object.keys(CHARACTER_ASSETS) as CharacterId[]
-
-// 캐릭터별 기본 표시 이름. 사용자가 '캐릭터 이름'을 직접 바꾸기 전까지 이 값을 따라간다.
-const CHARACTER_DISPLAY_NAMES: Record<CharacterId, string> = {
-    piyoo: '피요',
-    qupee: '큐피',
-    suupee: '수피',
-    wingpee: '윙피',
-}
-
-// 캐릭터 이름 커스텀 저장 키. 키가 있으면 '사용자가 직접 지정' → 캐릭터를 바꿔도 고정.
-const CHARACTER_NAME_KEY = 'jumpet.profile.characterName'
 
 // 돌봄 액션 픽셀 아이콘(7×7).
 const ACTION_ICON_PIXELS: Record<string, string[]> = {
@@ -50,27 +41,6 @@ const ACTIONS: {
     { key: 'pet', category: null, emoji: '🤗', label: '쓰다듬기', speech: '좋아 ✨' },
     { key: 'rest', category: null, emoji: '🛋️', label: '눕기', speech: '편안해~ 🛋️' },
 ]
-
-// 메뉴 창 localStorage에 저장되는 편집 가능 텍스트.
-// (단일 창 표시라 임시로 localStorage 사용 — 추후 설정 도메인 SSOT로 이관 가능.)
-const usePersistedText = (key: string, initial: string): [string, (value: string) => void] => {
-    const [value, setValue] = useState<string>(() => {
-        try {
-            return localStorage.getItem(key) ?? initial
-        } catch {
-            return initial
-        }
-    })
-    const update = (next: string) => {
-        setValue(next)
-        try {
-            localStorage.setItem(key, next)
-        } catch {
-            // localStorage 접근 불가 시 무시(메모리 상태만 유지).
-        }
-    }
-    return [value, update]
-}
 
 // 라벨(헤딩) + 클릭하면 인라인 편집되는 디스플레이 텍스트.
 const ProfileField = ({
@@ -143,32 +113,25 @@ export const CareTab = () => {
     const { consume } = useItemActions()
     const score = usePlayerStore((state) => state.player.score)
 
-    const [petName, setPetName] = usePersistedText('jumpet.profile.petName', '조조')
-    const [birthday, setBirthday] = usePersistedText('jumpet.profile.birthday', '5월 31일')
+    // 홈 프로필(SSOT) — 메뉴 창·펫 창이 공유. 좌클릭 멘트의 '이름'도 이 값을 쓴다.
+    const profile = useProfile()
+    const { setField } = useProfileActions()
 
     // 표시 중인 캐릭터 — main SSOT에서 읽는다. 좌우 버튼이 select하면 펫 윈도우도 함께 바뀐다.
     const currentCharacterId = useSelectedCharacterId()
     const selectCharacter = useSelectCharacter()
 
-    // '캐릭터 이름' — 사용자가 직접 바꾸기 전엔 선택된 캐릭터의 기본 이름을 따라가고,
-    // 한 번 수정하면 그 값으로 고정(localStorage). null이면 아직 커스텀 안 함.
-    const [customCharacterName, setCustomCharacterName] = useState<string | null>(() => {
-        try {
-            return localStorage.getItem(CHARACTER_NAME_KEY)
-        } catch {
-            return null
-        }
-    })
+    // '캐릭터 이름' — profile.characterName이 ''이면 선택된 캐릭터의 기본명을 따라가고,
+    // 한 번 수정하면 그 값으로 고정.
     const characterName =
-        customCharacterName ?? CHARACTER_DISPLAY_NAMES[currentCharacterId] ?? currentCharacterId
-    const setCharacterName = (value: string) => {
-        setCustomCharacterName(value)
-        try {
-            localStorage.setItem(CHARACTER_NAME_KEY, value)
-        } catch {
-            // localStorage 접근 불가 시 메모리 상태만 유지.
-        }
-    }
+        profile.characterName !== ''
+            ? profile.characterName
+            : (CHARACTER_DISPLAY_NAMES[currentCharacterId] ?? currentCharacterId)
+    const setCharacterName = (value: string) => void setField('characterName', value)
+    const petName = profile.petName
+    const setPetName = (value: string) => void setField('petName', value)
+    const birthday = profile.birthday
+    const setBirthday = (value: string) => void setField('birthday', value)
     const currentCharacterIndex = Math.max(0, CHARACTER_IDS.indexOf(currentCharacterId))
     const cycleCharacter = (delta: number) => {
         const nextIndex =
