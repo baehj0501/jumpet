@@ -42,15 +42,23 @@
 | 유튜브 | ⬜ placeholder | |
 | 설정 | ⬜ placeholder | |
 
+홈 탭의 돌봄(밥/놀이/쓰다듬기/눕기) 액션 그리드는 제거됨 — 홈은 씬 + 프로필 4행(캐릭터 이름/내 이름/생일/⭐포인트)만.
+
 ### 캐릭터 / 인터랙션
 
 - 캐릭터 4종: **piyoo / qupee / suupee / wingpee** (구 'dog' 제거). `CHARACTER_ASSETS`(감정별) + `HOME_SCENE_ASSETS`(홈 합본 이미지 `home.png`).
+- 동반 펫(`petSelection`)은 캐릭터 윈도우(`App.tsx`)에서 `.pet-companion`으로 우하단에 렌더. 펫 탭에서 장착/해제.
 - 좌클릭 멘트: 50% `"(캐릭터 이름)(이/가) …"`, 10% `"(내 이름)(아/야)"` 호격. 조사는 받침 유무로 결정. 우측 정렬, 하늘색 말풍선.
 - 탭 아이콘: `pages/menu/tabIcons.ts` 10종 16×16 다색 픽셀(`TAB_ICON_ART`), `PixelArt`로 렌더.
 
-### 진행 중
+### 메뉴 UI 픽셀 테마 규칙 (pixel-theme.css)
 
-- 메뉴 UI 픽셀아트 리디자인(레퍼런스 기준): 탭바·홈 씬 완료, 미세 조정 반복 중.
+- **계단(픽셀) 모서리**: `--pixel-clip`(현재 2px 3단=6px) clip-path 전역 토큰. 테두리가 필요한 요소(탭·버튼·태그)는 **바깥=테두리색 staircase + 안쪽 `::before` 채움(inset 2px)** 구조로 외곽을 끊김 없이 그린다(과거 mask-ring 방식 폐기). 버튼 채움색은 상태별 `--btn-fill` 변수로 전달.
+- **컬러 베벨**: 그레이 대신 블루 톤 inset box-shadow.
+
+### 배포
+
+- `electron-builder.yml` — mac(dmg, arm64+x64) · win(nsis, x64) · linux(AppImage). 스크립트: `package:mac`/`package:win`/`package:linux`. 미서명 빌드는 `CSC_IDENTITY_AUTO_DISCOVERY=false`. 산출물은 `dist/`.
 
 ## 프로젝트 개요
 

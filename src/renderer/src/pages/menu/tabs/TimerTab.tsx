@@ -30,9 +30,8 @@ export const TimerTab = () => {
 
     return (
         <div className='panel timer-panel'>
-            <div className='menu-heading'>⏳ 포모도로 타이머</div>
             <div className={phase === 'focus' ? 'timer-phase focus' : 'timer-phase break'}>
-                {phase === 'focus' ? '🎯 집중' : '☕ 휴식'}
+                {phase === 'focus' ? '포모도로 타이머' : '☕ 휴식'}
             </div>
 
             <div className='timer-stopwatch'>

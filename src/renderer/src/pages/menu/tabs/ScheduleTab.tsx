@@ -166,7 +166,6 @@ export const ScheduleTab = () => {
 
     return (
         <div className='panel'>
-            <div className='menu-heading'>📅 일정 관리</div>
             <div className='cal-head'>
                 <button
                     type='button'

@@ -44,22 +44,22 @@ const SLIME: PetDef = {
     palette: { '#': '#2f7a3a', g: '#8fe0a0', e: '#1a3a1a' },
 }
 
-// 별 — 금색 별 친구.
+// 별 — 금색 별 친구(외곽선 + 채움).
 const STAR: PetDef = {
     id: 'star',
     name: '반짝이',
     pixels: [
-        '....s....',
-        '...sss...',
-        '..sssss..',
-        'sssssssss',
-        '.sssssss.',
-        '..sssss..',
-        '..s...s..',
-        '.s.....s.',
+        '....o....',
+        '...oso...',
+        '..ossso..',
+        'oosssssoo',
+        '.ossssso.',
+        '..ooooo..',
+        '..o...o..',
+        '.o.....o.',
         '.........',
     ],
-    palette: { s: '#f6c945' },
+    palette: { s: '#f6c945', o: '#c79a3a' },
 }
 
 export const PET_CATALOG: PetDef[] = [CHICK, SLIME, STAR]

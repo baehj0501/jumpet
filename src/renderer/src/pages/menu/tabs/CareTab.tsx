@@ -109,7 +109,6 @@ export const CareTab = () => {
 
     return (
         <div className='panel'>
-            <div className='menu-heading'>🏠 우리 집</div>
             <div className='home-scene'>
                 <img
                     className='home-cloud c1'

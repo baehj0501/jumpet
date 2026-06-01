@@ -165,7 +165,7 @@ const REVEAL_DURATION_MS = 2600
 export const GachaTab = () => {
     const score = usePlayerStore((state) => state.player.score)
     const { gacha } = useItemActions()
-    const [message, setMessage] = useState('포인트를 모아\n돌봄 아이템을 뽑아 보세요')
+    const [message, setMessage] = useState('포인트를 모아\n아이템을 뽑아 보세요')
     const [spinning, setSpinning] = useState(false)
     const [reveal, setReveal] = useState<{ emoji: string; name: string } | null>(null)
     const [sparkFrame, setSparkFrame] = useState(0)
@@ -196,7 +196,7 @@ export const GachaTab = () => {
         const wonItem = CONSUMABLE_ITEMS.find((item) => item.id === outcome.wonItemId)
         if (wonItem) {
             // 획득 멘트는 표시하지 않는다(아래 reveal로 충분). 안내 멘트는 그대로 둔다.
-            setMessage('포인트를 모아\n돌봄 아이템을 뽑아 보세요')
+            setMessage('포인트를 모아\n아이템을 뽑아 보세요')
             setReveal({ emoji: wonItem.emoji, name: wonItem.name })
             setTimeout(() => setReveal(null), REVEAL_DURATION_MS)
         }
@@ -204,7 +204,6 @@ export const GachaTab = () => {
 
     return (
         <div className='panel'>
-            <div className='section-title gacha-title'>🎰 돌봄 아이템 뽑기</div>
             <div className='gacha-wrap'>
                 <div className='gacha-msg'>{message}</div>
                 <div className='gacha-machine'>

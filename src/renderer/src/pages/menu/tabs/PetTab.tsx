@@ -7,13 +7,13 @@ export const PetTab = () => {
 
     return (
         <div className='panel'>
-            <div className='menu-heading'>🐾 동반 펫</div>
-
             <div className='hint'>
                 펫을 누르면 캐릭터 옆에 따라다녀요
                 <br />
                 장착된 펫을 다시 누르면 해제돼요
             </div>
+
+            <div className='divider' />
 
             <div className='pet-grid'>
                 {PET_CATALOG.map((pet) => {
