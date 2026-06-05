@@ -41,6 +41,44 @@
     --btn-bg-hover: #9cc8f2;
     --emboss-hi: #d8ecff;
     --emboss-lo: #2c6b94;
+    /* 비활성 메뉴 탭 3겹(테두리/베벨/채움) — 기본은 테마 토큰을 따라가고, 테마별로 오버라이드 가능. */
+    --tab-border: var(--border);
+    --tab-bevel: var(--emboss-hi);
+    /* 베벨 (하,우) 어두운 쪽 — 기본은 베벨과 동일(=방향성 없음). 테마별로 어둡게 오버라이드. */
+    --tab-bevel-lo: var(--tab-bevel);
+    --tab-fill: var(--card);
+    /* 비활성 탭 글자색 — 기본은 테마 본문색. 테마별(예: 다크의 미디엄그레이) 오버라이드 가능. */
+    --tab-text: var(--text);
+    /* 활성 탭 — 기본은 테두리=비활성, 베벨=비활성, 채움=accent, 글자=흰색. 테마별 오버라이드 가능. */
+    --tab-active-border: var(--tab-border);
+    --tab-active-bevel: var(--tab-bevel);
+    --tab-active-bevel-lo: var(--tab-bevel-lo);
+    --tab-active-fill: var(--accent);
+    --tab-active-text: #fff;
+    /* 주 버튼(할일 필터·타이머 등) 활성 색 — 기본은 테마 accent 기반(테마별로 자동 변함), 테마별 오버라이드 가능. */
+    --btn-primary: var(--accent);
+    --btn-primary-edge: color-mix(in srgb, var(--accent) 68%, #000);
+    /* 홈 인사 말풍선 — 기본: 흰 안 + 테마 테두리 + 테마 글자. 테마별 오버라이드 가능. */
+    --bubble-bg: #ffffff;
+    --bubble-border: var(--border);
+    --bubble-text: var(--text);
+}
+/* 스카이블루 탭 — :root는 다른 테마 fallback이라, 스카이블루 전용 탭 색은 여기서 지정. */
+[data-theme='skyblue'] {
+    /* 비활성: 옅은 하늘 테두리 + 베벨(상좌 밝음/하우 약간 진함) + 거의 흰 채움. */
+    --tab-border: #a9d3f0;
+    --tab-bevel: #d8ecff;
+    --tab-bevel-lo: #c0e0f6;
+    --tab-fill: #eaf6ff;
+    /* 활성: 진한 하늘 테두리 + 베벨(상좌 밝음/하우 진함=테두리) + 미디엄 블루 채움. */
+    --tab-active-border: #5a9fd8;
+    --tab-active-bevel: #c4e2fb;
+    --tab-active-bevel-lo: #5a9fd8;
+    --tab-active-fill: #8cc3f0;
+    --tab-active-text: #1c4a72;
+    /* 스카이블루 주 버튼 활성 — 선호 톤(로열 블루) 유지. */
+    --btn-primary: #3f8de0;
+    --btn-primary-edge: #2f6cc4;
 }
 [data-theme='green'] {
     --bg: #eaf5e8;
@@ -55,6 +93,17 @@
     --btn-bg-hover: #9cdc92;
     --emboss-hi: #d8f3d2;
     --emboss-lo: #2c6e2c;
+    /* 연두 테마 비활성 탭 — 연두 테두리 + 파스텔 옐로우(크림) 베벨/채움. 베벨 (하,우)는 진한 연두. */
+    --tab-border: #a5cc6b;
+    --tab-bevel: #eeecb2;
+    --tab-bevel-lo: #c5d86d;
+    --tab-fill: #f9f8d3;
+    /* 연두 테마 활성 탭 — 진한 올리브 테두리 + 라이트(상좌)/다크(하우) 베벨 + 미디엄 그린 채움. */
+    --tab-active-border: #7c9555;
+    --tab-active-bevel: #cdd87a;
+    --tab-active-bevel-lo: #7c9555;
+    --tab-active-fill: #a6c569;
+    --tab-active-text: #2f4414;
 }
 [data-theme='babypink'] {
     --bg: #fde8f2;
@@ -69,6 +118,16 @@
     --btn-bg-hover: #f4a4ce;
     --emboss-hi: #ffdcee;
     --emboss-lo: #a83a72;
+    /* 핑크 테마 탭 — 비활성: 연핑크 테두리/베벨 + 거의 흰 채움. 활성: 진핑크 테두리 + 미디엄 핑크 채움. */
+    --tab-border: #f0b4d0;
+    --tab-bevel: #f9dbe9;
+    --tab-bevel-lo: #f3c6dc;
+    --tab-fill: #fdf3f8;
+    --tab-active-border: #df6c9f;
+    --tab-active-bevel: #f2c2da;
+    --tab-active-bevel-lo: #df6c9f;
+    --tab-active-fill: #f0a2c8;
+    --tab-active-text: #6e2848;
 }
 [data-theme='brown'] {
     --bg: #f5ede4;
@@ -83,6 +142,16 @@
     --btn-bg-hover: #d2b088;
     --emboss-hi: #f2ddc6;
     --emboss-lo: #6b431f;
+    /* 브라운 테마 탭 — 비활성: 연탄/크림. 활성: 진갈색 테두리 + 미디엄 탄 채움. */
+    --tab-border: #d9bd97;
+    --tab-bevel: #f6e8d4;
+    --tab-bevel-lo: #e6cfb0;
+    --tab-fill: #fbf4ea;
+    --tab-active-border: #9c6a44;
+    --tab-active-bevel: #e3c9a6;
+    --tab-active-bevel-lo: #9c6a44;
+    --tab-active-fill: #c39368;
+    --tab-active-text: #3c2410;
 }
 [data-theme='light'] {
     --bg: #ffffff;
@@ -97,6 +166,16 @@
     --btn-bg-hover: #d2d2d2;
     --emboss-hi: #ffffff;
     --emboss-lo: #bcbcbc;
+    /* 라이트(그레이) 테마 탭 — 비활성: 옅은 회색 테두리 + 흰 채움. 활성: 미디엄 회색 채움. */
+    --tab-border: #cccccc;
+    --tab-bevel: #e6e6e6;
+    --tab-bevel-lo: #d6d6d6;
+    --tab-fill: #ffffff;
+    --tab-active-border: #a0a0a0;
+    --tab-active-bevel: #cacaca;
+    --tab-active-bevel-lo: #a0a0a0;
+    --tab-active-fill: #c6c6c6;
+    --tab-active-text: #3a3a3a;
 }
 [data-theme='dark'] {
     --bg: #1a1a1a;
@@ -111,6 +190,21 @@
     --btn-bg-hover: #454545;
     --emboss-hi: #545454;
     --emboss-lo: #0e0e0e;
+    /* 다크 테마 탭 — (비활성/활성 반전) 비활성: 짙은 차콜로 묻힘. 활성: 미디엄 그레이로 도드라짐. 글자 흰색. */
+    --tab-border: #1a1a1a;
+    --tab-bevel: #3e3e3e;
+    --tab-bevel-lo: #141414;
+    --tab-fill: #2c2c2c;
+    --tab-text: #f0f0f0;
+    --tab-active-border: #3a3a3a;
+    --tab-active-bevel: #9c9c9c;
+    --tab-active-bevel-lo: #5e5e5e;
+    --tab-active-fill: #808080;
+    --tab-active-text: #f0f0f0;
+    /* 다크 테마 인사 말풍선 — 안=블랙, 테두리=화이트, 글자=화이트. */
+    --bubble-bg: #000000;
+    --bubble-border: #ffffff;
+    --bubble-text: #ffffff;
 }
 
 * {
@@ -234,46 +328,61 @@ body {
     padding: 9px 2px 7px;
     font-family: var(--pix);
     font-size: 11px;
-    color: var(--text);
+    color: var(--tab-text);
     cursor: pointer;
     text-align: center;
     white-space: nowrap;
     line-height: 1.3;
-    /* 바깥 면 = 테두리색 staircase. 안쪽 ::before가 2px 작게 덮어 외곽 2px만 테두리로 남는다. */
-    background: var(--border);
+    /* 3겹 계단 레이어 중 가장 바깥 = 테두리색(테마별 --tab-border). ::before(베벨), ::after(채움)가
+       안쪽을 덮어 바깥만 테두리로 남는다. 세 겹 모두 clip-path라 계단 모서리를 평행하게 따라간다. */
+    background: var(--tab-border);
     border: none;
     clip-path: var(--pixel-clip);
 }
-/* 흰색 카드 안쪽 면 — staircase 외곽을 2px 따라가는 테두리를 남긴다. */
+/* 베벨 띠 — 테두리 안쪽. inset 1.5px(테두리폭) ~ ::after inset 3.5px = 2px 띠.
+   대각선 split: (상,좌)=--tab-bevel, (하,우)=--tab-bevel-lo. 'to bottom right' 축의 50% 하드스톱이
+   TR→BL 대각선으로 갈라 상좌/하우를 나눈다. clip-path라 계단 모서리는 그대로 따라간다. */
 .tab::before {
     content: '';
     position: absolute;
-    inset: 2px;
-    z-index: -1;
+    inset: 1.5px;
+    z-index: -2;
     clip-path: var(--pixel-clip);
-    /* 비활성 탭 면 — 테마 카드색 + 테마 베벨(emboss 토큰, 반투명으로 톤다운). 베벨은 ::before의 clip-path에 클리핑돼 계단 모서리를 따른다. */
-    background: var(--card);
-    box-shadow:
-        inset 3px 3px 0 color-mix(in srgb, var(--emboss-hi) 60%, transparent),
-        inset -3px -3px 0 color-mix(in srgb, var(--emboss-lo) 42%, transparent);
+    background: linear-gradient(to bottom right, var(--tab-bevel) 50%, var(--tab-bevel-lo) 50%);
     pointer-events: none;
 }
+/* 채움 면 — 베벨 띠(2px) 안쪽(테마별 --tab-fill). */
+.tab::after {
+    content: '';
+    position: absolute;
+    inset: 3.5px;
+    z-index: -1;
+    clip-path: var(--pixel-clip);
+    background: var(--tab-fill);
+    pointer-events: none;
+}
+
 .tab .tab-icon {
     display: flex;
     justify-content: center;
 }
-.tab:hover::before {
-    background: var(--accent2);
-}
+/* hover = active 와 동일한 색. 기본(선택 안 함)은 비활성 색 그대로. */
+.tab:hover,
 .tab.active {
-    color: #fff;
+    color: var(--tab-active-text);
+    background: var(--tab-active-border);
 }
+.tab:hover::before,
 .tab.active::before {
-    background: var(--accent);
-    /* 활성 면(accent) 위 — 광택은 흰색 유지(테마 무관), 그림자는 테마 베벨(반투명으로 톤다운). */
-    box-shadow:
-        inset 3px 3px 0 rgba(255, 255, 255, 0.42),
-        inset -3px -3px 0 color-mix(in srgb, var(--emboss-lo) 42%, transparent);
+    background: linear-gradient(
+        to bottom right,
+        var(--tab-active-bevel) 50%,
+        var(--tab-active-bevel-lo) 50%
+    );
+}
+.tab:hover::after,
+.tab.active::after {
+    background: var(--tab-active-fill);
 }
 
 /* ── 패널 공통 ── */
@@ -340,11 +449,16 @@ body {
 .home-scene::before {
     content: '';
     position: absolute;
-    inset: 2px;
+    /* inset = 테두리 두께(1px). */
+    inset: 1px;
     z-index: -1;
     clip-path: var(--pixel-clip);
     /* 테마를 따라가는 하늘 배경 — 위에서 아래로 살짝 짙어지는 톤. */
     background: linear-gradient(var(--bg), var(--panel));
+    /* 컬러 베벨 — 큰 씬이라 탭·버튼보다 톤을 낮춘다(진한 쪽은 패널색과 섞어 부드럽게). */
+    box-shadow:
+        inset 2px 2px 0 color-mix(in srgb, var(--emboss-hi) 60%, var(--bg)),
+        inset -2px -2px 0 color-mix(in srgb, var(--emboss-lo) 35%, var(--panel));
     pointer-events: none;
 }
 /* 홈 씬 합본 이미지 (캐릭터 + 바닥) — 씬 하단 가득 */
@@ -419,11 +533,11 @@ body {
     top: 58px;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--border);
+    background: var(--bubble-border);
     clip-path: var(--pixel-clip);
     font-family: var(--pix);
     font-size: 13px;
-    color: var(--text);
+    color: var(--bubble-text);
     padding: 6px 12px;
     white-space: nowrap;
 }
@@ -433,7 +547,7 @@ body {
     inset: 2px;
     z-index: -1;
     clip-path: var(--pixel-clip);
-    background: #ffffff;
+    background: var(--bubble-bg);
     pointer-events: none;
 }
 /* 말풍선 꼬리 — 45° 다이아몬드. 위 절반은 말풍선(z 4)이 덮어 가리고 아래 V만 보인다. */
@@ -444,8 +558,8 @@ body {
     left: 50%;
     width: 12px;
     height: 12px;
-    background: #ffffff;
-    border: 2px solid var(--border);
+    background: var(--bubble-bg);
+    border: 2px solid var(--bubble-border);
     transform: translateX(-50%) rotate(45deg);
 }
 /* 좌우 캐릭터 전환 버튼 */
@@ -508,7 +622,8 @@ body {
     isolation: isolate;
     display: flex;
     flex-direction: column;
-    padding: 2px 10px;
+    /* 세로 여유 — 안쪽 값 박스들이 프레임에 붙지 않게 위아래 +10px씩. */
+    padding: 12px 10px;
     /* 바깥 면 = 테두리색 staircase, 안쪽 ::before가 2px 작게 덮어 계단 모서리에도 테두리를 남긴다. */
     background: var(--border);
     border: none;
@@ -517,13 +632,19 @@ body {
 .profile-rows::before {
     content: '';
     position: absolute;
-    inset: 2px;
+    /* inset = 테두리 두께(1px). */
+    inset: 1px;
     z-index: -1;
     clip-path: var(--pixel-clip);
     background: var(--card);
+    /* 컬러 베벨 — 밝은 카드 바탕이라 홈 씬보다 더 약하게(채움색과 더 많이 섞어 은은하게). */
+    box-shadow:
+        inset 2px 2px 0 color-mix(in srgb, var(--emboss-hi) 40%, var(--card)),
+        inset -2px -2px 0 color-mix(in srgb, var(--emboss-lo) 18%, var(--card));
     pointer-events: none;
 }
 .profile-row {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -548,13 +669,25 @@ body {
 .profile-row-value {
     flex: 1;
     min-width: 0;
+    /* 계단(픽셀) 모서리: 바깥 = 테두리색 staircase, 안쪽 ::before가 2px 작게 채워 테두리를 남긴다. */
+    position: relative;
+    isolation: isolate;
     text-align: center;
     font-family: var(--pix);
     font-size: 13px;
     color: var(--text);
+    background: var(--border);
+    border: none;
+    padding: 7px 8px;
+    clip-path: var(--pixel-clip);
+}
+.profile-row-value::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    z-index: -1;
+    clip-path: var(--pixel-clip);
     background: var(--bg);
-    border: 2px solid var(--border);
-    padding: 5px 8px;
 }
 .profile-row-value.dday {
     color: #e0568e;
@@ -567,22 +700,30 @@ body {
     flex: 1;
     min-width: 0;
     text-align: center;
+    /* 표시 박스와 동일하게 계단(픽셀) 모서리. input은 ::before를 못 쓰므로 clip-path로 외곽만 깎는다. */
+    border-radius: 0;
+    clip-path: var(--pixel-clip);
 }
 .profile-row-edit {
-    flex: 0 0 auto;
+    /* 흐름에서 빼서 값 박스가 오른쪽 끝까지 늘어나게 — ✎는 박스 안쪽 오른편에 띄운다. */
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 21px;
     background: none;
     border: none;
     color: var(--dim);
     cursor: pointer;
     font-size: 13px;
-    padding: 2px 4px;
+    padding: 2px 0;
+    text-align: center;
 }
 .profile-row-edit:hover {
     color: var(--accent);
 }
 .profile-row-edit-placeholder {
-    flex: 0 0 auto;
-    width: 21px;
+    display: none;
 }
 
 /* 액션 그리드 (돌봄) */
@@ -749,6 +890,15 @@ body {
 .pbtn.ghost:hover {
     --btn-fill: var(--panel);
 }
+/* 다크 테마 가챠 뽑기 버튼만 반전 — 화이트 채움 + 블랙 글자(어두운 메뉴에서 또렷하게). */
+[data-theme='dark'] .gacha-bottom .pbtn {
+    background: #ffffff;
+    --btn-fill: #ffffff;
+    color: #000000;
+}
+[data-theme='dark'] .gacha-bottom .pbtn:hover {
+    --btn-fill: #e6e6e6;
+}
 
 /* TODO */
 .todo-add-row {
@@ -844,25 +994,53 @@ body {
     display: none;
 }
 .todo-chip {
+    /* 기본 6px 계단보다 1px 작은 5px 계단(스텝 2·2·1) — 프로젝트 칩만 살짝 덜 둥글게. */
+    --chip-clip: polygon(
+        0 5px, 2px 5px, 2px 3px, 4px 3px, 4px 1px, 5px 1px, 5px 0,
+        calc(100% - 5px) 0, calc(100% - 5px) 1px, calc(100% - 4px) 1px, calc(100% - 4px) 3px,
+        calc(100% - 2px) 3px, calc(100% - 2px) 5px, 100% 5px,
+        100% calc(100% - 5px), calc(100% - 2px) calc(100% - 5px), calc(100% - 2px) calc(100% - 3px),
+        calc(100% - 4px) calc(100% - 3px), calc(100% - 4px) calc(100% - 1px),
+        calc(100% - 5px) calc(100% - 1px), calc(100% - 5px) 100%,
+        5px 100%, 5px calc(100% - 1px), 4px calc(100% - 1px), 4px calc(100% - 3px),
+        2px calc(100% - 3px), 2px calc(100% - 5px), 0 calc(100% - 5px)
+    );
+    position: relative;
+    isolation: isolate;
     display: inline-flex;
     align-items: center;
     gap: 4px;
     font-family: var(--pix);
     font-size: 11px;
+    /* '전체'(텍스트 직접)와 프로젝트 칩(내부 라벨 line-height:1) 높이를 맞춘다. */
+    line-height: 1;
     color: var(--text);
-    background: var(--card);
-    border: 2px solid var(--border);
-    padding: 3px 8px;
+    /* 바깥 면 = 테두리색 staircase(1px), 안쪽 ::before가 채움 — 계단 모서리에도 테두리가 남는다. */
+    background: var(--border);
+    border: none;
+    /* 상하·좌우 각 2px씩 더 키운 칩. */
+    padding: 5px 10px;
     cursor: pointer;
-    clip-path: var(--pixel-clip);
+    clip-path: var(--chip-clip);
 }
-.todo-chip:hover {
+.todo-chip::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    z-index: -1;
+    clip-path: var(--chip-clip);
+    background: var(--card);
+    pointer-events: none;
+}
+.todo-chip:hover::before {
     background: var(--btn-bg-hover);
 }
 .todo-chip.active {
     background: var(--accent);
     color: #fff;
-    border-color: var(--accent);
+}
+.todo-chip.active::before {
+    background: var(--accent);
 }
 /* 칩 내부 라벨/삭제(x) — 투명 버튼 */
 .todo-chip-label,
@@ -891,7 +1069,7 @@ body {
     font-size: 11px;
     color: var(--text);
     background: var(--bg);
-    border: 2px dashed var(--border);
+    border: 1px dashed var(--border);
     padding: 3px 8px;
     outline: none;
 }
@@ -1001,7 +1179,9 @@ body {
         inset -2px -2px 0 rgba(0, 0, 0, 0.2);
 }
 .todo-filter.active {
-    --btn-fill: var(--accent);
+    /* 활성 색은 테마 토큰을 따른다(테마별로 다름). 바깥 staircase = 진한 톤, 채움 = 주 색. */
+    background: var(--btn-primary-edge);
+    --btn-fill: var(--btn-primary);
     color: #fff;
 }
 .todo-list {
@@ -1423,9 +1603,10 @@ body {
 }
 /* 입력/작은 버튼 */
 .fi,
+.todo-chip-add,
 .add-btn,
 .todo-filter {
-    border-radius: 7px;
+    border-radius: 10px;
 }
 /* 작은 컨트롤 */
 .todo-check,
@@ -1484,6 +1665,65 @@ body {
     box-shadow:
         inset -2px -2px 0 var(--emboss-hi),
         inset 2px 2px 0 var(--emboss-lo);
+}
+/* 할일 필터 버튼만 테두리 1px (공유 그룹 .ac/.pbtn/.add-btn는 2px 유지). */
+.todo-filter::before {
+    inset: 1px;
+    /* 비활성 베벨 어두운 톤을 채움색과 섞어 명도를 올린다(대비 완화). */
+    box-shadow:
+        inset 2px 2px 0 var(--emboss-hi),
+        inset -2px -2px 0 color-mix(in srgb, var(--emboss-lo) 45%, var(--btn-bg));
+}
+/* 활성 필터는 반전(눌린) 베벨 대신 일반 베벨 — 채움(중간 블루) 대비를 낮춘 은은한 톤. */
+.todo-filter.active::before {
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.22),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.15);
+}
+
+/* 타이머 버튼 — 활성(주 .pbtn)/비활성(.ghost)을 할일 필터와 같은 블루 체계로.
+   (.pbtn은 가챠·유튜브 등과 공유하므로 .timer-controls로 스코프) */
+.timer-controls .pbtn {
+    background: var(--btn-primary-edge); /* 바깥 staircase = 진한 톤(테마별) */
+    --btn-fill: var(--btn-primary); /* 채움 = 주 색(테마별) */
+    color: #fff;
+}
+.timer-controls .pbtn:hover {
+    --btn-fill: color-mix(in srgb, var(--btn-primary) 78%, #fff);
+}
+.timer-controls .pbtn::before {
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.22),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.15);
+}
+.timer-controls .pbtn.ghost {
+    background: var(--border); /* 바깥 = 옅은 테두리 */
+    --btn-fill: var(--btn-bg); /* 채움 = 옅은 periwinkle(비활성 필터와 동일) */
+    color: var(--accent);
+}
+.timer-controls .pbtn.ghost:hover {
+    --btn-fill: var(--btn-bg-hover);
+}
+.timer-controls .pbtn.ghost::before {
+    box-shadow:
+        inset 2px 2px 0 var(--emboss-hi),
+        inset -2px -2px 0 color-mix(in srgb, var(--emboss-lo) 45%, var(--btn-bg));
+}
+
+/* 가챠(뽑기) 버튼 — 활성은 주 색(테마별), 비활성(disabled)은 흐리게.
+   (.pbtn 공유라 .gacha-bottom로 스코프. 다크 테마 전용 override는 더 구체적이라 유지됨) */
+.gacha-bottom .pbtn {
+    background: var(--btn-primary-edge);
+    --btn-fill: var(--btn-primary);
+    color: #fff;
+}
+.gacha-bottom .pbtn:hover {
+    --btn-fill: color-mix(in srgb, var(--btn-primary) 78%, #fff);
+}
+.gacha-bottom .pbtn::before {
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.22),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.15);
 }
 
 /* ── 일정(달력) ── */
@@ -1796,6 +2036,8 @@ body {
     gap: 4px;
     padding: 6px 4px;
     background: var(--border);
+    /* 버튼 기본 테두리(2px outset black) 제거 — 하·우의 어두운 가장자리 원인. */
+    border: none;
     cursor: pointer;
     clip-path: var(--pixel-clip);
 }
@@ -1859,6 +2101,8 @@ body {
     gap: 4px;
     padding: 6px 4px;
     background: var(--card);
+    /* 버튼 기본 테두리(2px outset black) 제거 — 하·우의 어두운 가장자리 원인. */
+    border: none;
     clip-path: var(--pixel-clip);
     box-shadow:
         inset 2px 2px 0 rgba(255, 255, 255, 0.5),
@@ -2011,6 +2255,8 @@ body {
     gap: 4px;
     padding: 8px 8px 10px;
     background: var(--border);
+    /* 버튼 기본 테두리(2px outset black) 제거 — 어두운 가장자리 원인. */
+    border: none;
     cursor: pointer;
     clip-path: var(--pixel-clip);
 }
@@ -2032,6 +2278,8 @@ body {
     width: 100%;
     aspect-ratio: 1 / 1;
     object-fit: cover;
+    /* PNG에 그려진 어두운 프레임을 가리려 안쪽만 보이게 크롭. */
+    object-view-box: inset(6%);
     image-rendering: pixelated;
     clip-path: var(--pixel-clip);
 }
@@ -2294,6 +2542,8 @@ body {
     padding: 6px 4px;
     cursor: pointer;
     background: var(--border);
+    /* 버튼 기본 테두리(2px outset black) 제거 — 하·우의 어두운 가장자리 원인. */
+    border: none;
     clip-path: var(--pixel-clip);
     font-family: var(--pix);
 }

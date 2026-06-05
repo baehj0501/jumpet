@@ -12,7 +12,9 @@
         />
         <title>JUMPET</title>
     </head>
-    <body data-theme="skyblue">
+    <!-- data-theme은 MenuPage가 <html>에 설정한다(설정 SSOT). body에 고정하면
+         가까운 조상으로서 --tab-* 같은 토큰을 가로채 테마가 어긋나므로 두지 않는다. -->
+    <body>
         <div id="root"></div>
         <script
             type="module"

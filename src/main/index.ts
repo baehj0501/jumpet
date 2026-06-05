@@ -43,7 +43,13 @@ const createWindow = (): BrowserWindow => {
         },
     })
 
-    mainWindow.center()
+    // 화면 오른쪽 아래에서 시작(작업표시줄/메뉴바 제외한 작업영역 기준 + 여백).
+    const { workArea } = screen.getPrimaryDisplay()
+    const margin = 24
+    mainWindow.setPosition(
+        Math.round(workArea.x + workArea.width - 300 - margin),
+        Math.round(workArea.y + workArea.height - 300 - margin),
+    )
 
     mainWindow.on('ready-to-show', () => {
         mainWindow.show()
@@ -68,6 +74,35 @@ const createWindow = (): BrowserWindow => {
 
 // 데코 창 싱글톤 ref — 꾸미기 모드 토글 시 클릭통과를 조작한다.
 let worldWindow: BrowserWindow | null = null
+
+// 캐릭터(펫) 창 싱글톤 ref — 말풍선이 뜰 때 잠깐 최상단으로 끌어올린다.
+let characterWindow: BrowserWindow | null = null
+
+// 일시 최상단 해제 타이머 — 연속 완료 시 마지막 호출 기준으로 복귀 시점을 미룬다.
+let characterTopTimer: ReturnType<typeof setTimeout> | null = null
+
+// 캐릭터 창을 잠깐 최상단으로 끌어올린다(상시 always-on-top 정책은 유지).
+// 할일 완료 등으로 말풍선이 뜰 때 호출 → 말풍선이 보이는 동안만 위로, 끝나면 일반 z-order로 복귀.
+const CHARACTER_TOP_DURATION_MS = 2600
+const bringCharacterWindowToTop = (): void => {
+    if (!characterWindow || characterWindow.isDestroyed()) {
+        return
+    }
+    if (!characterWindow.isVisible()) {
+        characterWindow.show()
+    }
+    characterWindow.moveTop()
+    characterWindow.setAlwaysOnTop(true)
+    if (characterTopTimer !== null) {
+        clearTimeout(characterTopTimer)
+    }
+    characterTopTimer = setTimeout(() => {
+        characterTopTimer = null
+        if (characterWindow && !characterWindow.isDestroyed()) {
+            characterWindow.setAlwaysOnTop(false)
+        }
+    }, CHARACTER_TOP_DURATION_MS)
+}
 
 // 꾸미기 모드에 따라 데코 창의 상호작용을 토글한다.
 // edit: 클릭/드래그 받음. fixed: 클릭 통과(데스크탑/다른 창 클릭 가능).
@@ -160,6 +195,8 @@ app.whenReady().then(() => {
             // 완료 시 todo에 저장된 보상(1~5점)을 지급하고 말풍선으로 알린다.
             applyPlayerEvent({ type: 'manual', delta: reward })
             broadcastCharacterSpeech(`할일 완료! +${reward}pt 🎉`)
+            // 완료 축하 말풍선이 가려지지 않게 캐릭터 창을 잠깐 최상단으로.
+            bringCharacterWindowToTop()
         },
         onTodoUncompleted: (reward) => {
             // 완료 취소 시 같은 보상을 차감(점수가 음수로 내려갈 수 있음).
@@ -232,7 +269,7 @@ app.whenReady().then(() => {
     // 캐릭터 위 말풍선 중계 — 메뉴 창의 돌봄 멘트 등을 캐릭터 창으로 보낸다.
     registerCharacterIpc()
 
-    createWindow()
+    characterWindow = createWindow()
 
     // 데스크탑 하단 월드 창 — 배치된 데코를 고정 표시.
     createWorldWindow()
@@ -243,7 +280,7 @@ app.whenReady().then(() => {
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
-            createWindow()
+            characterWindow = createWindow()
         }
     })
 })

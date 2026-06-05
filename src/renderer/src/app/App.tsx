@@ -54,14 +54,12 @@ export const App = () => {
         },
         // 드래그가 아닌 단순 좌클릭 → 랜덤 멘트를 머리 위 말풍선으로.
         // 클릭 시점의 최신 프로필(SSOT)을 읽는다.
-        // 50% 확률 우측 정렬 태그 "(캐릭터 이름)이/가" — 정보의 '캐릭터 이름'(비우면 캐릭터 기본명).
-        // 10% 확률 제일 윗줄 "(이름)아/야" — 정보의 '이름'.
+        // 50% 확률 우측 정렬 태그 "(캐릭터 이름)이/가" — 홈 탭과 동일하게 선택된 캐릭터의 고정 종류명을 쓴다.
+        //   (옛 profile.characterName 편집 기능은 폐기 — 저장소에 남은 값 대신 항상 종류명을 따른다.)
+        // 10% 확률 제일 윗줄 "(이름)아/야" — 정보의 '이름'(petName).
         onClick: () => {
             const profile = getProfileSnapshot()
-            const characterName =
-                profile.characterName !== ''
-                    ? profile.characterName
-                    : (CHARACTER_DISPLAY_NAMES[selectedCharacterId] ?? selectedCharacterId)
+            const characterName = CHARACTER_DISPLAY_NAMES[selectedCharacterId] ?? selectedCharacterId
             let message = pickRandomClickMessage()
             if (Math.random() < 0.1) {
                 message = `${withVocativeParticle(profile.petName)}\n${message}`

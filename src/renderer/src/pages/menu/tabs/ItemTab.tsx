@@ -63,9 +63,15 @@ export const ItemTab = () => {
     return (
         <div className='panel'>
             <div className='hint'>
-                {editing
-                    ? '보관함 데코를 눌러 바탕화면에 놓고, 드래그로 옮겨요 (우클릭=회수)'
-                    : '바탕화면 어디든 데코로 꾸며요'}
+                {editing ? (
+                    <>
+                        보관함 데코를 눌러 바탕화면에 놓고,
+                        <br />
+                        드래그로 옮겨요 (우클릭=회수)
+                    </>
+                ) : (
+                    '바탕화면 어디든 데코로 꾸며요'
+                )}
             </div>
 
             {/* 툴바 */}

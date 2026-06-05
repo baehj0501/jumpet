@@ -17,7 +17,7 @@ body,
 .pet-companion {
     position: fixed;
     right: 40px;
-    bottom: 40px;
+    bottom: 30px;
     pointer-events: none;
     z-index: 5;
     image-rendering: pixelated;
