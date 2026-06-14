@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
+    CHARACTER_CLICK_FRAMES,
     CHARACTER_DISPLAY_NAMES,
     CharacterView,
     SpeechBubble,
@@ -43,6 +44,60 @@ export const App = () => {
     // 말풍선 상태 — 다른 창(메뉴 돌봄 등)의 멘트 구독 + 같은 창(좌클릭) 멘트는 showSpeech로 즉시 표시.
     const { speech, showSpeech } = useCharacterSpeech()
 
+    // 클릭 반응 애니메이션 — 클릭하면 캐릭터의 모션 중 하나를 랜덤으로 골라 1회 재생 후 기본 포즈로 복귀.
+    // 모션이 없는 캐릭터는 애니 없음. clickFrameIndex가 null이면 재생 중 아님.
+    const [clickFrameIndex, setClickFrameIndex] = useState<number | null>(null)
+    const activeMotionRef = useRef<string[] | null>(null)
+    const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    // 프레임당 200ms, 마지막 프레임만 4초 유지 후 기본 포즈로 복귀.
+    const FRAME_MS = 200
+    const LAST_FRAME_HOLD_MS = 3000
+    const playClickAnimation = () => {
+        const motions = CHARACTER_CLICK_FRAMES[selectedCharacterId]
+        if (!motions || motions.length === 0) {
+            return
+        }
+        // 모션 하나를 랜덤 선택.
+        const frames = motions[Math.floor(Math.random() * motions.length)]
+        if (!frames || frames.length === 0) {
+            return
+        }
+        if (clickTimerRef.current) {
+            clearTimeout(clickTimerRef.current)
+        }
+        activeMotionRef.current = frames
+        let frame = 0
+        setClickFrameIndex(0)
+        // 현재 프레임을 보여준 뒤 다음을 예약. 마지막 프레임은 길게 유지하고 끝나면 복귀.
+        const scheduleNext = () => {
+            const isLastFrame = frame >= frames.length - 1
+            clickTimerRef.current = setTimeout(
+                () => {
+                    if (isLastFrame) {
+                        clickTimerRef.current = null
+                        activeMotionRef.current = null
+                        setClickFrameIndex(null)
+                    } else {
+                        frame += 1
+                        setClickFrameIndex(frame)
+                        scheduleNext()
+                    }
+                },
+                isLastFrame ? LAST_FRAME_HOLD_MS : FRAME_MS,
+            )
+        }
+        scheduleNext()
+    }
+    // 언마운트 시 진행 중인 타이머 정리.
+    useEffect(
+        () => () => {
+            if (clickTimerRef.current) {
+                clearTimeout(clickTimerRef.current)
+            }
+        },
+        [],
+    )
+
     // useWindowDrag는 자율 행동 정책을 모른다 — 호출자가 콜백에서 ref를 토글하고 자율 상태도 멈춘다.
     const { handleMouseDown } = useWindowDrag({
         onDragStart: () => {
@@ -66,12 +121,18 @@ export const App = () => {
             }
             const tag = Math.random() < 0.5 ? withSubjectParticle(characterName) : undefined
             showSpeech(message, tag)
+            // 클릭 반응 모션 재생(프레임 있는 캐릭터만).
+            playClickAnimation()
         },
     })
     const { handleContextMenu } = useContextMenu({ isInteractingRef })
 
     // 장착된 동반 펫(SSOT). 없으면 ''.
     const petId = useSelectedPetId()
+
+    // 클릭 애니 재생 중이면 활성 모션의 해당 프레임을, 아니면 mood 기본 이미지를 보여준다.
+    const clickOverrideSrc =
+        clickFrameIndex !== null ? activeMotionRef.current?.[clickFrameIndex] : undefined
 
     // 캐릭터 크기(SSOT) — 설정 탭에서 바꾸면 캐릭터 윈도우 자체를 키워 제자리에서 커진다.
     // 이미지가 objectFit:contain으로 창을 채우므로 창 크기가 곧 캐릭터 크기.
@@ -95,6 +156,7 @@ export const App = () => {
                 characterId={selectedCharacterId}
                 mood={CURRENT_MOOD}
                 state={characterState}
+                overrideSrc={clickOverrideSrc}
                 onMouseDown={handleMouseDown}
                 onContextMenu={handleContextMenu}
             />

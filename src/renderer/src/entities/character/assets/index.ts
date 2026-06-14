@@ -39,6 +39,45 @@ export const CHARACTER_ASSETS: Record<CharacterId, Record<Mood, string>> = {
     },
 }
 
+// 클릭 반응 모션 — <character>/<motion>/<n>.png 를 자동 수집(import.meta.glob, decorCatalog와 동일 방식).
+// `*/*/*` 3단 깊이라 캐릭터 직속 idle.png/home.png(2단)는 제외된다. 캐릭터 클릭 시 모션 하나를 랜덤 재생.
+const motionFiles = import.meta.glob('./*/*/*.png', {
+    eager: true,
+    query: '?url',
+    import: 'default',
+}) as Record<string, string>
+
+// 경로(./<character>/<motion>/<n>.png)를 캐릭터→모션→프레임으로 묶고, 모션·프레임 순으로 정렬한다.
+const buildClickFrames = (
+    files: Record<string, string>,
+): Partial<Record<CharacterId, string[][]>> => {
+    const byCharacter: Record<string, Record<string, { frame: number; url: string }[]>> = {}
+    for (const [path, url] of Object.entries(files)) {
+        const matched = path.match(/\.\/([^/]+)\/([^/]+)\/(\d+)\.png$/)
+        if (!matched) {
+            continue
+        }
+        const character = matched[1]
+        const motion = matched[2]
+        const frame = Number(matched[3])
+        ;((byCharacter[character] ??= {})[motion] ??= []).push({ frame, url })
+    }
+    const result: Partial<Record<CharacterId, string[][]>> = {}
+    for (const character of Object.keys(byCharacter)) {
+        const motions = byCharacter[character]
+        result[character as CharacterId] = Object.keys(motions)
+            .sort()
+            .map((motion) =>
+                motions[motion].sort((a, b) => a.frame - b.frame).map((f) => f.url),
+            )
+    }
+    return result
+}
+
+// 캐릭터별 클릭 모션 목록. 각 원소가 한 모션의 프레임 배열(string[]). 키 없으면 클릭 애니 없음.
+export const CHARACTER_CLICK_FRAMES: Partial<Record<CharacterId, string[][]>> =
+    buildClickFrames(motionFiles)
+
 // 홈 씬 합본(캐릭터 + 바닥) 이미지. CareTab 홈에서 캐릭터+바닥을 한 장으로 렌더.
 export const HOME_SCENE_ASSETS: Record<CharacterId, string> = {
     piyoo: piyooHome,
