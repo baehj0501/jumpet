@@ -7,7 +7,7 @@ import {
     useSelectedCharacterId,
     useSelectCharacter,
 } from '@renderer/entities/character'
-import { useProfile, useProfileActions } from '@renderer/entities/profile'
+import { getBirthdayCooldown, useProfile, useProfileActions } from '@renderer/entities/profile'
 import { ProfileRow } from '../ProfileRow'
 import homeCloud from '../assets/home_cloud2.png'
 
@@ -31,6 +31,8 @@ export const CareTab = () => {
     const setPetName = (value: string) => void setField('petName', value)
     const birthday = profile.birthday
     const setBirthday = (value: string) => void setField('birthday', value)
+    // 생일은 변경 후 1달 쿨타임 — 잠금 중엔 수정 불가(연필 숨김).
+    const birthdayCooldown = getBirthdayCooldown(profile)
     const currentCharacterIndex = Math.max(0, CHARACTER_IDS.indexOf(currentCharacterId))
     const cycleCharacter = (delta: number) => {
         const nextIndex =
@@ -89,29 +91,30 @@ export const CareTab = () => {
 
             <div className='profile-rows'>
                 <ProfileRow
-                    icon='🌿'
                     label='캐릭터 이름'
                     value={characterName}
                 />
                 <ProfileRow
-                    icon='💗'
                     label='내 이름'
                     value={petName}
                     onChange={setPetName}
                 />
                 <ProfileRow
-                    icon='🎂'
                     label='생일'
                     value={birthday}
-                    onChange={setBirthday}
+                    onChange={birthdayCooldown.locked ? undefined : setBirthday}
                 />
                 <div className='profile-row'>
-                    <span className='profile-row-icon'>⭐</span>
                     <span className='profile-row-label'>포인트</span>
                     <span className='profile-row-value points'>{score}P</span>
                     <span className='profile-row-edit-placeholder' />
                 </div>
             </div>
+            {birthdayCooldown.locked && (
+                <div className='hint'>
+                    생일은 한 달에 한 번만 바꿀 수 있어요 (D-{birthdayCooldown.remainingDays})
+                </div>
+            )}
         </div>
     )
 }

@@ -17,10 +17,10 @@ const PIXEL_CLIP = `polygon(
 // 머리 위 배치 + 픽셀 오프셋 그림자(드롭섀도라 계단 모양을 따라간다).
 export const wrapperStyle = css({
     position: 'absolute',
-    top: 6,
+    top: 2,
     left: '50%',
-    transform: 'translateX(-50%)',
-    maxWidth: 250,
+    // 창 너비(최대 ~240px)보다 좁게 — 긴 멘트가 좌우로 잘리지 않게 줄바꿈시킨다.
+    maxWidth: 200,
     width: 'max-content',
     pointerEvents: 'none',
     zIndex: 10,

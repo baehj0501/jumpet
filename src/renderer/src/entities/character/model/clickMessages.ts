@@ -103,6 +103,26 @@ export const CLICK_MESSAGES: string[] = [
     "넌 성장중이야(◍•ᴗ•◍)",
 ]
 
+// 시간대별 인사 멘트. 클릭 시 일정 확률로 일반 멘트 대신 시간대 인사를 띄운다.
+const TIME_GREETINGS: { until: number; lines: string[] }[] = [
+    // 새벽(0~4)
+    { until: 5, lines: ['아직 안 잤어? 🌙', '밤이 깊었네', '얼른 자야 해!', '늦었어, 굿나잇'] },
+    // 아침(5~10)
+    { until: 11, lines: ['좋은 아침! ☀️', '잘 잤어?', '아침이야~', '오늘도 화이팅!'] },
+    // 낮(11~16)
+    { until: 17, lines: ['점심 먹었어?', '좋은 오후야~', '나른한 오후네', '잘 보내고 있어?'] },
+    // 저녁(17~20)
+    { until: 21, lines: ['좋은 저녁이야 🌆', '오늘 하루 어땠어?', '저녁이네~', '수고 많았어!'] },
+    // 밤(21~23)
+    { until: 24, lines: ['이제 잘 시간이야 🌙', '별이 떴어 ✨', '오늘도 고생했어', '굿나잇 준비할까?'] },
+]
+
+// 현재 시각에 맞는 인사 하나를 뽑는다.
+export const pickTimeGreeting = (hour: number = new Date().getHours()): string => {
+    const band = TIME_GREETINGS.find((greeting) => hour < greeting.until) ?? TIME_GREETINGS[0]
+    return band.lines[Math.floor(Math.random() * band.lines.length)]
+}
+
 // 랜덤으로 하나 고른다(직전과 같으면 한 번 더 뽑아 변화를 준다).
 let lastIndex = -1
 export const pickRandomClickMessage = (): string => {

@@ -40,6 +40,25 @@ export const reduceScheduleState = (state: ScheduleState, event: ScheduleEvent):
             }
             return { items: next }
         }
+        case 'update': {
+            const title = event.title.trim().slice(0, MAX_SCHEDULE_TITLE_LENGTH)
+            if (title === '') {
+                return state
+            }
+            const memo = (event.memo ?? '').trim().slice(0, MAX_SCHEDULE_MEMO_LENGTH)
+            let changed = false
+            const next = state.items.map((item) => {
+                if (item.id !== event.id || (item.title === title && item.memo === memo)) {
+                    return item
+                }
+                changed = true
+                return { ...item, title, memo }
+            })
+            if (!changed) {
+                return state
+            }
+            return { items: next }
+        }
         default: {
             const exhaustiveCheck: never = event
             throw new Error(`Unhandled ScheduleEvent: ${JSON.stringify(exhaustiveCheck)}`)

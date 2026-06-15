@@ -40,8 +40,25 @@ const eachDateInRange = (startKey: string, endKey: string): string[] => {
 
 export const ScheduleTab = () => {
     const items = useScheduleItems()
-    const { add, remove } = useScheduleActions()
+    const { add, remove, update } = useScheduleActions()
     const { addTodo, removeTodo } = useTodoActions()
+
+    // 일정 수정 — 항목 더블클릭하면 ✎ 버튼이 뜨고, 누르면 제목 인라인 편집.
+    const [revealEditId, setRevealEditId] = useState<string | null>(null)
+    const [editingId, setEditingId] = useState<string | null>(null)
+    const [editTitle, setEditTitle] = useState('')
+    const startEditItem = (id: string, currentTitle: string) => {
+        setEditingId(id)
+        setEditTitle(currentTitle)
+        setRevealEditId(null)
+    }
+    const commitEditItem = (id: string, memo: string) => {
+        const trimmed = editTitle.trim()
+        if (trimmed !== '') {
+            void update(id, trimmed, memo)
+        }
+        setEditingId(null)
+    }
 
     // 오늘 — 렌더 시점 1회 고정(탭이 떠 있는 동안 날짜 경계를 넘는 일은 드묾).
     const today = useMemo(() => new Date(), [])
@@ -397,6 +414,11 @@ export const ScheduleTab = () => {
                         <div
                             key={item.id}
                             className='sched-item'
+                            onDoubleClick={() => {
+                                if (editingId !== item.id) {
+                                    setRevealEditId(item.id)
+                                }
+                            }}
                         >
                             <span className='sched-time-badge'>{item.time}</span>
                             {(item.date !== item.endDate || item.endTime !== item.time) && (
@@ -409,9 +431,44 @@ export const ScheduleTab = () => {
                                 </span>
                             )}
                             <span className='sched-text'>
-                                <span className='sched-title'>{item.title}</span>
-                                {item.memo && <span className='sched-memo'>{item.memo}</span>}
+                                {editingId === item.id ? (
+                                    <input
+                                        className='fi item-edit-input'
+                                        autoFocus
+                                        maxLength={MAX_SCHEDULE_TITLE_LENGTH}
+                                        value={editTitle}
+                                        onChange={(event) => setEditTitle(event.target.value)}
+                                        onBlur={() => commitEditItem(item.id, item.memo)}
+                                        onKeyDown={(event) => {
+                                            if (
+                                                event.key === 'Enter' &&
+                                                !event.nativeEvent.isComposing
+                                            ) {
+                                                commitEditItem(item.id, item.memo)
+                                            } else if (event.key === 'Escape') {
+                                                setEditingId(null)
+                                            }
+                                        }}
+                                    />
+                                ) : (
+                                    <>
+                                        <span className='sched-title'>{item.title}</span>
+                                        {item.memo && (
+                                            <span className='sched-memo'>{item.memo}</span>
+                                        )}
+                                    </>
+                                )}
                             </span>
+                            {revealEditId === item.id && editingId !== item.id && (
+                                <button
+                                    type='button'
+                                    className='item-edit-btn'
+                                    title='수정'
+                                    onClick={() => startEditItem(item.id, item.title)}
+                                >
+                                    ✎
+                                </button>
+                            )}
                             <button
                                 type='button'
                                 className='todo-del'

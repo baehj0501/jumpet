@@ -29,6 +29,8 @@ export type ScheduleEvent =
           todoId?: string
       }
     | { type: 'remove'; id: string }
+    // 추가된 일정의 제목·메모 수정.
+    | { type: 'update'; id: string; title: string; memo: string }
 
 export const INITIAL_SCHEDULE_STATE: ScheduleState = {
     items: [],

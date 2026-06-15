@@ -3,6 +3,7 @@ export {
     initializeSettingsSync,
     useTheme,
     usePetScale,
+    useLaunchAtLogin,
     useSettingsActions,
 } from './model/useSettingsStore'
 export {

@@ -13,20 +13,29 @@ import {
 type SettingsStore = {
     theme: ThemeId
     petScale: number
+    launchAtLogin: boolean
     setTheme: (theme: ThemeId) => Promise<void>
     setPetScale: (petScale: number) => Promise<void>
+    setLaunchAtLogin: (launchAtLogin: boolean) => Promise<void>
+}
+
+// main이 돌려준 전체 상태를 store에 반영.
+const mirror = (set: (partial: Partial<SettingsStore>) => void, state: SettingsState): void => {
+    set({ theme: state.theme, petScale: state.petScale, launchAtLogin: state.launchAtLogin })
 }
 
 const useSettingsStoreInternal = create<SettingsStore>((set) => ({
     theme: INITIAL_SETTINGS_STATE.theme,
     petScale: INITIAL_SETTINGS_STATE.petScale,
+    launchAtLogin: INITIAL_SETTINGS_STATE.launchAtLogin,
     setTheme: async (theme) => {
-        const next = await window.api.settings.apply({ type: 'setTheme', theme })
-        set({ theme: next.theme, petScale: next.petScale })
+        mirror(set, await window.api.settings.apply({ type: 'setTheme', theme }))
     },
     setPetScale: async (petScale) => {
-        const next = await window.api.settings.apply({ type: 'setPetScale', petScale })
-        set({ theme: next.theme, petScale: next.petScale })
+        mirror(set, await window.api.settings.apply({ type: 'setPetScale', petScale }))
+    },
+    setLaunchAtLogin: async (launchAtLogin) => {
+        mirror(set, await window.api.settings.apply({ type: 'setLaunchAtLogin', launchAtLogin }))
     },
 }))
 
@@ -47,19 +56,13 @@ export const initializeSettingsSync = (): void => {
     void window.api.settings
         .get()
         .then((state: SettingsState) => {
-            useSettingsStoreInternal.setState({
-                theme: state.theme,
-                petScale: state.petScale,
-            })
+            mirror(useSettingsStoreInternal.setState, state)
         })
         .catch(() => {
             // 창이 닫히는 타이밍 등으로 IPC가 단절되면 조용히 무시.
         })
     unsubscribeFromChanges = window.api.settings.onChange((state) => {
-        useSettingsStoreInternal.setState({
-            theme: state.theme,
-            petScale: state.petScale,
-        })
+        mirror(useSettingsStoreInternal.setState, state)
     })
 }
 
@@ -73,14 +76,18 @@ if (import.meta.hot) {
 
 export const useTheme = (): ThemeId => useSettingsStoreInternal((state) => state.theme)
 export const usePetScale = (): number => useSettingsStoreInternal((state) => state.petScale)
+export const useLaunchAtLogin = (): boolean =>
+    useSettingsStoreInternal((state) => state.launchAtLogin)
 
 export const useSettingsActions = (): {
     setTheme: (theme: ThemeId) => Promise<void>
     setPetScale: (petScale: number) => Promise<void>
+    setLaunchAtLogin: (launchAtLogin: boolean) => Promise<void>
 } =>
     useSettingsStoreInternal(
         useShallow((state) => ({
             setTheme: state.setTheme,
             setPetScale: state.setPetScale,
+            setLaunchAtLogin: state.setLaunchAtLogin,
         })),
     )

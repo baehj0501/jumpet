@@ -1,5 +1,5 @@
 {
-    "name": "game",
+    "name": "loopf",
     "version": "0.0.1",
     "description": "Electron + React + TypeScript desktop app",
     "main": "./out/main/index.js",

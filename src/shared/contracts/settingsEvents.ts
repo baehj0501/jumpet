@@ -9,18 +9,22 @@ export const THEME_IDS: ThemeId[] = ['skyblue', 'green', 'babypink', 'brown', 'l
 
 // 캐릭터 윈도우 표시 배율. 1.0 = 기본 300px. 범위는 reducer에서 강제(clamp).
 export const PET_SCALE_MIN = 0.5
-export const PET_SCALE_MAX = 2.0
+export const PET_SCALE_MAX = 0.8
 
 export type SettingsState = {
     theme: ThemeId
     petScale: number
+    // 컴퓨터 시작(로그인) 시 앱 자동 실행. main이 app.setLoginItemSettings로 OS에 반영.
+    launchAtLogin: boolean
 }
 
 export type SettingsEvent =
     | { type: 'setTheme'; theme: ThemeId }
     | { type: 'setPetScale'; petScale: number }
+    | { type: 'setLaunchAtLogin'; launchAtLogin: boolean }
 
 export const INITIAL_SETTINGS_STATE: SettingsState = {
     theme: 'skyblue',
     petScale: 1.0,
+    launchAtLogin: false,
 }

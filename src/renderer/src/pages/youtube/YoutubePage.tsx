@@ -2,13 +2,15 @@ import { createElement, useEffect, useRef, useState } from 'react'
 import {
     BASE_H,
     BASE_W,
-    MINI_H,
-    MINI_W,
     THEME_HOLES,
     YOUTUBE_THEMES as THEMES,
     resolveYoutubeSrc,
     themeSrc,
 } from './themes'
+
+// 뷰어 크기 5단계(%). 1=가장 작게 … 5=가장 크게(120%). 우클릭 메뉴에서 고른다.
+const SIZE_STEP_PCTS = [60, 75, 90, 105, 120]
+const DEFAULT_SIZE_STEP = 3
 
 // 메뉴에서 열 때 넘어온 옵션(쿼리). theme=프레임, video=재생할 유튜브 URL.
 const openParams = new URLSearchParams(window.location.search)
@@ -34,8 +36,10 @@ const BROWSE_CSS =
 
 export const YoutubePage = () => {
     const [theme, setTheme] = useState(() => initialTheme)
-    const [pct, setPct] = useState(() => Number(localStorage.getItem('yt_pct') || '100'))
-    const [mini, setMini] = useState(false)
+    const [sizeStep, setSizeStep] = useState(() => {
+        const saved = Number(localStorage.getItem('yt_size_step'))
+        return saved >= 1 && saved <= SIZE_STEP_PCTS.length ? saved : DEFAULT_SIZE_STEP
+    })
     const [ctx, setCtx] = useState<{ x: number; y: number } | null>(null)
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -93,7 +97,7 @@ export const YoutubePage = () => {
         const onCtx = (event: MouseEvent) => {
             event.preventDefault()
             const x = Math.min(event.clientX, window.innerWidth - 180)
-            const y = Math.min(event.clientY, window.innerHeight - 160)
+            const y = Math.min(event.clientY, window.innerHeight - 200)
             setCtx({ x: Math.max(4, x), y: Math.max(4, y) })
         }
         const onClickAway = () => setCtx(null)
@@ -105,31 +109,27 @@ export const YoutubePage = () => {
         }
     }, [])
 
-    const applyResize = (nextPct: number) => {
+    const applySize = (step: number) => {
+        const pct = SIZE_STEP_PCTS[step - 1] ?? SIZE_STEP_PCTS[DEFAULT_SIZE_STEP - 1]
         window.api.youtube.resize(
-            Math.round((BASE_W * nextPct) / 100),
-            Math.round((BASE_H * nextPct) / 100),
+            Math.round((BASE_W * pct) / 100),
+            Math.round((BASE_H * pct) / 100),
         )
     }
-    const onSlider = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const nextPct = Number(event.target.value)
-        setPct(nextPct)
-        localStorage.setItem('yt_pct', String(nextPct))
-        applyResize(nextPct)
+    // 창을 열 때 저장된 단계 크기로 한 번 맞춘다.
+    useEffect(() => {
+        applySize(sizeStep)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+    const chooseSize = (step: number) => {
+        setSizeStep(step)
+        localStorage.setItem('yt_size_step', String(step))
+        applySize(step)
+        setCtx(null)
     }
     const chooseTheme = (id: number) => {
         setTheme(id)
         localStorage.setItem('yt_theme', String(id))
-        setCtx(null)
-    }
-    const toggleMini = () => {
-        const next = !mini
-        setMini(next)
-        if (next) {
-            window.api.youtube.resize(MINI_W, MINI_H)
-        } else {
-            applyResize(pct)
-        }
         setCtx(null)
     }
 
@@ -150,21 +150,7 @@ export const YoutubePage = () => {
                 draggable={false}
             />
 
-            {/* 하단 크기 조절 슬라이더 */}
-            <div className='yt-resize-bar'>
-                <span>{pct}%</span>
-                <input
-                    type='range'
-                    className='yt-slider'
-                    min={50}
-                    max={200}
-                    step={1}
-                    value={pct}
-                    onChange={onSlider}
-                />
-            </div>
-
-            {/* 프레임 우클릭 컨텍스트 메뉴 — 테마 / 미니 / 닫기 */}
+            {/* 프레임 우클릭 컨텍스트 메뉴 — 테마 / 크기(1~5) / 닫기 */}
             {ctx && (
                 <div
                     className='yt-ctx'
@@ -190,13 +176,22 @@ export const YoutubePage = () => {
                             </button>
                         ))}
                     </div>
-                    <button
-                        type='button'
-                        className='yt-ctx-item'
-                        onClick={toggleMini}
-                    >
-                        {mini ? '미니 해제' : '미니 모드'}
-                    </button>
+                    <div className='yt-ctx-title'>📐 크기</div>
+                    <div className='yt-ctx-sizes'>
+                        {SIZE_STEP_PCTS.map((_, index) => {
+                            const step = index + 1
+                            return (
+                                <button
+                                    type='button'
+                                    key={step}
+                                    className={step === sizeStep ? 'yt-ctx-size active' : 'yt-ctx-size'}
+                                    onClick={() => chooseSize(step)}
+                                >
+                                    {step}
+                                </button>
+                            )
+                        })}
+                    </div>
                     <button
                         type='button'
                         className='yt-ctx-item danger'

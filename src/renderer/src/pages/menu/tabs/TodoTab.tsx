@@ -46,7 +46,7 @@ const formatDateTime = (epochMs: number): string => {
 
 export const TodoTab = () => {
     const todos = useTodos()
-    const { addTodo, toggleTodo, removeTodo, setTodoProject } = useTodoActions()
+    const { addTodo, toggleTodo, removeTodo, setTodoProject, updateTodoText } = useTodoActions()
     // 일정 연동: 일정에서 만든 할일을 지우면 연결된 일정도 함께 삭제한다.
     const scheduleItems = useScheduleItems()
     const { remove: removeSchedule } = useScheduleActions()
@@ -62,6 +62,22 @@ export const TodoTab = () => {
     const [deletingProject, setDeletingProject] = useState<string | null>(null)
     // 프로젝트 편집 모드 — 켜면 칩에 'x' 삭제 버튼이 나타난다.
     const [editingProjects, setEditingProjects] = useState(false)
+    // 할일 수정 — 항목 더블클릭하면 ✎ 버튼이 뜨고, 누르면 텍스트 인라인 편집.
+    const [revealEditId, setRevealEditId] = useState<string | null>(null)
+    const [editingId, setEditingId] = useState<string | null>(null)
+    const [editText, setEditText] = useState('')
+    const startEditTodo = (id: string, currentText: string) => {
+        setEditingId(id)
+        setEditText(currentText)
+        setRevealEditId(null)
+    }
+    const commitEditTodo = (id: string) => {
+        const trimmed = editText.trim()
+        if (trimmed !== '') {
+            void updateTodoText(id, trimmed)
+        }
+        setEditingId(null)
+    }
 
     // 출처·완료 기준 분류.
     const { activeManual, activeSchedule, completedTodos } = useMemo(() => {
@@ -211,10 +227,16 @@ export const TodoTab = () => {
     // 할 일 한 줄 렌더.
     const renderTodoItem = (todo: (typeof todos)[number]) => {
         const dateMs = todo.completed ? todo.completedAt : todo.createdAt
+        const isEditing = editingId === todo.id
         return (
             <div
                 key={todo.id}
                 className={todo.completed ? 'todo-item done' : 'todo-item'}
+                onDoubleClick={() => {
+                    if (!isEditing) {
+                        setRevealEditId(todo.id)
+                    }
+                }}
             >
                 <div
                     className={todo.completed ? 'todo-check checked' : 'todo-check'}
@@ -222,11 +244,41 @@ export const TodoTab = () => {
                 >
                     {todo.completed ? '✓' : ''}
                 </div>
-                <div className='todo-text'>
-                    {todo.project && <span className='todo-project-tag'>{todo.project}</span>}
-                    {todo.text}
-                </div>
-                {dateMs !== undefined && <span className='todo-date'>{formatDateTime(dateMs)}</span>}
+                {isEditing ? (
+                    <input
+                        className='fi item-edit-input'
+                        autoFocus
+                        maxLength={40}
+                        value={editText}
+                        onChange={(event) => setEditText(event.target.value)}
+                        onBlur={() => commitEditTodo(todo.id)}
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+                                commitEditTodo(todo.id)
+                            } else if (event.key === 'Escape') {
+                                setEditingId(null)
+                            }
+                        }}
+                    />
+                ) : (
+                    <div className='todo-text'>
+                        {todo.project && <span className='todo-project-tag'>{todo.project}</span>}
+                        {todo.text}
+                    </div>
+                )}
+                {dateMs !== undefined && !isEditing && (
+                    <span className='todo-date'>{formatDateTime(dateMs)}</span>
+                )}
+                {revealEditId === todo.id && !isEditing && (
+                    <button
+                        type='button'
+                        className='item-edit-btn'
+                        title='수정'
+                        onClick={() => startEditTodo(todo.id, todo.text)}
+                    >
+                        ✎
+                    </button>
+                )}
                 <button
                     type='button'
                     className='todo-del'

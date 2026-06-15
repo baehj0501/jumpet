@@ -1,5 +1,5 @@
-appId: com.rapportlabs.game
-productName: Game
+appId: com.rapportlabs.loopf
+productName: Loopf
 directories:
     buildResources: build
 files:

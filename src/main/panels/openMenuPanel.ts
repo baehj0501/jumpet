@@ -30,7 +30,7 @@ export const openMenuPanel = () => {
         minHeight: 460,
         frame: false,
         resizable: true,
-        title: 'JUMPET',
+        title: '루프프 데스크메이트',
         autoHideMenuBar: true,
         webPreferences: {
             preload: join(__dirname, '../preload/index.mjs'),

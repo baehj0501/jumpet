@@ -6,3 +6,4 @@ export {
     getProfileSnapshot,
     initializeProfileSync,
 } from './model/useProfileStore'
+export { getBirthdayCooldown } from './model/birthdayCooldown'

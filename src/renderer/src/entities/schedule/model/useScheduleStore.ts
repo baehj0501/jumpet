@@ -19,6 +19,8 @@ type ScheduleActions = {
     ) => Promise<void>
     // 일정 1개 삭제.
     remove: (id: string) => Promise<void>
+    // 일정 1개의 제목·메모 수정.
+    update: (id: string, title: string, memo: string) => Promise<void>
 }
 
 type ScheduleStore = {
@@ -42,6 +44,10 @@ const useScheduleStoreInternal = create<ScheduleStore>((set) => ({
     },
     remove: async (id) => {
         const next = await window.api.schedule.apply({ type: 'remove', id })
+        set({ items: next.items })
+    },
+    update: async (id, title, memo) => {
+        const next = await window.api.schedule.apply({ type: 'update', id, title, memo })
         set({ items: next.items })
     },
 }))
@@ -82,5 +88,6 @@ export const useScheduleActions = (): ScheduleActions =>
         useShallow((state) => ({
             add: state.add,
             remove: state.remove,
+            update: state.update,
         })),
     )

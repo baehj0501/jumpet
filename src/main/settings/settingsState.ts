@@ -32,6 +32,12 @@ export const reduceSettingsState = (
             }
             return { ...state, petScale: next }
         }
+        case 'setLaunchAtLogin': {
+            if (event.launchAtLogin === state.launchAtLogin) {
+                return state
+            }
+            return { ...state, launchAtLogin: event.launchAtLogin }
+        }
         default: {
             const exhaustiveCheck: never = event
             throw new Error(`Unhandled SettingsEvent: ${JSON.stringify(exhaustiveCheck)}`)

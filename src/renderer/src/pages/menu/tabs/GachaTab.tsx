@@ -310,7 +310,7 @@ export const GachaTab = () => {
                         onClick={handleSpin}
                         disabled={!canSpin}
                     >
-                        {spinning ? '섞는 중…' : `🎲 뽑기 (${GACHA_COST}pt)`}
+                        {spinning ? '섞는 중…' : `뽑기 (${GACHA_COST}pt)`}
                     </button>
                     <div className='gacha-points'>내 포인트: {score}pt</div>
                 </div>

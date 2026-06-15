@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CHARACTER_ASSETS, useSelectedCharacterId } from '@renderer/entities/character'
+import { usePlayerStore } from '@renderer/entities/player'
 import { CareTab } from './tabs/CareTab'
 import { TodoTab } from './tabs/TodoTab'
 import { FortuneTab } from './tabs/FortuneTab'
@@ -67,6 +68,24 @@ export const MenuPage = () => {
         document.documentElement.setAttribute('data-theme', theme)
     }, [theme])
 
+    // 포인트 변동 피드백 — 점수가 바뀌면 +N/-N 토스트를 잠깐 띄운다.
+    const score = usePlayerStore((state) => state.player.score)
+    const prevScoreRef = useRef(score)
+    const mountAtRef = useRef(Date.now())
+    const [pointFx, setPointFx] = useState<{ delta: number; key: number } | null>(null)
+    useEffect(() => {
+        const prev = prevScoreRef.current
+        prevScoreRef.current = score
+        if (score === prev) {
+            return
+        }
+        // 창 열릴 때의 초기 sync(0→실제값)는 피드백에서 제외.
+        if (Date.now() - mountAtRef.current < 800) {
+            return
+        }
+        setPointFx({ delta: score - prev, key: Date.now() })
+    }, [score])
+
     const renderTab = () => {
         switch (activeTab) {
             case 'care':
@@ -94,6 +113,16 @@ export const MenuPage = () => {
 
     return (
         <>
+            {pointFx && (
+                <div
+                    key={pointFx.key}
+                    className={pointFx.delta >= 0 ? 'point-fx plus' : 'point-fx minus'}
+                    onAnimationEnd={() => setPointFx(null)}
+                >
+                    {pointFx.delta >= 0 ? `+${pointFx.delta}` : pointFx.delta}P
+                </div>
+            )}
+
             {banner && (
                 <div
                     className='timer-banner'
@@ -120,11 +149,7 @@ export const MenuPage = () => {
             )}
 
             <div className='titlebar'>
-                <div className='title'>
-                    <span className='title-leaf'>🌱</span>
-                    JUMPET
-                    <span className='title-sparkle'>✨</span>
-                </div>
+                <div className='title'>LOOPF DESKMATE</div>
                 <button
                     type='button'
                     className='close-btn'

@@ -89,6 +89,10 @@ const useWorldStoreInternal = create<WorldStore>((set) => {
 let isInitialized = false
 let unsubscribeFromChanges: (() => void) | null = null
 
+// 팀 데모용 — 시작 시 보유하지 않은 데코를 전부 1개씩 보유 처리(가챠 없이 모두 사용 가능).
+// 프로덕션 빌드 전에는 false로 되돌릴 것.
+const DEMO_UNLOCK_ALL_DECOR = true
+
 export const initializeWorldSync = (): void => {
     if (isInitialized) {
         return
@@ -103,6 +107,29 @@ export const initializeWorldSync = (): void => {
                 placed: state.placed,
                 mode: state.mode,
             })
+            // 데모: 미보유 데코를 모두 1개씩 채워 넣는다(이미 가진 건 그대로 — 중복 적립 없음).
+            if (DEMO_UNLOCK_ALL_DECOR) {
+                const owned = { ...state.owned }
+                let changed = false
+                for (const decor of DECOR_ITEMS) {
+                    if ((owned[decor.id] ?? 0) <= 0) {
+                        owned[decor.id] = 1
+                        changed = true
+                    }
+                }
+                if (changed) {
+                    void window.api.world
+                        .apply({ type: 'commitLayout', owned, placed: state.placed })
+                        .then((next) =>
+                            useWorldStoreInternal.setState({
+                                owned: next.owned,
+                                placed: next.placed,
+                                mode: next.mode,
+                            }),
+                        )
+                        .catch(() => {})
+                }
+            }
         })
         .catch(() => {
             // 창 종료 타이밍 등으로 IPC 단절 시 조용히 무시.

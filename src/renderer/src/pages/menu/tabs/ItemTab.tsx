@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
     DECOR_THEMES,
     THEME_LABELS,
@@ -47,6 +47,21 @@ export const ItemTab = () => {
         await setMode('fixed')
     }
 
+    // 편집 중 다른 탭으로 나가면(이 탭 언마운트) 저장 없이 취소(복원)하고 편집 모드를 종료한다.
+    // cleanup이 항상 최신 editing/cancelEdit를 보도록 ref로 들고 있는다.
+    const editingRef = useRef(editing)
+    editingRef.current = editing
+    const cancelEditRef = useRef(cancelEdit)
+    cancelEditRef.current = cancelEdit
+    useEffect(
+        () => () => {
+            if (editingRef.current) {
+                void cancelEditRef.current()
+            }
+        },
+        [],
+    )
+
     const placeOnDesktop = (itemId: string) => {
         if (!editing || (owned[itemId] ?? 0) <= 0) {
             return
@@ -62,7 +77,7 @@ export const ItemTab = () => {
 
     return (
         <div className='panel'>
-            <div className='hint'>
+            <div className={editing ? 'hint' : 'hint item-intro'}>
                 {editing ? (
                     <>
                         보관함 데코를 눌러 바탕화면에 놓고,
@@ -71,36 +86,6 @@ export const ItemTab = () => {
                     </>
                 ) : (
                     '바탕화면 어디든 데코로 꾸며요'
-                )}
-            </div>
-
-            {/* 툴바 */}
-            <div className='world-toolbar'>
-                {!editing ? (
-                    <button
-                        type='button'
-                        className='pbtn'
-                        onClick={enterEdit}
-                    >
-                        🎨 꾸미기
-                    </button>
-                ) : (
-                    <>
-                        <button
-                            type='button'
-                            className='pbtn'
-                            onClick={saveEdit}
-                        >
-                            저장
-                        </button>
-                        <button
-                            type='button'
-                            className='pbtn ghost'
-                            onClick={() => void cancelEdit()}
-                        >
-                            취소
-                        </button>
-                    </>
                 )}
             </div>
 
@@ -220,6 +205,36 @@ export const ItemTab = () => {
                     전체 비우기 (배치 {placed.length}개 회수)
                 </button>
             )}
+
+            {/* 하단 고정(플로팅) 툴바 — 스크롤해도 항상 보인다. */}
+            <div className='world-toolbar floating'>
+                {!editing ? (
+                    <button
+                        type='button'
+                        className='pbtn'
+                        onClick={enterEdit}
+                    >
+                        꾸미기
+                    </button>
+                ) : (
+                    <>
+                        <button
+                            type='button'
+                            className='pbtn'
+                            onClick={saveEdit}
+                        >
+                            저장
+                        </button>
+                        <button
+                            type='button'
+                            className='pbtn ghost'
+                            onClick={() => void cancelEdit()}
+                        >
+                            취소
+                        </button>
+                    </>
+                )}
+            </div>
         </div>
     )
 }

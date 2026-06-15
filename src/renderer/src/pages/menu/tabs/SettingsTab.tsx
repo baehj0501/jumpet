@@ -3,12 +3,13 @@ import {
     CHARACTER_DISPLAY_NAMES,
     useSelectedCharacterId,
 } from '@renderer/entities/character'
-import { useProfile, useProfileActions } from '@renderer/entities/profile'
+import { getBirthdayCooldown, useProfile, useProfileActions } from '@renderer/entities/profile'
 import {
     PET_SCALE_MAX,
     PET_SCALE_MIN,
     THEME_IDS,
     type ThemeId,
+    useLaunchAtLogin,
     usePetScale,
     useSettingsActions,
     useTheme,
@@ -28,17 +29,30 @@ const THEME_META: Record<ThemeId, { label: string; bg: string; accent: string }>
 export const SettingsTab = () => {
     const theme = useTheme()
     const petScale = usePetScale()
-    const { setTheme, setPetScale } = useSettingsActions()
+    const launchAtLogin = useLaunchAtLogin()
+    const { setTheme, setPetScale, setLaunchAtLogin } = useSettingsActions()
 
     // 슬라이더는 드래그 중 즉각 반응해야 하므로 로컬 상태로 잡고, SSOT 값이 바뀌면 동기화한다.
     const [scaleDraft, setScaleDraft] = useState(petScale)
     useEffect(() => {
         setScaleDraft(petScale)
     }, [petScale])
+    // 슬라이더 표시 수치(50~150%)와 실제 배율(PET_SCALE_MIN~MAX, =0.5~0.8)을 분리한다.
+    // 표시 150% = 실제 0.8(최대), 표시 50% = 실제 0.5(최소). 선형 매핑.
+    const DISPLAY_MIN = 50
+    const DISPLAY_MAX = 150
+    const scaleToDisplay = (scale: number) =>
+        DISPLAY_MIN +
+        ((scale - PET_SCALE_MIN) / (PET_SCALE_MAX - PET_SCALE_MIN)) * (DISPLAY_MAX - DISPLAY_MIN)
+    const displayToScale = (display: number) =>
+        PET_SCALE_MIN +
+        ((display - DISPLAY_MIN) / (DISPLAY_MAX - DISPLAY_MIN)) * (PET_SCALE_MAX - PET_SCALE_MIN)
 
     // 내 정보(profile SSOT) — 홈 탭과 같은 값을 편집한다.
     const profile = useProfile()
     const { setField } = useProfileActions()
+    // 생일은 변경 후 1달 쿨타임 — 잠금 중엔 수정 불가.
+    const birthdayCooldown = getBirthdayCooldown(profile)
     const currentCharacterId = useSelectedCharacterId()
     // 캐릭터 이름은 선택된 캐릭터의 고정 종류명(수정 불가).
     const characterName = CHARACTER_DISPLAY_NAMES[currentCharacterId] ?? currentCharacterId
@@ -56,7 +70,7 @@ export const SettingsTab = () => {
     }, [])
 
     const onScaleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const next = Number(event.target.value) / 100
+        const next = displayToScale(Number(event.target.value))
         setScaleDraft(next)
         void setPetScale(next)
     }
@@ -106,40 +120,54 @@ export const SettingsTab = () => {
                 <input
                     type='range'
                     className='settings-slider'
-                    min={Math.round(PET_SCALE_MIN * 100)}
-                    max={Math.round(PET_SCALE_MAX * 100)}
+                    min={DISPLAY_MIN}
+                    max={DISPLAY_MAX}
                     step={10}
-                    value={Math.round(scaleDraft * 100)}
+                    value={Math.round(scaleToDisplay(scaleDraft))}
                     onChange={onScaleChange}
                 />
-                <span className='scale-value'>{Math.round(scaleDraft * 100)}%</span>
+                <span className='scale-value'>{Math.round(scaleToDisplay(scaleDraft))}%</span>
             </div>
 
             {/* 내 정보 */}
             <div className='section-title-1'>내 정보</div>
             <div className='profile-rows'>
                 <ProfileRow
-                    icon='🌿'
                     label='캐릭터 이름'
                     value={characterName}
                 />
                 <ProfileRow
-                    icon='💗'
                     label='내 이름'
                     value={profile.petName}
                     onChange={(value) => void setField('petName', value)}
                 />
                 <ProfileRow
-                    icon='🎂'
                     label='생일'
                     value={profile.birthday}
-                    onChange={(value) => void setField('birthday', value)}
+                    onChange={
+                        birthdayCooldown.locked
+                            ? undefined
+                            : (value) => void setField('birthday', value)
+                    }
                 />
             </div>
+            {birthdayCooldown.locked && (
+                <div className='hint'>
+                    생일은 한 달에 한 번만 바꿀 수 있어요 (D-{birthdayCooldown.remainingDays})
+                </div>
+            )}
 
             {/* 앱 정보 / 종료 */}
             <div className='section-title-1'>앱</div>
-            <div className='hint'>JUMPET {version && `v${version}`}</div>
+            <label className='settings-toggle'>
+                <input
+                    type='checkbox'
+                    checked={launchAtLogin}
+                    onChange={(event) => void setLaunchAtLogin(event.target.checked)}
+                />
+                컴퓨터 켤 때 자동 실행
+            </label>
+            <div className='hint'>루프프 데스크메이트 {version && `v${version}`}</div>
             <button
                 type='button'
                 className='pbtn ghost'

@@ -47,10 +47,13 @@ const motionFiles = import.meta.glob('./*/*/*.png', {
     import: 'default',
 }) as Record<string, string>
 
+// 한 클릭 모션 = 모션 이름 + 프레임 URL 배열. 이름으로 'walking' 등 특수 모션을 구분한다.
+export type ClickMotion = { name: string; frames: string[] }
+
 // 경로(./<character>/<motion>/<n>.png)를 캐릭터→모션→프레임으로 묶고, 모션·프레임 순으로 정렬한다.
 const buildClickFrames = (
     files: Record<string, string>,
-): Partial<Record<CharacterId, string[][]>> => {
+): Partial<Record<CharacterId, ClickMotion[]>> => {
     const byCharacter: Record<string, Record<string, { frame: number; url: string }[]>> = {}
     for (const [path, url] of Object.entries(files)) {
         const matched = path.match(/\.\/([^/]+)\/([^/]+)\/(\d+)\.png$/)
@@ -62,21 +65,48 @@ const buildClickFrames = (
         const frame = Number(matched[3])
         ;((byCharacter[character] ??= {})[motion] ??= []).push({ frame, url })
     }
-    const result: Partial<Record<CharacterId, string[][]>> = {}
+    const result: Partial<Record<CharacterId, ClickMotion[]>> = {}
     for (const character of Object.keys(byCharacter)) {
         const motions = byCharacter[character]
         result[character as CharacterId] = Object.keys(motions)
             .sort()
-            .map((motion) =>
-                motions[motion].sort((a, b) => a.frame - b.frame).map((f) => f.url),
-            )
+            .map((motion) => ({
+                name: motion,
+                frames: motions[motion].sort((a, b) => a.frame - b.frame).map((f) => f.url),
+            }))
     }
     return result
 }
 
-// 캐릭터별 클릭 모션 목록. 각 원소가 한 모션의 프레임 배열(string[]). 키 없으면 클릭 애니 없음.
-export const CHARACTER_CLICK_FRAMES: Partial<Record<CharacterId, string[][]>> =
+// 캐릭터별 클릭 모션 목록. 각 원소가 한 모션(name + frames). 키 없으면 클릭 애니 없음.
+export const CHARACTER_CLICK_FRAMES: Partial<Record<CharacterId, ClickMotion[]>> =
     buildClickFrames(motionFiles)
+
+// 'walking' 모션 프레임만 따로 추출 — 클릭 시 walking이 당첨됐을 때 좌/우 걷기 애니메이션에 쓴다.
+// 같은 glob을 재사용하고 motion === 'walking'만 골라 프레임 순으로 정렬한다.
+const buildWalkFrames = (
+    files: Record<string, string>,
+): Partial<Record<CharacterId, string[]>> => {
+    const byCharacter: Record<string, { frame: number; url: string }[]> = {}
+    for (const [path, url] of Object.entries(files)) {
+        const matched = path.match(/\.\/([^/]+)\/([^/]+)\/(\d+)\.png$/)
+        if (!matched || matched[2] !== 'walking') {
+            continue
+        }
+        ;(byCharacter[matched[1]] ??= []).push({ frame: Number(matched[3]), url })
+    }
+    const result: Partial<Record<CharacterId, string[]>> = {}
+    for (const character of Object.keys(byCharacter)) {
+        result[character as CharacterId] = byCharacter[character]
+            .sort((a, b) => a.frame - b.frame)
+            .map((f) => f.url)
+    }
+    return result
+}
+
+// 캐릭터별 걷기 프레임. 키 없으면 walking 모션 에셋이 없는 캐릭터(정지 폴백).
+export const CHARACTER_WALK_FRAMES: Partial<Record<CharacterId, string[]>> =
+    buildWalkFrames(motionFiles)
 
 // 홈 씬 합본(캐릭터 + 바닥) 이미지. CareTab 홈에서 캐릭터+바닥을 한 장으로 렌더.
 export const HOME_SCENE_ASSETS: Record<CharacterId, string> = {

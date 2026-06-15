@@ -12,7 +12,7 @@ import { registerScheduleIpc } from './schedule'
 import { registerCharacterSelectionIpc } from './characterSelection'
 import { registerProfileIpc } from './profile'
 import { registerPetSelectionIpc } from './petSelection'
-import { registerSettingsIpc } from './settings'
+import { registerSettingsIpc, applyLaunchAtLogin, readSettingsState } from './settings'
 import { registerWorldIpc } from './world'
 import { registerYoutubeIpc } from './youtube'
 import { setMenuPanelOnTop } from './panels/openMenuPanel'
@@ -172,7 +172,7 @@ const createWorldWindow = (): BrowserWindow => {
 }
 
 app.whenReady().then(() => {
-    electronApp.setAppUserModelId('com.rapportlabs.game')
+    electronApp.setAppUserModelId('com.rapportlabs.loopf')
 
     app.on('browser-window-created', (_, window) => {
         optimizer.watchWindowShortcuts(window)
@@ -240,6 +240,8 @@ app.whenReady().then(() => {
 
     // 환경설정(테마·캐릭터 크기) IPC — 설정 탭에서 바꾸면 메뉴/캐릭터 창이 구독해 반영.
     registerSettingsIpc()
+    // 저장된 '로그인 시 자동 실행' 값을 OS에 동기화(시작 시 1회).
+    applyLaunchAtLogin(readSettingsState().launchAtLogin)
 
     // 앱 유틸 IPC — 버전 표시 + 데이터 초기화(전체 영속 데이터 삭제 후 재시작) + 전체 종료.
     ipcMain.handle('app:getVersion', (): string => app.getVersion())

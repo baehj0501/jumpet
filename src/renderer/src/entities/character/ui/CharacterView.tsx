@@ -12,6 +12,8 @@ type CharacterViewProps = {
     state: CharacterState
     // 클릭 반응 등 일시적 프레임을 강제로 보여줄 때. 없으면 mood 기본 이미지.
     overrideSrc?: string
+    // 좌측으로 걸을 때 스프라이트를 좌우 반전한다(기본 스프라이트는 우향).
+    flip?: boolean
     onMouseDown: (event: MouseEvent) => void
     onContextMenu: (event: MouseEvent) => void
 }
@@ -23,6 +25,7 @@ export const CharacterView = ({
     mood,
     state,
     overrideSrc,
+    flip = false,
     onMouseDown,
     onContextMenu,
 }: CharacterViewProps) => {
@@ -38,6 +41,7 @@ export const CharacterView = ({
         >
             <img
                 css={imageStyle}
+                style={flip ? { transform: 'scaleX(-1)' } : undefined}
                 src={imageSrc}
                 alt={characterId}
                 draggable={false}

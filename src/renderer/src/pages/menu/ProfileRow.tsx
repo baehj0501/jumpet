@@ -1,16 +1,14 @@
 import { useState } from 'react'
 
-// 프로필 한 줄 — 아이콘 + 라벨 + 값 박스 + 연필(클릭 시 인라인 편집).
+// 프로필 한 줄 — 라벨 + 값 박스 + 연필(클릭 시 인라인 편집).
 // 홈 탭(CareTab)과 설정 탭(SettingsTab)이 공유한다.
 // onChange를 주지 않으면 읽기 전용(연필 없음) — 예: 캐릭터 이름.
 export const ProfileRow = ({
-    icon,
     label,
     value,
     onChange,
     placeholder,
 }: {
-    icon: string
     label: string
     value: string
     onChange?: (value: string) => void
@@ -35,7 +33,6 @@ export const ProfileRow = ({
     if (!onChange) {
         return (
             <div className='profile-row'>
-                <span className='profile-row-icon'>{icon}</span>
                 <span className='profile-row-label'>{label}</span>
                 <span className='profile-row-value'>{value}</span>
                 <span className='profile-row-edit-placeholder' />
@@ -45,7 +42,6 @@ export const ProfileRow = ({
 
     return (
         <div className='profile-row'>
-            <span className='profile-row-icon'>{icon}</span>
             <span className='profile-row-label'>{label}</span>
             {editing ? (
                 <input
