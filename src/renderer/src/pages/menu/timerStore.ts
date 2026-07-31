@@ -127,7 +127,9 @@ export const useTimerStore = create<TimerStore>((set, get) => {
             // 0 도달 → 단계 전환 + 보상 + 캐릭터 멘트 + 상단 배너.
             if (state.phase === 'focus') {
                 void usePlayerStore.getState().apply({ type: 'manual', delta: FOCUS_REWARD })
-                window.api.character.say(`집중 ${state.focusMin}분 완료! 휴식하세요 ☕`)
+                window.api.character.say(`집중 ${state.focusMin}분 완료! 휴식하세요 ☕`, {
+                    sticky: true,
+                })
                 set({
                     phase: 'break',
                     remaining: state.breakMin * 60,
@@ -138,7 +140,9 @@ export const useTimerStore = create<TimerStore>((set, get) => {
                     lines: [`집중 ${state.focusMin}분 완료`, '휴식하세요'],
                 })
             } else {
-                window.api.character.say(`휴식 ${state.breakMin}분 완료! 집중하세요 🍅`)
+                window.api.character.say(`휴식 ${state.breakMin}분 완료! 집중하세요 🍅`, {
+                    sticky: true,
+                })
                 set({ phase: 'focus', remaining: state.focusMin * 60 })
                 flashBanner({
                     title: '포모도로 타이머',

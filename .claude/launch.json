@@ -1,17 +1,23 @@
 {
-    "version": "0.0.1",
-    "configurations": [
-        {
-            "name": "dev",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": ["run", "dev"],
-            "port": 5173
-        },
-        {
-            "name": "start (preview)",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": ["run", "start"],
-            "port": 5173
-        }
-    ]
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "lucky-draw",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "4599", "--directory", "/Users/tedconvd_macbook5/Desktop/lucky-draw"],
+      "port": 4599
+    },
+    {
+      "name": "pointform",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8080", "--directory", "/Users/tedconvd_macbook5/Desktop"],
+      "port": 8080
+    },
+    {
+      "name": "consult-booking",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/Users/tedconvd_macbook5/Desktop/consult-booking", "run", "dev"],
+      "port": 3000
+    }
+  ]
 }

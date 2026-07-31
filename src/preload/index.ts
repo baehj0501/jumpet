@@ -110,18 +110,25 @@ const api = {
     // 캐릭터 위 말풍선. 다른 창(메뉴 등)에서 say로 멘트를 보내면 캐릭터 창이 onSpeech로 받아 띄운다.
     // 영속 데이터가 아니라 일시적 UI 신호 — fire-and-forget(send) + 구독(on).
     character: {
-        say: (text: string): void => {
-            ipcRenderer.send('character:say', text)
+        say: (text: string, options?: { sticky?: boolean }): void => {
+            ipcRenderer.send('character:say', text, options)
         },
-        onSpeech: (handler: (text: string) => void): (() => void) => {
-            const listener = (_event: unknown, text: string) => {
-                handler(text)
+        onSpeech: (
+            handler: (payload: { text: string; sticky?: boolean }) => void,
+        ): (() => void) => {
+            const listener = (_event: unknown, payload: { text: string; sticky?: boolean }) => {
+                // 구버전 호환 — payload가 문자열로 올 수도 있으니 정규화.
+                handler(typeof payload === 'string' ? { text: payload } : payload)
             }
             ipcRenderer.on('character:speech', listener)
             const unsubscribe = () => {
                 ipcRenderer.removeListener('character:speech', listener)
             }
             return unsubscribe
+        },
+        // sticky 알림 말풍선을 사용자가 닫았을 때 — 캐릭터 창의 최상단 고정을 해제하라고 main에 알린다.
+        dismissNotification: (): void => {
+            ipcRenderer.send('character:dismissNotification')
         },
     },
     // 소모성 아이템 인벤토리 API. consume은 apply, 뽑기는 결과를 반환하는 별도 invoke.
@@ -253,6 +260,29 @@ const api = {
         // 가장자리/모서리 드래그 리사이즈 — edge 방향 + 화면 좌표 델타.
         resizeEdge: (edge: string, dx: number, dy: number): void =>
             ipcRenderer.send('youtube:resizeEdge', { edge, dx, dy }),
+        // 항상 위(true) / 일반 z-order(false) 토글.
+        setAlwaysOnTop: (value: boolean): void =>
+            ipcRenderer.send('youtube:setAlwaysOnTop', value),
+        // 우클릭 시 OS 네이티브 컨텍스트 메뉴를 main에 요청(현재 상태를 넘겨 체크 표시).
+        openContextMenu: (state: {
+            theme: number
+            sizeStep: number
+            alwaysOnTop: boolean
+            sizeCount: number
+            themes: { id: number; name: string }[]
+        }): void => ipcRenderer.send('youtube:openContextMenu', state),
+        // 팝업 메뉴에서 항목을 고르면 호출 — main이 뷰어로 relay하고 팝업을 닫는다.
+        selectMenu: (action: { type: string; value?: number | boolean }): void =>
+            ipcRenderer.send('youtube:menuSelect', action),
+        // 메뉴에서 고른 결과를 뷰어가 받는다.
+        onMenuAction: (
+            handler: (action: { type: string; value?: number | boolean }) => void,
+        ): (() => void) => {
+            const listener = (_event: unknown, action: { type: string; value?: number | boolean }) =>
+                handler(action)
+            ipcRenderer.on('youtube:menuAction', listener)
+            return () => ipcRenderer.removeListener('youtube:menuAction', listener)
+        },
         close: (): void => ipcRenderer.send('youtube:close'),
     },
 }

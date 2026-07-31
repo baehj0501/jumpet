@@ -193,7 +193,7 @@ export const ItemTab = () => {
             )}
 
             {totalOwned === 0 && placed.length === 0 && (
-                <div className='empty-hint'>가챠에서 데코를 뽑아 월드를 꾸며 보세요</div>
+                <div className='empty-hint'>뽑기에서 데코를 뽑아 월드를 꾸며 보세요</div>
             )}
 
             {!editing && placed.length > 0 && (

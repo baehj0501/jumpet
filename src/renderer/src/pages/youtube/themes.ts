@@ -51,17 +51,30 @@ const extractVideoId = (input: string): string | null => {
     return m ? m[1] : null
 }
 
-// 재생 소스 결정. 임베드는 일부 영상이 막혀 있어(오류 153) 일반 watch 페이지로 연다.
-// isVideo=특정 영상(watch) → 플레이어만 꽉 채움. false=홈/검색 등 둘러보기.
-export const resolveYoutubeSrc = (input?: string): { src: string; isVideo: boolean } => {
+// 재생 소스 결정.
+// isVideo=특정 영상 → 임베드 플레이어로 연다(페이지 잡동사니·레터박스 없이 프레임을 꽉 채움).
+//   (watch 페이지는 작은 창에서 영상이 작게 letterbox 되는 문제가 있어 임베드를 쓴다.
+//    단, 업로더가 임베드를 막아둔 일부 영상은 오류가 날 수 있음.)
+// false=홈/검색 등 둘러보기.
+export const resolveYoutubeSrc = (
+    input?: string,
+): { src: string; isVideo: boolean; videoId: string | null } => {
     const value = (input ?? '').trim()
     if (value === '') {
-        return { src: 'https://www.youtube.com', isVideo: false }
+        return { src: 'https://www.youtube.com', isVideo: false, videoId: null }
     }
     const id = extractVideoId(value)
     if (id) {
-        return { src: `https://www.youtube.com/watch?v=${id}`, isVideo: true }
+        return {
+            src: `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`,
+            isVideo: true,
+            videoId: id,
+        }
     }
     // 유튜브 URL이지만 ID를 못 찾으면 그대로(검색결과/채널 등) 로드.
-    return { src: value, isVideo: false }
+    return { src: value, isVideo: false, videoId: null }
 }
+
+// 임베드 차단(오류 153) 시 폴백할 watch URL.
+export const watchUrl = (videoId: string): string =>
+    `https://www.youtube.com/watch?v=${videoId}`

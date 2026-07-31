@@ -17,6 +17,8 @@ const broadcastWorldState = (next: WorldState): void => {
 type WorldIpcHooks = {
     // 꾸미기 모드가 바뀌면 호출 — main이 월드 창의 클릭통과/포커스를 토글한다.
     onModeChange?: (mode: WorldMode) => void
+    // 월드 상태가 바뀔 때마다 호출 — main이 전체화면 오버레이 표시 여부를 갱신한다.
+    onChange?: (state: WorldState) => void
     // 가챠 — 점수 확인·차감(player)을 main/index.ts에서 주입. 데코 추첨은 renderer가 한다.
     getScore?: () => number
     spendForGacha?: () => void
@@ -47,6 +49,7 @@ export const registerWorldIpc = (hooks: WorldIpcHooks = {}): void => {
         }
         writeWorldState(next)
         broadcastWorldState(next)
+        hooks.onChange?.(next)
         if (next.mode !== current.mode) {
             hooks.onModeChange?.(next.mode)
         }

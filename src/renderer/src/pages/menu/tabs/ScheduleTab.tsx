@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
     MAX_SCHEDULE_TITLE_LENGTH,
     MAX_SCHEDULE_MEMO_LENGTH,
@@ -21,6 +21,29 @@ const formatShortDate = (key: string): string => {
     return `${month}/${day}`
 }
 
+// 일정 알람 오프셋 — 시작 시각 기준 'N분 전'(0 = 정시).
+const SCHEDULE_REMIND_OFFSETS: { label: string; minutes: number }[] = [
+    { label: '정시', minutes: 0 },
+    { label: '10분 전', minutes: 10 },
+    { label: '20분 전', minutes: 20 },
+    { label: '1시간 전', minutes: 60 },
+    { label: '1일 전', minutes: 1440 },
+]
+
+// 오프셋(분) → 배지 표기.
+const formatScheduleAlarm = (minutes: number): string => {
+    if (minutes <= 0) {
+        return '정시'
+    }
+    if (minutes % 1440 === 0) {
+        return `${minutes / 1440}일 전`
+    }
+    if (minutes % 60 === 0) {
+        return `${minutes / 60}시간 전`
+    }
+    return `${minutes}분 전`
+}
+
 // [startKey, endKey] 사이의 모든 날짜 키(양끝 포함). 기간 일정의 달력 점 표시에 사용.
 const eachDateInRange = (startKey: string, endKey: string): string[] => {
     const [sy, sm, sd] = startKey.split('-').map(Number)
@@ -40,7 +63,7 @@ const eachDateInRange = (startKey: string, endKey: string): string[] => {
 
 export const ScheduleTab = () => {
     const items = useScheduleItems()
-    const { add, remove, update } = useScheduleActions()
+    const { add, remove, update, setRemind } = useScheduleActions()
     const { addTodo, removeTodo } = useTodoActions()
 
     // 일정 수정 — 항목 더블클릭하면 ✎ 버튼이 뜨고, 누르면 제목 인라인 편집.
@@ -60,6 +83,21 @@ export const ScheduleTab = () => {
         setEditingId(null)
     }
 
+    // 일정 알람 — 🔔 누르면 오프셋 팝업(항목 id + 화면 좌표).
+    const [remindMenu, setRemindMenu] = useState<{ id: string; x: number; y: number } | null>(null)
+    useEffect(() => {
+        if (!remindMenu) {
+            return
+        }
+        const onAway = () => setRemindMenu(null)
+        window.addEventListener('mousedown', onAway)
+        return () => window.removeEventListener('mousedown', onAway)
+    }, [remindMenu])
+    const applyScheduleRemind = (id: string, minutes: number | null) => {
+        void setRemind(id, minutes)
+        setRemindMenu(null)
+    }
+
     // 오늘 — 렌더 시점 1회 고정(탭이 떠 있는 동안 날짜 경계를 넘는 일은 드묾).
     const today = useMemo(() => new Date(), [])
     const todayKey = toDateKey(today.getFullYear(), today.getMonth(), today.getDate())
@@ -77,6 +115,8 @@ export const ScheduleTab = () => {
     const [endDate, setEndDate] = useState(todayKey)
     // 체크 시에만 같은 내용을 '할 일' 탭에도 등록한다. 기본 on.
     const [addToTodo, setAddToTodo] = useState(true)
+    // 추가 시 알람 오프셋(분). null이면 알람 없음. 기본은 정시(0).
+    const [addAlarmOffset, setAddAlarmOffset] = useState<number | null>(0)
     // 추가 폼 열림 여부 — 캘린더 날짜를 더블클릭하면 토글된다.
     const [isAddOpen, setIsAddOpen] = useState(false)
 
@@ -169,7 +209,16 @@ export const ScheduleTab = () => {
         if (addToTodo) {
             linkedTodoId = await addTodo(`${formatShortDate(startDate)} ${time} ${trimmed}`, 'schedule')
         }
-        await add(startDate, normalizedEnd, time, endTime, trimmed, memo.trim(), linkedTodoId)
+        await add(
+            startDate,
+            normalizedEnd,
+            time,
+            endTime,
+            trimmed,
+            memo.trim(),
+            linkedTodoId,
+            addAlarmOffset,
+        )
         setTitle('')
         setMemo('')
     }
@@ -372,6 +421,34 @@ export const ScheduleTab = () => {
                                         value={memo}
                                         onChange={(event) => setMemo(event.target.value)}
                                     />
+                                    <label className='sched-alarm-row'>
+                                        🔔 알람
+                                        <select
+                                            className='fi'
+                                            value={
+                                                addAlarmOffset === null
+                                                    ? 'none'
+                                                    : String(addAlarmOffset)
+                                            }
+                                            onChange={(event) =>
+                                                setAddAlarmOffset(
+                                                    event.target.value === 'none'
+                                                        ? null
+                                                        : Number(event.target.value),
+                                                )
+                                            }
+                                        >
+                                            <option value='none'>없음</option>
+                                            {SCHEDULE_REMIND_OFFSETS.map((offset) => (
+                                                <option
+                                                    key={offset.label}
+                                                    value={String(offset.minutes)}
+                                                >
+                                                    {offset.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </label>
                                     <div className='sched-add-actions'>
                                         <label className='sched-todo-check'>
                                             <input
@@ -459,6 +536,38 @@ export const ScheduleTab = () => {
                                     </>
                                 )}
                             </span>
+                            {item.remindOffsetMinutes !== undefined && editingId !== item.id && (
+                                <span className='todo-remind-badge'>
+                                    🔔 {formatScheduleAlarm(item.remindOffsetMinutes)}
+                                </span>
+                            )}
+                            {editingId !== item.id && (
+                                <button
+                                    type='button'
+                                    className={
+                                        item.remindOffsetMinutes !== undefined
+                                            ? 'item-remind-btn active'
+                                            : 'item-remind-btn'
+                                    }
+                                    title='알람 설정'
+                                    onClick={(event) => {
+                                        event.stopPropagation()
+                                        const rect = event.currentTarget.getBoundingClientRect()
+                                        const x = Math.min(rect.left, window.innerWidth - 168)
+                                        const y = Math.min(
+                                            rect.bottom + 4,
+                                            window.innerHeight - 200,
+                                        )
+                                        setRemindMenu({
+                                            id: item.id,
+                                            x: Math.max(8, x),
+                                            y: Math.max(8, y),
+                                        })
+                                    }}
+                                >
+                                    🔔
+                                </button>
+                            )}
                             {revealEditId === item.id && editingId !== item.id && (
                                 <button
                                     type='button'
@@ -486,6 +595,44 @@ export const ScheduleTab = () => {
                     ))}
                 </div>
             )}
+
+            {remindMenu &&
+                (() => {
+                    const target = items.find((item) => item.id === remindMenu.id)
+                    return (
+                        <div
+                            className='remind-menu'
+                            style={{ left: remindMenu.x, top: remindMenu.y }}
+                            onMouseDown={(event) => event.stopPropagation()}
+                        >
+                            <div className='remind-menu-title'>🔔 알람</div>
+                            <div className='remind-menu-sub'>시작 시각 기준</div>
+                            <div className='remind-menu-grid'>
+                                {SCHEDULE_REMIND_OFFSETS.map((offset) => (
+                                    <button
+                                        key={offset.label}
+                                        type='button'
+                                        className='remind-menu-item'
+                                        onClick={() =>
+                                            applyScheduleRemind(remindMenu.id, offset.minutes)
+                                        }
+                                    >
+                                        {offset.label}
+                                    </button>
+                                ))}
+                            </div>
+                            {target?.remindOffsetMinutes !== undefined && (
+                                <button
+                                    type='button'
+                                    className='remind-menu-clear'
+                                    onClick={() => applyScheduleRemind(remindMenu.id, null)}
+                                >
+                                    알람 해제
+                                </button>
+                            )}
+                        </div>
+                    )
+                })()}
         </div>
     )
 }

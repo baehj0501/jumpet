@@ -13,7 +13,8 @@ import { registerCharacterSelectionIpc } from './characterSelection'
 import { registerProfileIpc } from './profile'
 import { registerPetSelectionIpc } from './petSelection'
 import { registerSettingsIpc, applyLaunchAtLogin, readSettingsState } from './settings'
-import { registerWorldIpc } from './world'
+import { registerWorldIpc, readWorldState } from './world'
+import type { WorldState } from './world'
 import { registerYoutubeIpc } from './youtube'
 import { setMenuPanelOnTop } from './panels/openMenuPanel'
 import { broadcastCharacterSpeech, registerCharacterIpc } from './character'
@@ -84,7 +85,8 @@ let characterTopTimer: ReturnType<typeof setTimeout> | null = null
 // 캐릭터 창을 잠깐 최상단으로 끌어올린다(상시 always-on-top 정책은 유지).
 // 할일 완료 등으로 말풍선이 뜰 때 호출 → 말풍선이 보이는 동안만 위로, 끝나면 일반 z-order로 복귀.
 const CHARACTER_TOP_DURATION_MS = 2600
-const bringCharacterWindowToTop = (): void => {
+// persist=true면 자동 복귀 타이머를 걸지 않는다 — sticky 알림 말풍선이 닫힐 때까지(releaseCharacterWindowTop) 최상단 유지.
+const bringCharacterWindowToTop = (persist = false): void => {
     if (!characterWindow || characterWindow.isDestroyed()) {
         return
     }
@@ -95,6 +97,10 @@ const bringCharacterWindowToTop = (): void => {
     characterWindow.setAlwaysOnTop(true)
     if (characterTopTimer !== null) {
         clearTimeout(characterTopTimer)
+        characterTopTimer = null
+    }
+    if (persist) {
+        return
     }
     characterTopTimer = setTimeout(() => {
         characterTopTimer = null
@@ -102,6 +108,31 @@ const bringCharacterWindowToTop = (): void => {
             characterWindow.setAlwaysOnTop(false)
         }
     }, CHARACTER_TOP_DURATION_MS)
+}
+
+// sticky 알림 말풍선이 닫혔을 때 — 캐릭터 창의 최상단 고정을 해제하고 일반 z-order로 복귀.
+const releaseCharacterWindowTop = (): void => {
+    if (characterTopTimer !== null) {
+        clearTimeout(characterTopTimer)
+        characterTopTimer = null
+    }
+    if (characterWindow && !characterWindow.isDestroyed()) {
+        characterWindow.setAlwaysOnTop(false)
+    }
+}
+
+// 고정 모드의 데코 오버레이를 일반 창보다 '아래' 레벨에 고정한다.
+// macOS에선 캐릭터/다른 앱을 클릭해 앱이 활성화돼도 전체화면 데코가 위로 딸려 올라오지 않게
+// 일반 창(normal)보다 1단계 낮은 레벨에 못박는다. (Windows는 아래 레벨 개념이 없어 always-on-top 해제만.)
+const pinWorldToBottom = (): void => {
+    if (!worldWindow || worldWindow.isDestroyed()) {
+        return
+    }
+    if (process.platform === 'darwin') {
+        worldWindow.setAlwaysOnTop(true, 'normal', -1)
+    } else {
+        worldWindow.setAlwaysOnTop(false)
+    }
 }
 
 // 꾸미기 모드에 따라 데코 창의 상호작용을 토글한다.
@@ -113,11 +144,37 @@ const setWorldEditable = (editable: boolean): void => {
     }
     worldWindow.setIgnoreMouseEvents(!editable)
     if (editable) {
-        // 편집 중엔 데코 창을 앞으로(캐릭터 위), 메뉴는 그보다 위로 띄운다.
+        // 편집 중엔 최하단 고정을 풀고(일반 레벨) 앞으로 올려 상호작용 가능하게 한다.
+        // 단, 'floating'(메뉴와 같은 레벨)로 올리면 전체화면 데코가 메뉴 창을 덮어 버튼이 안 눌리므로
+        // 일반(normal) 레벨로만 올리고, 메뉴 창은 그보다 위(floating)에 두어 항상 클릭 가능하게 한다.
+        worldWindow.setAlwaysOnTop(false)
         worldWindow.moveTop()
+    } else {
+        // 고정 모드로 돌아오면 다시 최하단 레벨로 못박는다.
+        pinWorldToBottom()
     }
     // 메뉴 창을 데코 창 위로 — 편집 중 메뉴 버튼/보관함 클릭이 가려지지 않게.
     setMenuPanelOnTop(editable)
+}
+
+// 전체화면 데코 오버레이 표시 여부 — 꾸미기 모드이거나 배치된 데코가 있을 때만 보인다.
+// (배치가 없고 고정 모드면 숨겨, 투명 미지원 환경에서 화면을 가리지 않게 한다.)
+const syncWorldWindowVisibility = (state: WorldState): void => {
+    if (!worldWindow || worldWindow.isDestroyed()) {
+        return
+    }
+    const shouldShow = state.mode === 'edit' || state.placed.length > 0
+    if (shouldShow) {
+        if (!worldWindow.isVisible()) {
+            worldWindow.showInactive()
+        }
+        // 고정(비편집) 모드로 보일 땐 항상 최하단 레벨에 못박아, 앱 활성화 시 위로 안 올라오게.
+        if (state.mode !== 'edit') {
+            pinWorldToBottom()
+        }
+    } else if (worldWindow.isVisible()) {
+        worldWindow.hide()
+    }
 }
 
 const createWorldWindow = (): BrowserWindow => {
@@ -158,8 +215,10 @@ const createWorldWindow = (): BrowserWindow => {
     // 모든 워크스페이스에 표시하고, always-on-top은 쓰지 않아 일반 창 아래로 깔린다.
     win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: false })
 
+    // 전체화면 투명 오버레이는 평소 숨겨 둔다(일부 Windows에서 투명 합성 실패 시 바탕화면이
+    // 통째로 가려지는 문제 방지). 꾸미기 모드이거나 배치된 데코가 있을 때만 표시.
     win.on('ready-to-show', () => {
-        win.showInactive()
+        syncWorldWindowVisibility(readWorldState())
     })
 
     if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
@@ -203,6 +262,11 @@ app.whenReady().then(() => {
             applyPlayerEvent({ type: 'manual', delta: -reward })
             broadcastCharacterSpeech(`완료 취소 -${reward}pt`)
         },
+        onTodoSummary: (count) => {
+            // 아침/저녁 남은 할일 리마인더.
+            broadcastCharacterSpeech(`할 일 ${count}개 남았어요!`, { sticky: true })
+            bringCharacterWindowToTop(true)
+        },
     })
 
     // 운세 영속 데이터 IPC — todo와 같은 패턴. 새 운세가 떴을 때만 점수 보상을 조립한다.
@@ -225,7 +289,9 @@ app.whenReady().then(() => {
     // (schedule은 character를 직접 import하지 않고, "일정 시각 도래" 사실만 콜백으로 위임.)
     registerScheduleIpc({
         onDue: (title) => {
-            broadcastCharacterSpeech(`⏰ ${title}`)
+            // 일정 알람 — 캐릭터를 끌어올려 sticky 말풍선(닫을 때까지 유지)으로 알린다.
+            broadcastCharacterSpeech(`⏰ ${title}`, { sticky: true })
+            bringCharacterWindowToTop(true)
         },
     })
 
@@ -261,6 +327,10 @@ app.whenReady().then(() => {
         onModeChange: (mode) => {
             setWorldEditable(mode === 'edit')
         },
+        // 배치/모드 변경 시 오버레이 표시 여부 갱신.
+        onChange: (state) => {
+            syncWorldWindowVisibility(state)
+        },
         // 데코 가챠 비용 차감 — item 가챠와 동일하게 player에 위임.
         getScore: () => readPlayerState().score,
         spendForGacha: () => {
@@ -269,7 +339,10 @@ app.whenReady().then(() => {
     })
 
     // 캐릭터 위 말풍선 중계 — 메뉴 창의 돌봄 멘트 등을 캐릭터 창으로 보낸다.
-    registerCharacterIpc()
+    registerCharacterIpc({
+        onStickySpeech: () => bringCharacterWindowToTop(true),
+        onDismiss: () => releaseCharacterWindowTop(),
+    })
 
     characterWindow = createWindow()
 

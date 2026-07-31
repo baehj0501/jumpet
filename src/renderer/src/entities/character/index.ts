@@ -7,6 +7,8 @@ export {
     HOME_SCENE_ASSETS,
     CHARACTER_CLICK_FRAMES,
     CHARACTER_WALK_FRAMES,
+    CHARACTER_FALL_FRAMES,
+    CHARACTER_EXPRESSIONS,
 } from './assets'
 export { useStateMachine } from './behaviors/useStateMachine'
 export { useWalking } from './behaviors/useWalking'

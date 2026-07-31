@@ -1,5 +1,6 @@
 import { ipcMain } from 'electron'
 import { getYoutubeWindow, openYoutubePanel } from '../panels/openYoutubePanel'
+import { openYoutubeMenuPanel, closeYoutubeMenuPanel } from '../panels/openYoutubeMenuPanel'
 
 // 유튜브 별창 제어 — 영속 상태 없는 윈도우 조작 채널(fire-and-forget).
 export const registerYoutubeIpc = (): void => {
@@ -60,6 +61,36 @@ export const registerYoutubeIpc = (): void => {
             win.setBounds({ x: Math.round(x), y: Math.round(y), width: Math.round(width), height: Math.round(height) })
         },
     )
+
+    // 항상 위 / 일반 z-order 토글 — 사용자가 뷰어를 다른 창 위에 고정할지 선택.
+    ipcMain.on('youtube:setAlwaysOnTop', (_event, value: boolean) => {
+        getYoutubeWindow()?.setAlwaysOnTop(Boolean(value))
+    })
+
+    // 우클릭 → 별도 팝업 창에 커스텀(썸네일) 메뉴를 띄운다(작은 뷰어에서도 안 잘림).
+    ipcMain.on(
+        'youtube:openContextMenu',
+        (
+            _event,
+            state: {
+                theme: number
+                sizeStep: number
+                alwaysOnTop: boolean
+                sizeCount: number
+            },
+        ) => {
+            if (!getYoutubeWindow()) {
+                return
+            }
+            openYoutubeMenuPanel(state)
+        },
+    )
+
+    // 팝업 메뉴에서 고른 결과 → 유튜브 뷰어 렌더러로 relay(상태·localStorage·부수효과는 뷰어가 처리) 후 팝업 닫기.
+    ipcMain.on('youtube:menuSelect', (_event, action: { type: string; value?: number | boolean }) => {
+        getYoutubeWindow()?.webContents.send('youtube:menuAction', action)
+        closeYoutubeMenuPanel()
+    })
 
     ipcMain.on('youtube:close', () => {
         getYoutubeWindow()?.close()

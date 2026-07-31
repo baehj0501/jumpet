@@ -1,43 +1,42 @@
 import type { CharacterId, Mood } from '../model/Character'
 
-// JUMPET_4 원본 PNG(idle 포즈)를 변형 없이 그대로 사용.
-import piyooIdle from './piyoo/idle.png'
-import qupeeIdle from './qupee/idle.png'
-import suupeeIdle from './suupee/idle.png'
-import wingpeeIdle from './wingpee/idle.png'
-// 홈 씬용 합본(캐릭터 + 잔디 바닥) 이미지.
-import piyooHome from './piyoo/home.png'
-import qupeeHome from './qupee/home.png'
-import suupeeHome from './suupee/home.png'
-import wingpeeHome from './wingpee/home.png'
-// 에셋 도착 시 mood별 이미지를 추가하고 폴백을 교체:
-// import piyooHappy from './piyoo/play.png' 등.
+// 캐릭터 루트의 단일 이미지(idle/home/happy/sad 등)를 자동 수집한다.
+// <character>/<name>.png 2단 깊이 — 모션(3단 */*/*)과 겹치지 않는다.
+// 표정을 추가하려면 <character>/<mood>.png 를 넣으면 자동 인식된다(예: suupee/happy.png).
+const rootImageFiles = import.meta.glob('./*/*.png', {
+    eager: true,
+    query: '?url',
+    import: 'default',
+}) as Record<string, string>
 
-// 캐릭터 × 감정 별 이미지 매핑.
-// Record로 강제해 새 CharacterId / Mood 추가 시 매핑 누락이 컴파일 에러로 잡힌다.
-// 아직 mood별 에셋이 없는 캐릭터는 idle(default) 한 장으로 폴백한다.
-export const CHARACTER_ASSETS: Record<CharacterId, Record<Mood, string>> = {
-    piyoo: {
-        default: piyooIdle,
-        happy: piyooIdle,
-        sad: piyooIdle,
-    },
-    qupee: {
-        default: qupeeIdle,
-        happy: qupeeIdle,
-        sad: qupeeIdle,
-    },
-    suupee: {
-        default: suupeeIdle,
-        happy: suupeeIdle,
-        sad: suupeeIdle,
-    },
-    wingpee: {
-        default: wingpeeIdle,
-        happy: wingpeeIdle,
-        sad: wingpeeIdle,
-    },
+// character → { 파일명(확장자 제외): url }.
+const rootByCharacter: Record<string, Record<string, string>> = {}
+for (const [path, url] of Object.entries(rootImageFiles)) {
+    const matched = path.match(/\.\/([^/]+)\/([^/]+)\.png$/)
+    if (!matched) {
+        continue
+    }
+    ;(rootByCharacter[matched[1]] ??= {})[matched[2]] = url
 }
+
+const CHARACTER_IDS: CharacterId[] = ['piyoo', 'qupee', 'suupee', 'wingpee']
+// mood → 파일명. default는 idle.png를 쓴다. happy/sad는 같은 이름의 png가 있으면 사용.
+const MOOD_FILE: Record<Mood, string> = { default: 'idle', happy: 'happy', sad: 'sad' }
+
+// 캐릭터 × 감정 별 이미지 매핑. mood 이미지가 없으면 idle(default)로 폴백한다.
+// 파일을 넣기만 하면(<character>/<mood>.png) 자동으로 반영된다.
+export const CHARACTER_ASSETS: Record<CharacterId, Record<Mood, string>> = Object.fromEntries(
+    CHARACTER_IDS.map((id) => {
+        const files = rootByCharacter[id] ?? {}
+        const idle = files['idle']
+        const moods: Record<Mood, string> = {
+            default: files[MOOD_FILE.default] ?? idle,
+            happy: files[MOOD_FILE.happy] ?? idle,
+            sad: files[MOOD_FILE.sad] ?? idle,
+        }
+        return [id, moods]
+    }),
+) as Record<CharacterId, Record<Mood, string>>
 
 // 클릭 반응 모션 — <character>/<motion>/<n>.png 를 자동 수집(import.meta.glob, decorCatalog와 동일 방식).
 // `*/*/*` 3단 깊이라 캐릭터 직속 idle.png/home.png(2단)는 제외된다. 캐릭터 클릭 시 모션 하나를 랜덤 재생.
@@ -62,6 +61,10 @@ const buildClickFrames = (
         }
         const character = matched[1]
         const motion = matched[2]
+        // 'expressions'는 클릭 애니가 아니라 정적 표정 세트라 클릭 모션에서 제외한다(CHARACTER_EXPRESSIONS로 따로 수집).
+        if (motion === 'expressions') {
+            continue
+        }
         const frame = Number(matched[3])
         ;((byCharacter[character] ??= {})[motion] ??= []).push({ frame, url })
     }
@@ -82,15 +85,16 @@ const buildClickFrames = (
 export const CHARACTER_CLICK_FRAMES: Partial<Record<CharacterId, ClickMotion[]>> =
     buildClickFrames(motionFiles)
 
-// 'walking' 모션 프레임만 따로 추출 — 클릭 시 walking이 당첨됐을 때 좌/우 걷기 애니메이션에 쓴다.
-// 같은 glob을 재사용하고 motion === 'walking'만 골라 프레임 순으로 정렬한다.
-const buildWalkFrames = (
+// 특정 모션(예: 'walking', 'falldown') 프레임만 캐릭터별로 추출해 프레임 순 정렬한다.
+// 같은 glob을 재사용한다. 키 없으면 그 모션 에셋이 없는 캐릭터.
+const buildMotionFrames = (
     files: Record<string, string>,
+    motion: string,
 ): Partial<Record<CharacterId, string[]>> => {
     const byCharacter: Record<string, { frame: number; url: string }[]> = {}
     for (const [path, url] of Object.entries(files)) {
         const matched = path.match(/\.\/([^/]+)\/([^/]+)\/(\d+)\.png$/)
-        if (!matched || matched[2] !== 'walking') {
+        if (!matched || matched[2] !== motion) {
             continue
         }
         ;(byCharacter[matched[1]] ??= []).push({ frame: Number(matched[3]), url })
@@ -106,12 +110,18 @@ const buildWalkFrames = (
 
 // 캐릭터별 걷기 프레임. 키 없으면 walking 모션 에셋이 없는 캐릭터(정지 폴백).
 export const CHARACTER_WALK_FRAMES: Partial<Record<CharacterId, string[]>> =
-    buildWalkFrames(motionFiles)
+    buildMotionFrames(motionFiles, 'walking')
 
-// 홈 씬 합본(캐릭터 + 바닥) 이미지. CareTab 홈에서 캐릭터+바닥을 한 장으로 렌더.
-export const HOME_SCENE_ASSETS: Record<CharacterId, string> = {
-    piyoo: piyooHome,
-    qupee: qupeeHome,
-    suupee: suupeeHome,
-    wingpee: wingpeeHome,
-}
+// 캐릭터별 낙하(falldown) 프레임. 중력으로 떨어질 때 이 포즈를 보여준다. 키 없으면 기본 포즈로 폴백.
+export const CHARACTER_FALL_FRAMES: Partial<Record<CharacterId, string[]>> =
+    buildMotionFrames(motionFiles, 'falldown')
+
+// 캐릭터별 정적 표정 세트(<character>/expressions/*.png). 가만히 있을 때 가끔 랜덤으로 보여준다.
+// 애니가 아니라 각 프레임이 독립된 한 표정 — 순서 무관.
+export const CHARACTER_EXPRESSIONS: Partial<Record<CharacterId, string[]>> =
+    buildMotionFrames(motionFiles, 'expressions')
+
+// 홈 씬 합본(캐릭터 + 바닥) 이미지. CareTab 홈에서 캐릭터+바닥을 한 장으로 렌더. (<character>/home.png)
+export const HOME_SCENE_ASSETS: Record<CharacterId, string> = Object.fromEntries(
+    CHARACTER_IDS.map((id) => [id, rootByCharacter[id]?.['home']]),
+) as Record<CharacterId, string>

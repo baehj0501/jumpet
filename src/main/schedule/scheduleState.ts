@@ -30,6 +30,8 @@ export const reduceScheduleState = (state: ScheduleState, event: ScheduleEvent):
                 title,
                 memo,
                 todoId: event.todoId,
+                // 추가 폼에서 고른 알람 오프셋(없음이면 undefined). 🔔로 나중에 변경/해제 가능.
+                remindOffsetMinutes: event.remindOffsetMinutes,
             }
             return { items: [...state.items, item] }
         }
@@ -53,6 +55,21 @@ export const reduceScheduleState = (state: ScheduleState, event: ScheduleEvent):
                 }
                 changed = true
                 return { ...item, title, memo }
+            })
+            if (!changed) {
+                return state
+            }
+            return { items: next }
+        }
+        case 'setRemind': {
+            // 알람 오프셋 설정·해제. null이면 remindOffsetMinutes 제거(알람 없음).
+            let changed = false
+            const next = state.items.map((item) => {
+                if (item.id !== event.id) {
+                    return item
+                }
+                changed = true
+                return { ...item, remindOffsetMinutes: event.remindOffsetMinutes ?? undefined }
             })
             if (!changed) {
                 return state

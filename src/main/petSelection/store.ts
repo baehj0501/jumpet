@@ -14,7 +14,7 @@ const store = new Store<SchemaShape>({
 export const readPetSelectionState = (): PetSelectionState => {
     const raw = store.get('petSelection') as PetSelectionState | undefined
     if (raw && typeof raw.petId === 'string') {
-        return raw
+        return { petId: raw.petId }
     }
     store.set('petSelection', INITIAL_PET_SELECTION_STATE)
     return INITIAL_PET_SELECTION_STATE

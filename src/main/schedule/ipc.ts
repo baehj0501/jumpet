@@ -39,16 +39,28 @@ export const registerScheduleIpc = ({ onDue }: ScheduleIpcDeps): void => {
         return next
     })
 
-    // 30초마다 현재 날짜/시각과 일치하는 일정(아직 안 알린 것)을 통지한다.
-    // 같은 분에 중복 통지하지 않도록 세션 내 in-memory Set으로 dedup.
+    // 30초마다 알람 시각(시작 시각 − remindOffsetMinutes)이 도래한 일정을 통지한다.
+    // remindOffsetMinutes가 없는 일정(=알람 해제)은 건너뛴다.
+    // 같은 분에 중복 통지하지 않도록 세션 내 in-memory Set(id+오프셋)으로 dedup.
     const notifiedIds = new Set<string>()
     const checkDue = () => {
         const now = new Date()
-        const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
-        const time = `${pad(now.getHours())}:${pad(now.getMinutes())}`
+        const nowDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+        const nowTime = `${pad(now.getHours())}:${pad(now.getMinutes())}`
         for (const item of readScheduleState().items) {
-            if (item.date === date && item.time === time && !notifiedIds.has(item.id)) {
-                notifiedIds.add(item.id)
+            if (typeof item.remindOffsetMinutes !== 'number') {
+                continue
+            }
+            const start = new Date(`${item.date}T${item.time}`)
+            if (Number.isNaN(start.getTime())) {
+                continue
+            }
+            const fire = new Date(start.getTime() - item.remindOffsetMinutes * 60_000)
+            const fireDate = `${fire.getFullYear()}-${pad(fire.getMonth() + 1)}-${pad(fire.getDate())}`
+            const fireTime = `${pad(fire.getHours())}:${pad(fire.getMinutes())}`
+            const key = `${item.id}:${item.remindOffsetMinutes}`
+            if (fireDate === nowDate && fireTime === nowTime && !notifiedIds.has(key)) {
+                notifiedIds.add(key)
                 onDue(item.title)
             }
         }

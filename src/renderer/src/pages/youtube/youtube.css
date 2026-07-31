@@ -230,6 +230,16 @@ body {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    /* 창이 작을 때 메뉴가 길어 잘리지 않게 — 창 높이에 맞춰 스크롤. */
+    max-height: calc(100vh - 8px);
+    overflow-y: auto;
+}
+/* 별도 팝업 창(youtube.html?menu=1)에 뜨는 메뉴 — 창 자체가 커서 위치에 뜨므로 좌상단에 그대로 배치. */
+.yt-ctx.yt-ctx-popup {
+    position: static;
+    width: 176px;
+    max-height: none;
+    overflow: visible;
 }
 .yt-ctx-title {
     font-size: 11px;
@@ -296,4 +306,8 @@ body {
 }
 .yt-ctx-item.danger {
     color: #d23b3b;
+}
+.yt-ctx-item.active {
+    color: #2f6aa8;
+    font-weight: 600;
 }

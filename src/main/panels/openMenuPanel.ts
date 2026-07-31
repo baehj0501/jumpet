@@ -30,6 +30,9 @@ export const openMenuPanel = () => {
         minHeight: 460,
         frame: false,
         resizable: true,
+        // 프레임리스 창은 backgroundColor가 없으면 리사이즈 시 아직 안 칠해진 영역이
+        // 검정으로 비친다(특히 Windows). 테마 기본 배경색으로 불투명하게 깔아 검정 바를 막는다.
+        backgroundColor: '#e8f4ff',
         title: '루프프 데스크메이트',
         autoHideMenuBar: true,
         webPreferences: {

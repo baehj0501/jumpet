@@ -57,6 +57,28 @@ export const tagStyle = css({
     whiteSpace: 'nowrap',
 })
 
+// sticky 알림 말풍선의 닫기(X) 버튼 — 우상단 모서리에 작은 원형 배지.
+export const closeStyle = css({
+    position: 'absolute',
+    top: -7,
+    right: -7,
+    width: 17,
+    height: 17,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: BORDER_COLOR,
+    color: '#fff',
+    border: '2px solid #fff',
+    borderRadius: '50%',
+    fontSize: 9,
+    lineHeight: 1,
+    cursor: 'pointer',
+    padding: 0,
+    fontFamily: 'inherit',
+    zIndex: 1,
+})
+
 // 픽셀 꼬리 — 계단형(아래로 좁아지는) 블록. 채움색 + 좌우 어두운 테두리.
 export const tailStyle = css({
     position: 'absolute',

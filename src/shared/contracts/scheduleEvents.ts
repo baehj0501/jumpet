@@ -11,6 +11,8 @@ export type ScheduleItem = {
     memo: string // 100자 이내 간단 메모 (없으면 '')
     // '할 일에도 추가'로 함께 만든 todo의 id. 일정 삭제 시 이 todo도 같이 지운다. 없으면 undefined.
     todoId?: string
+    // 알람 — 시작 시각 기준 'N분 전'에 알린다(0 = 정시). 없으면(undefined) 알람 없음.
+    remindOffsetMinutes?: number
 }
 
 export type ScheduleState = {
@@ -27,10 +29,13 @@ export type ScheduleEvent =
           title: string
           memo: string
           todoId?: string
+          remindOffsetMinutes?: number
       }
     | { type: 'remove'; id: string }
     // 추가된 일정의 제목·메모 수정.
     | { type: 'update'; id: string; title: string; memo: string }
+    // 알람 오프셋 설정·해제(null이면 해제).
+    | { type: 'setRemind'; id: string; remindOffsetMinutes: number | null }
 
 export const INITIAL_SCHEDULE_STATE: ScheduleState = {
     items: [],

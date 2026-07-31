@@ -114,11 +114,26 @@ declare global {
                 move: (dx: number, dy: number) => void
                 resize: (width: number, height: number) => void
                 resizeEdge: (edge: string, dx: number, dy: number) => void
+                setAlwaysOnTop: (value: boolean) => void
+                openContextMenu: (state: {
+                    theme: number
+                    sizeStep: number
+                    alwaysOnTop: boolean
+                    sizeCount: number
+                    themes: { id: number; name: string }[]
+                }) => void
+                selectMenu: (action: { type: string; value?: number | boolean }) => void
+                onMenuAction: (
+                    handler: (action: { type: string; value?: number | boolean }) => void,
+                ) => () => void
                 close: () => void
             }
             character: {
-                say: (text: string) => void
-                onSpeech: (handler: (text: string) => void) => () => void
+                say: (text: string, options?: { sticky?: boolean }) => void
+                onSpeech: (
+                    handler: (payload: { text: string; sticky?: boolean }) => void,
+                ) => () => void
+                dismissNotification: () => void
             }
         }
     }

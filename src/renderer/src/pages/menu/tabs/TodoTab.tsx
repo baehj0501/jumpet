@@ -34,19 +34,10 @@ const writeStoredProjects = (projects: string[]): void => {
     }
 }
 
-// 시각 표기 — 'M/D HH:MM'. (남은 할일=추가 시각, 완료=완료 시각)
-const formatDateTime = (epochMs: number): string => {
-    const date = new Date(epochMs)
-    const month = date.getMonth() + 1
-    const day = date.getDate()
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-    return `${month}/${day} ${hours}:${minutes}`
-}
-
 export const TodoTab = () => {
     const todos = useTodos()
-    const { addTodo, toggleTodo, removeTodo, setTodoProject, updateTodoText } = useTodoActions()
+    const { addTodo, toggleTodo, removeTodo, setTodoProject, updateTodoText } =
+        useTodoActions()
     // 일정 연동: 일정에서 만든 할일을 지우면 연결된 일정도 함께 삭제한다.
     const scheduleItems = useScheduleItems()
     const { remove: removeSchedule } = useScheduleActions()
@@ -137,12 +128,22 @@ export const TodoTab = () => {
     // 입력 줄 드롭다운에서 고른 프로젝트로 새 할일을 넣는다. '전체'면 미지정.
     const addTargetProject = addProject !== PROJECT_ALL ? addProject : undefined
 
-    const handleAdd = () => {
+    // 하단 '할 일 추가 +' 버튼을 누르면 열리는 추가 패널(아이템 탭처럼 하단 플로팅).
+    const [isAddOpen, setIsAddOpen] = useState(false)
+
+    // 추가 패널 닫기 — 입력값도 초기화.
+    const closeAddPanel = () => {
+        setIsAddOpen(false)
+        setText('')
+        setAddProject(PROJECT_ALL)
+    }
+
+    const handleAdd = async () => {
         const trimmed = text.trim()
         if (trimmed === '') {
             return
         }
-        void addTodo(trimmed, undefined, addTargetProject)
+        await addTodo(trimmed, undefined, addTargetProject)
         setText('')
         // 추가 후 프로젝트 선택은 '전체'로 초기화.
         setAddProject(PROJECT_ALL)
@@ -226,7 +227,6 @@ export const TodoTab = () => {
 
     // 할 일 한 줄 렌더.
     const renderTodoItem = (todo: (typeof todos)[number]) => {
-        const dateMs = todo.completed ? todo.completedAt : todo.createdAt
         const isEditing = editingId === todo.id
         return (
             <div
@@ -266,9 +266,6 @@ export const TodoTab = () => {
                         {todo.text}
                     </div>
                 )}
-                {dateMs !== undefined && !isEditing && (
-                    <span className='todo-date'>{formatDateTime(dateMs)}</span>
-                )}
                 {revealEditId === todo.id && !isEditing && (
                     <button
                         type='button'
@@ -299,38 +296,6 @@ export const TodoTab = () => {
 
     return (
         <div className='panel'>
-            <div className='todo-add-row'>
-                <select
-                    className='todo-add-project-select'
-                    value={addProject}
-                    onChange={(event) => setAddProject(event.target.value)}
-                    title='추가할 프로젝트'
-                >
-                    <option value={PROJECT_ALL}>전체</option>
-                    {projectNames.map((name) => (
-                        <option
-                            key={name}
-                            value={name}
-                        >
-                            {name}
-                        </option>
-                    ))}
-                </select>
-                <input
-                    className='fi'
-                    placeholder='할 일 입력 후 Enter'
-                    maxLength={40}
-                    value={text}
-                    onChange={(event) => setText(event.target.value)}
-                    onKeyDown={(event) => {
-                        // 한글(IME) 조합 중 Enter는 조합 확정용 — 추가를 트리거하지 않는다.
-                        if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
-                            handleAdd()
-                        }
-                    }}
-                />
-            </div>
-
             <div className='todo-filters'>
                 <button
                     type='button'
@@ -461,6 +426,68 @@ export const TodoTab = () => {
                 <div className='todo-list'>{listTodos.map(renderTodoItem)}</div>
             )}
 
+            {/* 하단 플로팅 — '할 일 추가 +' 버튼, 누르면 추가 패널이 펼쳐진다. */}
+            {isAddOpen ? (
+                <div className='todo-add-panel floating'>
+                    <div className='todo-add-row'>
+                        <select
+                            className='todo-add-project-select'
+                            value={addProject}
+                            onChange={(event) => setAddProject(event.target.value)}
+                            title='추가할 프로젝트'
+                        >
+                            <option value={PROJECT_ALL}>전체</option>
+                            {projectNames.map((name) => (
+                                <option
+                                    key={name}
+                                    value={name}
+                                >
+                                    {name}
+                                </option>
+                            ))}
+                        </select>
+                        <input
+                            className='fi'
+                            placeholder='할 일 입력 후 Enter'
+                            autoFocus
+                            maxLength={40}
+                            value={text}
+                            onChange={(event) => setText(event.target.value)}
+                            onKeyDown={(event) => {
+                                // 한글(IME) 조합 중 Enter는 조합 확정용 — 추가를 트리거하지 않는다.
+                                if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+                                    void handleAdd()
+                                }
+                            }}
+                        />
+                    </div>
+
+                    <div className='todo-add-actions'>
+                        <button
+                            type='button'
+                            className='add-btn'
+                            onClick={() => void handleAdd()}
+                        >
+                            추가
+                        </button>
+                        <button
+                            type='button'
+                            className='pbtn ghost'
+                            onClick={closeAddPanel}
+                        >
+                            닫기
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <button
+                    type='button'
+                    className='pbtn todo-add-fab floating'
+                    onClick={() => setIsAddOpen(true)}
+                >
+                    할 일 추가 +
+                </button>
+            )}
         </div>
     )
 }

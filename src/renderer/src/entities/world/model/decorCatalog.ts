@@ -32,29 +32,9 @@ export const THEME_THUMBNAILS: Record<DecorTheme, string> = {
     star: thumbStar,
 }
 
-// 이름 있는 대표 데코의 한글 이름. 나머지는 파일명(번호)을 그대로 쓴다.
-const NAME_OVERRIDES: Record<string, string> = {
-    park_flower: '꽃',
-    park_butterfly: '나비',
-    park_clover: '클로버',
-    park_bluebird: '파랑새',
-    park_stump: '그루터기',
-    shipping_box: '상자',
-    shipping_burger: '버거',
-    shipping_dumbbell: '아령',
-    shipping_gift: '선물',
-    shipping_truck: '트럭',
-    snow_igloo: '이글루',
-    snow_radio: '라디오',
-    snow_raincloud: '먹구름',
-    snow_snowflake: '눈송이',
-    snow_snowman2: '눈사람',
-    star_beanbag: '빈백',
-    star_rocket: '로켓',
-    star_skateboard: '보드',
-    star_starfish: '불가사리',
-    star_tipi: '티피',
-}
+// 모든 테마(피요=공원 / 쿠피=택배 / 윙피=겨울 / 슈피=별)의 데코가 한글 파일명을 쓰므로
+// 파일명을 그대로 이름으로 사용한다. (특별한 이름 매핑이 필요하면 여기에 추가)
+const NAME_OVERRIDES: Record<string, string> = {}
 
 const modules = import.meta.glob('../assets/*/*.png', {
     eager: true,

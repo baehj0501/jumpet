@@ -2,6 +2,8 @@ import { type CSSProperties, useEffect, useRef, useState } from 'react'
 import {
     CHARACTER_CLICK_FRAMES,
     CHARACTER_WALK_FRAMES,
+    CHARACTER_FALL_FRAMES,
+    CHARACTER_EXPRESSIONS,
     CHARACTER_DISPLAY_NAMES,
     CharacterView,
     SpeechBubble,
@@ -21,9 +23,8 @@ import { PET_SCALE_MAX, usePetScale } from '@renderer/entities/settings'
 import { useWindowDrag } from '@renderer/features/drag'
 import { useContextMenu } from '@renderer/features/context-menu'
 
-// 감정 전환 UI는 Phase 1B 이후 인터랙션에서 결정 — 지금은 default 고정.
-// 캐릭터(펫) 종류는 홈 탭 좌우 버튼이 바꾸는 SSOT(useSelectedCharacterId)에서 읽는다.
-const CURRENT_MOOD: Mood = 'default'
+// 클릭 시 happy 표정을 유지하는 시간(ms). 이 뒤 default로 복귀. (표정 이미지 있는 캐릭터만 시각적 변화)
+const HAPPY_MOOD_HOLD_MS = 2500
 
 // 캐릭터 윈도우 기본 한 변 길이(px). petScale 1.0 기준. main createWindow와 일치해야 한다.
 const BASE_WINDOW_SIZE = 300
@@ -49,6 +50,23 @@ const AUTO_WALK_CHANCE = 0.4
 const AUTO_WALK_TOP_THRESHOLD_PX = 50
 // 생일 당일 보너스 포인트(연 1회).
 const BIRTHDAY_BONUS = 50
+
+// 가만히 있을 때 랜덤 표정 로테이션 — 주기·확률·유지 시간. (표정 세트가 있는 캐릭터만)
+const EXPRESSION_TICK_MS = 5000
+const EXPRESSION_CHANCE = 0.5
+const EXPRESSION_HOLD_MS = 2800
+
+// 중력 — 캐릭터를 바닥(groundY)보다 위로 올렸다 놓으면 가속하며 떨어진다.
+// GRAVITY: 프레임당 속도 증가(px). MAX_FALL_VELOCITY: 최고 낙하 속도 상한(길게 떨어져도 안 빨라지게).
+const GRAVITY = 0.25
+const MAX_FALL_VELOCITY = 5
+const BOUNCE_DAMPING = 0.3
+// 튕김 속도가 이 값 미만이면 멈춘다(무한 미세 튕김 방지).
+const BOUNCE_MIN_VELOCITY = 3
+// falldown 포즈 프레임 넘김 간격(ms). 클수록 표정 변화가 느긋하다.
+const FALL_FRAME_MS = 280
+// 착지 후 마지막 falldown 포즈를 유지하는 시간(ms). 이 뒤 기본 포즈로 복귀.
+const LAND_POSE_HOLD_MS = 560
 
 // "N월 N일" 또는 "M-D"/"M.D" 형식에서 월·일을 파싱.
 const parseBirthday = (raw: string): { month: number; day: number } | null => {
@@ -76,6 +94,13 @@ export const App = () => {
     // features 계층(드래그, 컨텍스트 메뉴)이 write하고 entities 계층(behaviors)이 read한다.
     // 드래그와 메뉴는 시간상 거의 겹치지 않으므로 단일 ref OR set으로 충분하다.
     const isInteractingRef = useRef(false)
+    // 표정(mood) — 기본 default, 클릭 시 잠깐 happy로. 표정 이미지가 있는 캐릭터만 시각적으로 바뀐다.
+    const [mood, setMood] = useState<Mood>('default')
+    const moodTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    // 중력 바닥 높이(창 Y). "지금 있는 높이"를 바닥으로 고정 — 마운트 시 1회 캡처, 리사이즈 시 갱신.
+    const groundYRef = useRef<number | null>(null)
+    // 낙하 애니메이션 rAF id — 새 낙하 시작 시 이전 것을 취소한다.
+    const fallRafRef = useRef<number | null>(null)
 
     // 캐릭터의 상태 머신을 초기화하고 현재 상태를 가져온다.
     const [characterState, { interrupt: interruptAutonomousState }] = useStateMachine(isInteractingRef)
@@ -87,7 +112,7 @@ export const App = () => {
     const selectedCharacterId = useSelectedCharacterId()
 
     // 말풍선 상태 — 다른 창(메뉴 돌봄 등)의 멘트 구독 + 같은 창(좌클릭) 멘트는 showSpeech로 즉시 표시.
-    const { speech, showSpeech } = useCharacterSpeech()
+    const { speech, showSpeech, dismissSpeech } = useCharacterSpeech()
 
     // 클릭 반응 애니메이션 — 클릭하면 캐릭터의 모션 중 하나를 랜덤으로 골라 1회 재생 후 기본 포즈로 복귀.
     // 모션이 없는 캐릭터는 애니 없음. clickFrameIndex가 null이면 재생 중 아님.
@@ -105,6 +130,14 @@ export const App = () => {
     const WALK_MOVE_SPEED = 80 // 걷기 이동 속도(px/초)
     const [walkDirection, setWalkDirection] = useState<'left' | 'right' | null>(null)
     const [walkFrameSrc, setWalkFrameSrc] = useState<string | undefined>(undefined)
+    // 가만히 있을 때 가끔 보여줄 랜덤 표정 포즈(없으면 undefined → 기본 포즈).
+    const [expressionSrc, setExpressionSrc] = useState<string | undefined>(undefined)
+    const expressionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    // 낙하 중 보여줄 falldown 포즈 프레임(없으면 undefined → 기본 포즈).
+    const [fallFrameSrc, setFallFrameSrc] = useState<string | undefined>(undefined)
+    const fallFrameTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+    // 착지 후 마지막 포즈 유지 타이머 — 새 드래그/낙하 시 취소한다.
+    const landHoldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     // 진행 중인 인플레이스 클릭 애니를 멈춘다(걷기로 전환할 때 공용).
     const stopInPlaceAnimation = () => {
         if (clickTimerRef.current) {
@@ -124,13 +157,18 @@ export const App = () => {
         setWalkDirection(Math.random() < 0.5 ? 'left' : 'right')
     }
 
-    const playClickAnimation = () => {
+    const playClickAnimation = (preferredName?: string) => {
         const motions = CHARACTER_CLICK_FRAMES[selectedCharacterId]
         if (!motions || motions.length === 0) {
             return
         }
-        // 모션 하나를 랜덤 선택.
-        const motion = motions[Math.floor(Math.random() * motions.length)]
+        // 특정 모션 지정(예: 생일 'cheer') 시 그걸, 아니면 랜덤.
+        const motion = preferredName
+            ? motions.find((candidate) => candidate.name === preferredName)
+            : motions[Math.floor(Math.random() * motions.length)]
+        if (!motion) {
+            return
+        }
         // 'walking'이 당첨되면 좌/우로 실제 걸어가는 모션으로 분기.
         if (motion.name === 'walking') {
             startWalk()
@@ -178,20 +216,140 @@ export const App = () => {
         [],
     )
 
+    // 마운트 시 "지금 있는 높이"를 중력 바닥으로 캡처(1회).
+    useEffect(() => {
+        window.api.getWindowBounds().then((bounds) => {
+            if (bounds && groundYRef.current === null) {
+                groundYRef.current = bounds.y
+            }
+        })
+    }, [])
+
+    // 낙하 포즈(falldown) 프레임 순환·유지 타이머 정지 + 기본 포즈로 즉시 복귀.
+    const stopFallFrames = () => {
+        if (fallFrameTimerRef.current !== null) {
+            clearInterval(fallFrameTimerRef.current)
+            fallFrameTimerRef.current = null
+        }
+        if (landHoldTimerRef.current !== null) {
+            clearTimeout(landHoldTimerRef.current)
+            landHoldTimerRef.current = null
+        }
+        setFallFrameSrc(undefined)
+    }
+
+    // 낙하 시작 — falldown 프레임이 있으면 순환 재생(마지막 프레임에서 유지). 없으면 기본 포즈.
+    const startFallFrames = () => {
+        const frames = CHARACTER_FALL_FRAMES[selectedCharacterId]
+        if (!frames || frames.length === 0) {
+            return
+        }
+        stopFallFrames()
+        let index = 0
+        setFallFrameSrc(frames[0])
+        fallFrameTimerRef.current = setInterval(() => {
+            index = Math.min(index + 1, frames.length - 1)
+            setFallFrameSrc(frames[index])
+            // 마지막 프레임에 도달하면 유지(순환 정지).
+            if (index >= frames.length - 1 && fallFrameTimerRef.current !== null) {
+                clearInterval(fallFrameTimerRef.current)
+                fallFrameTimerRef.current = null
+            }
+        }, FALL_FRAME_MS)
+    }
+
+    // 드래그를 놓았을 때 — 캐릭터가 바닥보다 위에 있으면 가속하며 떨어뜨린다(작은 튕김 포함).
+    const applyGravity = async () => {
+        const ground = groundYRef.current
+        if (ground === null) {
+            return
+        }
+        const bounds = await window.api.getWindowBounds()
+        // 이미 바닥이거나 아래면(또는 조회 실패) 낙하 없음.
+        if (!bounds || bounds.y >= ground) {
+            return
+        }
+        if (fallRafRef.current !== null) {
+            cancelAnimationFrame(fallRafRef.current)
+        }
+        // 낙하 중에는 자율 행동이 끼어들지 않게 상호작용 신호를 켜고, falldown 포즈를 재생한다.
+        isInteractingRef.current = true
+        startFallFrames()
+        const x = bounds.x
+        let y = bounds.y
+        let velocity = 0
+        const step = () => {
+            velocity = Math.min(velocity + GRAVITY, MAX_FALL_VELOCITY)
+            y += velocity
+            if (y >= ground) {
+                // 바닥 도달 — 속도가 충분하면 감쇠해 튕기고, 아니면 착지.
+                const bounceVelocity = velocity * BOUNCE_DAMPING
+                if (bounceVelocity >= BOUNCE_MIN_VELOCITY) {
+                    y = ground
+                    velocity = -bounceVelocity
+                    window.api.moveWindowTo(x, ground)
+                    fallRafRef.current = requestAnimationFrame(step)
+                    return
+                }
+                window.api.moveWindowTo(x, ground)
+                fallRafRef.current = null
+                isInteractingRef.current = false
+                // 착지 — 프레임 순환은 멈추되 마지막 포즈를 잠시 유지한 뒤 기본 포즈로 복귀.
+                if (fallFrameTimerRef.current !== null) {
+                    clearInterval(fallFrameTimerRef.current)
+                    fallFrameTimerRef.current = null
+                }
+                if (landHoldTimerRef.current !== null) {
+                    clearTimeout(landHoldTimerRef.current)
+                }
+                landHoldTimerRef.current = setTimeout(() => {
+                    setFallFrameSrc(undefined)
+                    landHoldTimerRef.current = null
+                }, LAND_POSE_HOLD_MS)
+                return
+            }
+            window.api.moveWindowTo(x, Math.round(y))
+            fallRafRef.current = requestAnimationFrame(step)
+        }
+        fallRafRef.current = requestAnimationFrame(step)
+    }
+
+    // 클릭 시 잠깐 happy 표정으로 바꿨다 복귀. (happy 이미지가 있는 캐릭터만 실제로 표정이 바뀐다)
+    const flashHappyMood = () => {
+        setMood('happy')
+        if (moodTimerRef.current !== null) {
+            clearTimeout(moodTimerRef.current)
+        }
+        moodTimerRef.current = setTimeout(() => {
+            setMood('default')
+            moodTimerRef.current = null
+        }, HAPPY_MOOD_HOLD_MS)
+    }
+
     // useWindowDrag는 자율 행동 정책을 모른다 — 호출자가 콜백에서 ref를 토글하고 자율 상태도 멈춘다.
     const { handleMouseDown } = useWindowDrag({
         onDragStart: () => {
             isInteractingRef.current = true
             interruptAutonomousState()
+            // 새 드래그 시작 시 진행 중이던 낙하는 취소.
+            if (fallRafRef.current !== null) {
+                cancelAnimationFrame(fallRafRef.current)
+                fallRafRef.current = null
+            }
+            stopFallFrames()
         },
         onDragEnd: () => {
             isInteractingRef.current = false
+            // 바닥보다 위에서 놓았으면 중력으로 떨어뜨린다.
+            void applyGravity()
         },
         // 드래그가 아닌 단순 좌클릭 → 랜덤 멘트를 머리 위 말풍선으로. 클릭 시점의 최신 프로필(SSOT)을 읽는다.
         // - NAME_CALL_CHANCE(10%) 확률 제일 윗줄 "(내 이름)아/야" 호명.
         // - 같은 NAME_CALL_CHANCE(10%) 확률 우측 정렬 태그 "(캐릭터 이름)이/가"(선택된 캐릭터의 고정 종류명).
         // - 아주 드물게(CLICK_REWARD_CHANCE) 1~5pt 행운 포인트 증정.
         onClick: () => {
+            // 클릭하면 잠깐 happy 표정으로.
+            flashHappyMood()
             const profile = getProfileSnapshot()
             const characterName = CHARACTER_DISPLAY_NAMES[selectedCharacterId] ?? selectedCharacterId
             // 행운 포인트 — 0.02% 확률로 1~5pt 랜덤 지급(다른 멘트 대신 축하 말풍선).
@@ -210,7 +368,7 @@ export const App = () => {
             }
             const tag =
                 Math.random() < NAME_CALL_CHANCE ? withSubjectParticle(characterName) : undefined
-            showSpeech(message, tag)
+            showSpeech(message, { tag })
             // 클릭 반응 모션 재생(프레임 있는 캐릭터만).
             playClickAnimation()
         },
@@ -325,10 +483,44 @@ export const App = () => {
         return () => clearInterval(intervalId)
     }, [])
 
-    // 클릭 애니 재생 중이면 활성 모션의 해당 프레임을, 걷는 중이면 걷기 프레임을, 아니면 mood 기본 이미지를 보여준다.
+    // 가만히 있을 때 가끔 랜덤 표정을 잠깐 보여준다. 표정 세트가 있는 캐릭터(현재 슈피)만 시각 변화.
+    // 드래그/걷기/클릭 애니 중이거나 이미 표정 표시 중이면 건너뛴다.
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            if (
+                isInteractingRef.current ||
+                isBusyRef.current ||
+                expressionTimerRef.current !== null
+            ) {
+                return
+            }
+            if (Math.random() >= EXPRESSION_CHANCE) {
+                return
+            }
+            const list = CHARACTER_EXPRESSIONS[selectedCharacterId]
+            if (!list || list.length === 0) {
+                return
+            }
+            setExpressionSrc(list[Math.floor(Math.random() * list.length)])
+            expressionTimerRef.current = setTimeout(() => {
+                setExpressionSrc(undefined)
+                expressionTimerRef.current = null
+            }, EXPRESSION_HOLD_MS)
+        }, EXPRESSION_TICK_MS)
+        return () => {
+            clearInterval(intervalId)
+            if (expressionTimerRef.current !== null) {
+                clearTimeout(expressionTimerRef.current)
+                expressionTimerRef.current = null
+            }
+        }
+    }, [selectedCharacterId])
+
+    // 낙하 중이면 falldown 포즈, 클릭 애니 중이면 그 프레임, 걷는 중이면 걷기 프레임, 아니면 mood 기본 이미지.
     const clickOverrideSrc =
         clickFrameIndex !== null ? activeMotionRef.current?.[clickFrameIndex] : undefined
-    const overrideSrc = clickOverrideSrc ?? walkFrameSrc
+    // 우선순위: 낙하 > 클릭 애니 > 걷기 > (가만히 있을 때) 랜덤 표정 > 기본 mood.
+    const overrideSrc = fallFrameSrc ?? clickOverrideSrc ?? walkFrameSrc ?? expressionSrc
 
     // 캐릭터 크기(SSOT) — 설정 탭에서 바꾸면 캐릭터 윈도우 자체를 키워 제자리에서 커진다.
     // 이미지가 objectFit:contain으로 창을 채우므로 창 크기가 곧 캐릭터 크기.
@@ -345,6 +537,15 @@ export const App = () => {
         }
         const size = Math.round(BASE_WINDOW_SIZE * petScale)
         window.api.setWindowSize(size, size)
+        // 리사이즈는 창을 중심 기준으로 재배치해 Y가 바뀐다 — 바닥 높이를 새 위치로 갱신.
+        const timer = setTimeout(() => {
+            window.api.getWindowBounds().then((bounds) => {
+                if (bounds && !isInteractingRef.current) {
+                    groundYRef.current = bounds.y
+                }
+            })
+        }, 60)
+        return () => clearTimeout(timer)
     }, [petScale])
 
     // 생일 축하 — 생일 당일이면 축하 멘트 + 보너스 포인트(연 1회, localStorage로 중복 방지).
@@ -360,7 +561,7 @@ export const App = () => {
         localStorage.setItem('loopf.birthdayBonusYear', year)
         void window.api.player.apply({ type: 'manual', delta: BIRTHDAY_BONUS })
         showSpeech(`생일 축하해! 🎉 +${BIRTHDAY_BONUS}P`)
-        playClickAnimation()
+        playClickAnimation('cheer')
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [profileForBirthday.birthday])
 
@@ -370,10 +571,12 @@ export const App = () => {
                 text={speech.text}
                 tag={speech.tag}
                 scale={bubbleScale}
+                sticky={speech.sticky}
+                onClose={dismissSpeech}
             />
             <CharacterView
                 characterId={selectedCharacterId}
-                mood={CURRENT_MOOD}
+                mood={mood}
                 state={characterState}
                 overrideSrc={overrideSrc}
                 flip={walkDirection === 'left'}

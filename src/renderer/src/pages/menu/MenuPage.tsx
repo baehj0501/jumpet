@@ -34,7 +34,7 @@ const TABS: { id: TabId; label: string }[] = [
     { id: 'todo', label: '할일' },
     { id: 'timer', label: '타이머' },
     { id: 'fortune', label: '운세' },
-    { id: 'gacha', label: '가챠' },
+    { id: 'gacha', label: '뽑기' },
     { id: 'pet', label: '펫' },
     { id: 'item', label: '아이템' },
     { id: 'youtube', label: '유튜브' },

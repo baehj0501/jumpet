@@ -62,9 +62,22 @@ type TodoIpcDeps = {
     onTodoCompleted: (reward: number) => void
     // 완료 취소된 todo의 보상 점수. 호출자가 점수 차감(음수 허용)을 합성한다.
     onTodoUncompleted: (reward: number) => void
+    // 아침/저녁 남은 할일 리마인더 — 미완료 개수를 넘긴다.
+    onTodoSummary: (count: number) => void
 }
 
-export const registerTodoIpc = ({ onTodoCompleted, onTodoUncompleted }: TodoIpcDeps): void => {
+// 알림 체크 주기 — 분 단위를 놓치지 않게 30초마다.
+const TODO_NOTIFY_INTERVAL_MS = 30_000
+// 매일 남은 할일 리마인더 시각(아침/저녁).
+const TODO_MORNING_HHMM = '09:00'
+const TODO_EVENING_HHMM = '19:00'
+const pad2 = (n: number): string => String(n).padStart(2, '0')
+
+export const registerTodoIpc = ({
+    onTodoCompleted,
+    onTodoUncompleted,
+    onTodoSummary,
+}: TodoIpcDeps): void => {
     ipcMain.handle('todo:get', (): TodoState => {
         return readTodoState()
     })
@@ -98,4 +111,33 @@ export const registerTodoIpc = ({ onTodoCompleted, onTodoUncompleted }: TodoIpcD
 
         return next
     })
+
+    // 30초마다 매일 아침/저녁 남은 할일 리마인더를 체크한다(날짜+슬롯 키로 세션 내 dedup).
+    const notifiedSummary = new Set<string>()
+    const checkTodoNotifications = () => {
+        const d = new Date()
+        const dateKey = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
+        const hhmm = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+        const todos = readTodoState().todos
+
+        // 아침/저녁 리마인더 — 정한 시각에 미완료 할일이 있으면 1회.
+        for (const [slot, time] of [
+            ['morning', TODO_MORNING_HHMM],
+            ['evening', TODO_EVENING_HHMM],
+        ] as const) {
+            if (hhmm !== time) {
+                continue
+            }
+            const key = `${dateKey}:${slot}`
+            if (notifiedSummary.has(key)) {
+                continue
+            }
+            notifiedSummary.add(key)
+            const remaining = todos.filter((todo) => !todo.completed).length
+            if (remaining > 0) {
+                onTodoSummary(remaining)
+            }
+        }
+    }
+    setInterval(checkTodoNotifications, TODO_NOTIFY_INTERVAL_MS)
 }
