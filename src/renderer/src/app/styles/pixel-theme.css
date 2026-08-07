@@ -81,18 +81,19 @@
     --btn-primary-edge: #2f6cc4;
 }
 [data-theme='green'] {
-    --bg: #eaf5e8;
-    --panel: #d4edd2;
-    --border: #80c87a;
-    --accent: #3a9a3a;
-    --accent2: #60ba50;
-    --text: #0a300a;
-    --dim: #5a9858;
-    --card: #f2faf0;
-    --btn-bg: #b8e8b0;
-    --btn-bg-hover: #9cdc92;
-    --emboss-hi: #d8f3d2;
-    --emboss-lo: #2c6e2c;
+    /* 연두 테마 — 순수 초록에서 노란기를 섞은 라임/올리브 연두로. (탭 크림옐로우와 톤 맞춤) */
+    --bg: #f0f6e0;
+    --panel: #e2efc6;
+    --border: #a5cf6b;
+    --accent: #67922b;
+    --accent2: #8fbf3e;
+    --text: #29360d;
+    --dim: #7c9440;
+    --card: #f7fae5;
+    --btn-bg: #d3e795;
+    --btn-bg-hover: #c1de79;
+    --emboss-hi: #ebf4bd;
+    --emboss-lo: #566d1c;
     /* 연두 테마 비활성 탭 — 연두 테두리 + 파스텔 옐로우(크림) 베벨/채움. 베벨 (하,우)는 진한 연두. */
     --tab-border: #a5cc6b;
     --tab-bevel: #eeecb2;
@@ -496,7 +497,7 @@ body {
     position: absolute;
     z-index: 1;
     color: #ffffff;
-    font-size: 11px;
+    font-size: 20px;
     opacity: 0.85;
 }
 .home-sparkle.s1 {
@@ -514,6 +515,22 @@ body {
 .home-sparkle.s4 {
     top: 96px;
     right: 64px;
+}
+.home-sparkle.s5 {
+    top: 176px;
+    left: 58px;
+}
+.home-sparkle.s6 {
+    bottom: 54px;
+    right: 44px;
+}
+.home-sparkle.s7 {
+    top: 44px;
+    right: 110px;
+}
+.home-sparkle.s8 {
+    bottom: 132px;
+    left: 96px;
 }
 /* 잔디 바닥 (이미지) */
 .home-ground {

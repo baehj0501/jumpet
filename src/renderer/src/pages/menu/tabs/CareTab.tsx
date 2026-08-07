@@ -2,17 +2,23 @@ import { usePlayerStore } from '@renderer/entities/player'
 import {
     CHARACTER_ASSETS,
     CHARACTER_DISPLAY_NAMES,
-    HOME_SCENE_ASSETS,
     type CharacterId,
     useSelectedCharacterId,
     useSelectCharacter,
 } from '@renderer/entities/character'
 import { getBirthdayCooldown, useProfile, useProfileActions } from '@renderer/entities/profile'
 import { ProfileRow } from '../ProfileRow'
-import homeCloud from '../assets/home_cloud2.png'
 
 // 카탈로그에 등록된 캐릭터 ID 목록(좌우 전환 대상).
 const CHARACTER_IDS = Object.keys(CHARACTER_ASSETS) as CharacterId[]
+
+// 홈 탭 캐릭터 표시 배율 — 슈피는 기준(1), 나머지는 20% 작게. (발끝 기준 축소)
+const HOME_FIGURE_SCALE: Record<CharacterId, number> = {
+    piyoo: 0.85,
+    qupee: 0.8,
+    suupee: 1,
+    wingpee: 0.85,
+}
 
 export const CareTab = () => {
     const score = usePlayerStore((state) => state.player.score)
@@ -43,22 +49,14 @@ export const CareTab = () => {
     return (
         <div className='panel'>
             <div className='home-scene'>
-                <img
-                    className='home-cloud c1'
-                    src={homeCloud}
-                    alt=''
-                    draggable={false}
-                />
-                <img
-                    className='home-cloud c2'
-                    src={homeCloud}
-                    alt=''
-                    draggable={false}
-                />
                 <span className='home-sparkle s1'>✦</span>
                 <span className='home-sparkle s2'>✦</span>
                 <span className='home-sparkle s3'>✦</span>
                 <span className='home-sparkle s4'>✦</span>
+                <span className='home-sparkle s5'>✦</span>
+                <span className='home-sparkle s6'>✦</span>
+                <span className='home-sparkle s7'>✦</span>
+                <span className='home-sparkle s8'>✦</span>
 
                 <div className='home-bubble'>{petName} 안녕! 💗</div>
                 <span className='home-bubble-tail' />
@@ -74,9 +72,13 @@ export const CareTab = () => {
                 </button>
                 <img
                     className='home-figure'
-                    src={HOME_SCENE_ASSETS[CHARACTER_IDS[currentCharacterIndex]]}
+                    src={CHARACTER_ASSETS[CHARACTER_IDS[currentCharacterIndex]].default}
                     alt='캐릭터'
                     draggable={false}
+                    style={{
+                        transform: `translateX(-50%) scale(${HOME_FIGURE_SCALE[CHARACTER_IDS[currentCharacterIndex]] ?? 1})`,
+                        transformOrigin: 'bottom center',
+                    }}
                 />
                 <button
                     type='button'
