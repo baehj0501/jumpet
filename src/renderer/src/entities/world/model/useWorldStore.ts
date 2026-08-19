@@ -90,8 +90,8 @@ let isInitialized = false
 let unsubscribeFromChanges: (() => void) | null = null
 
 // 팀 데모용 — 시작 시 보유하지 않은 데코를 전부 1개씩 보유 처리(가챠 없이 모두 사용 가능).
-// 프로덕션 빌드 전에는 false로 되돌릴 것.
-const DEMO_UNLOCK_ALL_DECOR = true
+// 정식 동작: 데코는 뽑기로만 획득하므로 false. (데모 확인이 필요할 때만 임시로 true)
+const DEMO_UNLOCK_ALL_DECOR = false
 
 export const initializeWorldSync = (): void => {
     if (isInitialized) {

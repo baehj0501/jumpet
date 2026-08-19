@@ -64,7 +64,8 @@ export const YoutubePage = () => {
         }
         const scaleX = window.innerWidth / BASE_W
         const scaleY = window.innerHeight / BASE_H
-        const base = THEME_HOLES[themeId]
+        // 삭제된 테마 id가 저장돼 있어도 안전하게 — 없으면 기본(1)으로 폴백.
+        const base = THEME_HOLES[themeId] ?? THEME_HOLES[1]
         const width = Math.round(base.width * scaleX)
         const height = Math.round(base.height * scaleY)
         wv.style.left = `${Math.round(base.left * scaleX)}px`

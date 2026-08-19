@@ -19,9 +19,14 @@ export {
     withSubjectParticle,
     withVocativeParticle,
 } from './model/characterNames'
+export { CHARACTER_GACHA_COST } from '@shared/contracts/characterEvents'
 export {
     useSelectedCharacterId,
     useSelectCharacter,
+    useChooseCharacter,
+    useHasChosenCharacter,
+    useOwnedCharacters,
+    useRollCharacterGacha,
     initializeCharacterSelectionSync,
 } from './model/useCharacterSelectionStore'
 export type { CharacterState } from './model/CharacterState'

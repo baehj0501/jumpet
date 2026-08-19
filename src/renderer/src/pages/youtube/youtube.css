@@ -248,7 +248,8 @@ body {
 }
 .yt-ctx-themes {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    /* 6종을 3개씩 2줄로. */
+    grid-template-columns: repeat(3, 1fr);
     gap: 4px;
 }
 .yt-ctx-theme {

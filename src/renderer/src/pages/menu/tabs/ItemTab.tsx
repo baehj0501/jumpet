@@ -177,14 +177,18 @@ export const ItemTab = () => {
                                     title={editing ? '눌러서 바탕화면에 배치' : undefined}
                                 >
                                     <span className='item-emoji'>
-                                        <img
-                                            src={decor.src}
-                                            alt={decor.name}
-                                            draggable={false}
-                                        />
+                                        {count > 0 ? (
+                                            <img
+                                                src={decor.src}
+                                                alt={decor.name}
+                                                draggable={false}
+                                            />
+                                        ) : (
+                                            <span className='item-lock-icon'>🔒</span>
+                                        )}
                                     </span>
                                     <span className='item-name'>{decor.name}</span>
-                                    <span className='item-count'>×{count}</span>
+                                    {count > 0 && <span className='item-count'>×{count}</span>}
                                 </button>
                             )
                         })}

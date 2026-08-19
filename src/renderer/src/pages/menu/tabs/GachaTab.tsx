@@ -1,8 +1,31 @@
 import { useEffect, useState } from 'react'
 import { usePlayerStore } from '@renderer/entities/player'
 import { GACHA_COST } from '@renderer/entities/item'
-import { useWorldActions } from '@renderer/entities/world'
+import {
+    PET_CATALOG,
+    PetSprite,
+    useOwnedPets,
+    useRollPetGacha,
+} from '@renderer/entities/pet'
+import {
+    CHARACTER_ASSETS,
+    CHARACTER_DISPLAY_NAMES,
+    type CharacterId,
+    useOwnedCharacters,
+    useRollCharacterGacha,
+} from '@renderer/entities/character'
+import { DECOR_ITEMS, useWorldActions } from '@renderer/entities/world'
 import { PixelArt } from '../PixelArt'
+
+// 뽑기 결과 카테고리 — 한 번 뽑으면 데코(꾸미기)·펫(동반)·캐릭터 중 랜덤으로 나온다.
+type GachaCategory = 'decor' | 'pet' | 'character'
+// reveal 대상 — 데코·캐릭터는 이미지(src), 펫은 픽셀 스프라이트(petId).
+type Reveal =
+    | { kind: 'image'; src: string; name: string }
+    | { kind: 'pet'; petId: string; name: string }
+
+// 캐릭터 전체 id — 미보유 캐릭터 추첨 가중치 계산용.
+const ALL_CHARACTER_IDS = Object.keys(CHARACTER_ASSETS) as CharacterId[]
 
 // 검볼(가챠) 머신 — 정면/수평. 유리돔은 비워두고 알사탕은 오버레이로 그려 섞이는 모션을 준다.
 // o=외곽선 g=유리 G=유리하이라이트 d=유리음영 P=몸체 H=몸체하이라이트 D=몸체음영 b=손잡이 k=배출구
@@ -169,9 +192,13 @@ const REVEAL_DURATION_MS = 2600
 export const GachaTab = () => {
     const score = usePlayerStore((state) => state.player.score)
     const { rollGacha } = useWorldActions()
-    const [message, setMessage] = useState('포인트를 모아\n데코를 뽑아 보세요')
+    const rollPetGacha = useRollPetGacha()
+    const rollCharacterGacha = useRollCharacterGacha()
+    const ownedPets = useOwnedPets()
+    const ownedCharacters = useOwnedCharacters()
+    const [message, setMessage] = useState('포인트를 모아\n뽑아 보세요')
     const [spinning, setSpinning] = useState(false)
-    const [reveal, setReveal] = useState<{ src: string; name: string } | null>(null)
+    const [reveal, setReveal] = useState<Reveal | null>(null)
     const [sparkFrame, setSparkFrame] = useState(0)
 
     // 머신 주변 반짝이 형태를 천천히 바꾼다(프레임 순환).
@@ -188,18 +215,51 @@ export const GachaTab = () => {
         }
         setSpinning(true)
         setReveal(null)
-        const won = await rollGacha()
-        // 유리돔 알사탕이 섞이는 연출 (~1초).
-        await new Promise((resolve) => setTimeout(resolve, SPIN_DURATION_MS))
+        // 유리돔 알사탕이 섞이는 연출 (~1초) — 추첨과 병렬로 돌린다.
+        const spin = new Promise((resolve) => setTimeout(resolve, SPIN_DURATION_MS))
+
+        // 데코 + 미보유 펫 + 미보유 캐릭터를 한 통에 넣고 랜덤 추첨(카테고리는 개수로 가중).
+        const unownedPetCount = PET_CATALOG.filter((pet) => !ownedPets.includes(pet.id)).length
+        const unownedCharCount = ALL_CHARACTER_IDS.filter(
+            (id) => !ownedCharacters.includes(id),
+        ).length
+        const bag: GachaCategory[] = [
+            ...Array<GachaCategory>(DECOR_ITEMS.length).fill('decor'),
+            ...Array<GachaCategory>(unownedPetCount).fill('pet'),
+            ...Array<GachaCategory>(unownedCharCount).fill('character'),
+        ]
+        const category = bag[Math.floor(Math.random() * bag.length)] ?? 'decor'
+
+        let nextReveal: Reveal | null = null
+        if (category === 'decor') {
+            const won = await rollGacha()
+            if (won) {
+                nextReveal = { kind: 'image', src: won.src, name: won.name }
+            }
+        } else if (category === 'pet') {
+            const won = await rollPetGacha()
+            if (won) {
+                nextReveal = { kind: 'pet', petId: won.id, name: won.name }
+            }
+        } else {
+            const won = await rollCharacterGacha()
+            if (won) {
+                nextReveal = {
+                    kind: 'image',
+                    src: CHARACTER_ASSETS[won].default,
+                    name: CHARACTER_DISPLAY_NAMES[won] ?? won,
+                }
+            }
+        }
+        await spin
         setSpinning(false)
 
-        if (!won) {
+        if (!nextReveal) {
             setMessage('포인트가 부족해요')
             return
         }
-        // 획득한 데코를 reveal로 보여준다. 안내 멘트는 그대로.
-        setMessage('포인트를 모아\n데코를 뽑아 보세요')
-        setReveal({ src: won.src, name: won.name })
+        setMessage('포인트를 모아\n뽑아 보세요')
+        setReveal(nextReveal)
         setTimeout(() => setReveal(null), REVEAL_DURATION_MS)
     }
 
@@ -232,11 +292,18 @@ export const GachaTab = () => {
                                 />
                             </span>
                             <span className='reveal-emoji'>
-                                <img
-                                    src={reveal.src}
-                                    alt={reveal.name}
-                                    draggable={false}
-                                />
+                                {reveal.kind === 'image' ? (
+                                    <img
+                                        src={reveal.src}
+                                        alt={reveal.name}
+                                        draggable={false}
+                                    />
+                                ) : (
+                                    <PetSprite
+                                        petId={reveal.petId}
+                                        cell={9}
+                                    />
+                                )}
                             </span>
                             <span className='reveal-name'>{reveal.name}</span>
                         </div>

@@ -19,6 +19,8 @@ import { registerYoutubeIpc } from './youtube'
 import { setMenuPanelOnTop } from './panels/openMenuPanel'
 import { broadcastCharacterSpeech, registerCharacterIpc } from './character'
 import { GACHA_COST } from '@shared/contracts/itemEvents'
+import { PET_GACHA_COST } from '@shared/contracts/petEvents'
+import { CHARACTER_GACHA_COST } from '@shared/contracts/characterEvents'
 
 const createWindow = (): BrowserWindow => {
     const mainWindow = new BrowserWindow({
@@ -296,13 +298,25 @@ app.whenReady().then(() => {
     })
 
     // 선택된 캐릭터(펫) IPC — 홈 탭에서 바꾼 캐릭터를 펫 윈도우와 공유(SSOT).
-    registerCharacterSelectionIpc()
+    // 캐릭터 뽑기 비용 차감은 데코·펫 가챠와 동일하게 player에 위임.
+    registerCharacterSelectionIpc({
+        getScore: () => readPlayerState().score,
+        spendForGacha: () => {
+            applyPlayerEvent({ type: 'gachaSpin', cost: CHARACTER_GACHA_COST })
+        },
+    })
 
     // 홈 프로필(캐릭터 이름·이름·생일) IPC — 메뉴 창과 펫 창이 공유(SSOT).
     registerProfileIpc()
 
-    // 동반 펫 장착 IPC — 펫 탭에서 장착한 펫을 펫 창과 공유(SSOT).
-    registerPetSelectionIpc()
+    // 동반 펫 장착/보유 IPC — 펫 탭에서 장착한 펫을 펫 창과 공유(SSOT).
+    // 펫 뽑기 비용 차감은 데코 가챠와 동일하게 player에 위임.
+    registerPetSelectionIpc({
+        getScore: () => readPlayerState().score,
+        spendForGacha: () => {
+            applyPlayerEvent({ type: 'gachaSpin', cost: PET_GACHA_COST })
+        },
+    })
 
     // 환경설정(테마·캐릭터 크기) IPC — 설정 탭에서 바꾸면 메뉴/캐릭터 창이 구독해 반영.
     registerSettingsIpc()

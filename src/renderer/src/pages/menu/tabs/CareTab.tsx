@@ -1,16 +1,18 @@
+import { useState } from 'react'
 import { usePlayerStore } from '@renderer/entities/player'
 import {
     CHARACTER_ASSETS,
     CHARACTER_DISPLAY_NAMES,
     type CharacterId,
+    useOwnedCharacters,
     useSelectedCharacterId,
     useSelectCharacter,
 } from '@renderer/entities/character'
 import { getBirthdayCooldown, useProfile, useProfileActions } from '@renderer/entities/profile'
 import { ProfileRow } from '../ProfileRow'
 
-// 카탈로그에 등록된 캐릭터 ID 목록(좌우 전환 대상).
-const CHARACTER_IDS = Object.keys(CHARACTER_ASSETS) as CharacterId[]
+// ‹ › 로 둘러볼 전체 캐릭터 목록.
+const ALL_CHARACTER_IDS = Object.keys(CHARACTER_ASSETS) as CharacterId[]
 
 // 홈 탭 캐릭터 표시 배율 — 슈피는 기준(1), 나머지는 20% 작게. (발끝 기준 축소)
 const HOME_FIGURE_SCALE: Record<CharacterId, number> = {
@@ -27,23 +29,35 @@ export const CareTab = () => {
     const profile = useProfile()
     const { setField } = useProfileActions()
 
-    // 표시 중인 캐릭터 — main SSOT에서 읽는다. 좌우 버튼이 select하면 펫 윈도우도 함께 바뀐다.
+    // 활성(장착) 캐릭터 — main SSOT. 잠긴 캐릭터를 둘러봐도 활성은 바뀌지 않는다.
     const currentCharacterId = useSelectedCharacterId()
     const selectCharacter = useSelectCharacter()
+    const ownedCharacterIds = useOwnedCharacters()
+    // ‹ ›는 전체 캐릭터를 둘러본다(로컬 index). 보유 캐릭터로 넘어가면 즉시 장착되고,
+    // 잠긴 캐릭터는 미리보기(잠금 표시)만 하고 장착은 그대로다.
+    const [browseIndex, setBrowseIndex] = useState(() =>
+        Math.max(0, ALL_CHARACTER_IDS.indexOf(currentCharacterId)),
+    )
+    const browsedId = ALL_CHARACTER_IDS[browseIndex] ?? currentCharacterId
+    const browsedOwned = ownedCharacterIds.includes(browsedId)
 
-    // '캐릭터 이름' — 선택된 캐릭터의 고정 종류명(슈피/피요/쿠피/윙피). 수정 불가.
-    const characterName = CHARACTER_DISPLAY_NAMES[currentCharacterId] ?? currentCharacterId
+    // '캐릭터 이름' — 둘러보는 캐릭터의 고정 종류명(슈피/피요/쿠피/윙피). 수정 불가.
+    const characterName = CHARACTER_DISPLAY_NAMES[browsedId] ?? browsedId
     const petName = profile.petName
     const setPetName = (value: string) => void setField('petName', value)
     const birthday = profile.birthday
     const setBirthday = (value: string) => void setField('birthday', value)
     // 생일은 변경 후 1달 쿨타임 — 잠금 중엔 수정 불가(연필 숨김).
     const birthdayCooldown = getBirthdayCooldown(profile)
-    const currentCharacterIndex = Math.max(0, CHARACTER_IDS.indexOf(currentCharacterId))
     const cycleCharacter = (delta: number) => {
         const nextIndex =
-            (currentCharacterIndex + delta + CHARACTER_IDS.length) % CHARACTER_IDS.length
-        void selectCharacter(CHARACTER_IDS[nextIndex])
+            (browseIndex + delta + ALL_CHARACTER_IDS.length) % ALL_CHARACTER_IDS.length
+        setBrowseIndex(nextIndex)
+        const nextId = ALL_CHARACTER_IDS[nextIndex]
+        // 보유한 캐릭터면 즉시 장착(펫도 전환). 잠긴 캐릭터는 미리보기만.
+        if (ownedCharacterIds.includes(nextId)) {
+            void selectCharacter(nextId)
+        }
     }
 
     return (
@@ -65,26 +79,35 @@ export const CareTab = () => {
                     type='button'
                     className='char-nav'
                     onClick={() => cycleCharacter(-1)}
-                    disabled={CHARACTER_IDS.length <= 1}
+                    disabled={ALL_CHARACTER_IDS.length <= 1}
                     title='이전 캐릭터'
                 >
                     ‹
                 </button>
                 <img
                     className='home-figure'
-                    src={CHARACTER_ASSETS[CHARACTER_IDS[currentCharacterIndex]].default}
+                    src={CHARACTER_ASSETS[browsedId].default}
                     alt='캐릭터'
                     draggable={false}
                     style={{
-                        transform: `translateX(-50%) scale(${HOME_FIGURE_SCALE[CHARACTER_IDS[currentCharacterIndex]] ?? 1})`,
+                        transform: `translateX(-50%) scale(${HOME_FIGURE_SCALE[browsedId] ?? 1})`,
                         transformOrigin: 'bottom center',
+                        // 잠긴 캐릭터는 흐리게 미리보기.
+                        filter: browsedOwned ? undefined : 'grayscale(1) brightness(1.1)',
+                        opacity: browsedOwned ? 1 : 0.35,
                     }}
                 />
+                {!browsedOwned && (
+                    <div className='home-lock'>
+                        <span className='home-lock-icon'>🔒</span>
+                        <span className='home-lock-text'>뽑기로 해제</span>
+                    </div>
+                )}
                 <button
                     type='button'
                     className='char-nav'
                     onClick={() => cycleCharacter(1)}
-                    disabled={CHARACTER_IDS.length <= 1}
+                    disabled={ALL_CHARACTER_IDS.length <= 1}
                     title='다음 캐릭터'
                 >
                     ›

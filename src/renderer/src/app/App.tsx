@@ -9,6 +9,7 @@ import {
     pickRandomClickMessage,
     pickTimeGreeting,
     useCharacterSpeech,
+    useHasChosenCharacter,
     useSelectedCharacterId,
     useStateMachine,
     useWalking,
@@ -21,6 +22,7 @@ import { PetSprite, useSelectedPetId } from '@renderer/entities/pet'
 import { PET_SCALE_MAX, usePetScale } from '@renderer/entities/settings'
 import { useWindowDrag } from '@renderer/features/drag'
 import { useContextMenu } from '@renderer/features/context-menu'
+import { CharacterPicker } from './CharacterPicker'
 
 // 클릭 시 happy 표정을 유지하는 시간(ms). 이 뒤 default로 복귀. (표정 이미지 있는 캐릭터만 시각적 변화)
 const HAPPY_MOOD_HOLD_MS = 2500
@@ -89,6 +91,8 @@ export const App = () => {
 
     // 홈 탭에서 선택한 캐릭터(SSOT) — 바뀌면 펫도 즉시 교체된다.
     const selectedCharacterId = useSelectedCharacterId()
+    // 첫 실행 온보딩 — 아직 캐릭터를 고르지 않았으면 창 위에 선택 오버레이를 띄운다.
+    const hasChosenCharacter = useHasChosenCharacter()
 
     // 말풍선 상태 — 다른 창(메뉴 돌봄 등)의 멘트 구독 + 같은 창(좌클릭) 멘트는 showSpeech로 즉시 표시.
     const { speech, showSpeech, dismissSpeech } = useCharacterSpeech()
@@ -458,6 +462,7 @@ export const App = () => {
                     />
                 </div>
             )}
+            {!hasChosenCharacter && <CharacterPicker />}
         </>
     )
 }

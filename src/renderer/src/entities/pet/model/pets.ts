@@ -423,22 +423,22 @@ const SNAIL: PetDef = {
     palette: { S: '#caa45a', h: '#9a7838', H: '#e6caa0', B: '#e8d6a8', e: '#2a2a2a' },
 }
 
-// 꿀벌 — 노랑+검정 줄무늬.
+// 꿀벌 — 노랑+검정 줄무늬 + X자로 펼친 4장 날개.
 const BEE: PetDef = {
     id: 'bee',
     name: '꿀벌',
     pixels: [
-        'w..o.o..w',
-        '.wo...ow.',
+        'w.......w',
+        '.w.....w.',
+        '..wo.ow..',
         '..ooooo..',
-        '.oykykyo.',
-        '.okykyko.',
-        '.oykykyo.',
-        '.okykyko.',
+        '..oykyo..',
+        '..okyko..',
         '..ooooo..',
-        '.........',
+        '.w.....w.',
+        'w.......w',
     ],
-    palette: { o: '#3a3a2a', y: '#f6cf45', k: '#3a3a2a', w: '#dff0ff' },
+    palette: { o: '#3a3a2a', y: '#f6cf45', k: '#3a3a2a', w: '#c8e6fa' },
 }
 
 // 무당벌레 — 빨강 + 검은 점.
@@ -549,19 +549,19 @@ const SHEEP: PetDef = {
     palette: { W: '#f3f3f0', k: '#3a3a3a', F: '#5a5a5a', e: '#fbfbfb', n: '#2a2a2a' },
 }
 
-// 얼룩소 — 흰 + 검은 얼룩.
+// 얼룩소 — 흰 얼굴 + 귀 + 검은 얼룩 + 분홍 코.
 const COW: PetDef = {
     id: 'cow',
     name: '얼룩소',
     pixels: [
-        'ko.....ok',
-        'koo...ook',
+        'oo.....oo',
+        'oPo...oPo',
         '.ooooooo.',
-        'oWkWWWWWo',
+        'okkWWWWWo',
         'oWeWWWeWo',
-        'oWWWkkWWo',
-        'oWPPPPPWo',
-        '.oWnWnWo.',
+        'oWWWWWkko',
+        'oWWPPPWWo',
+        'oWPnPnPWo',
         '..ooooo..',
     ],
     palette: { o: '#5a5a5a', W: '#fbfbfb', k: '#2a2a2a', e: '#2a2a2a', P: '#f3aec1', n: '#cf6f8c' },
@@ -657,7 +657,7 @@ const MOUSE: PetDef = {
     palette: { M: '#9aa0aa', m: '#f3c0cc', o: '#6a6f78', G: '#c2c7d0', e: '#2a2a2a', n: '#cf6f8c', w: '#eef0f4' },
 }
 
-// 다람쥐 — 주황 + 큰 꼬리.
+// 다람쥐 — 주황 + 큰 꼬리 + 팔다리.
 const SQUIRREL: PetDef = {
     id: 'squirrel',
     name: '다람이',
@@ -667,10 +667,10 @@ const SQUIRREL: PetDef = {
         'oSeSo.TT.',
         'oSSSSoTtT',
         'oSnSSoTtT',
+        'ttSSSoTtT',
         '.oSSSoTtT',
-        '..oSSoTtT',
-        '...ooTttT',
-        '.....TTT.',
+        '.oSSSoTt.',
+        '.oo.oo...',
     ],
     palette: { o: '#a0581a', S: '#d68a44', e: '#2a2a2a', n: '#7a4424', T: '#b5702a', t: '#e6a860' },
 }
@@ -765,20 +765,20 @@ const MUSHROOM: PetDef = {
     palette: { M: '#e2453a', w: '#fbf3e0', F: '#f0e2c4', e: '#2a2a2a' },
 }
 
-// 선인장 — 초록 + 팔 + 꽃.
+// 선인장 — 사구아로(중앙 기둥 + 좌우 팔) + 꽃.
 const CACTUS: PetDef = {
     id: 'cactus',
     name: '선인장',
     pixels: [
         '....p....',
-        'C...C....',
-        'C.CCC..C.',
-        'CCCCC.CC.',
-        '.CCCCCCC.',
-        '.CCeCeCC.',
-        '.CCCCCCC.',
-        '.CCCCCCC.',
-        '.CCCCCCC.',
+        '...CCC...',
+        'C..CCC..C',
+        'C.CCCCC.C',
+        'CCCCCCCCC',
+        '..CCCCC..',
+        '..CeCeC..',
+        '..CCCCC..',
+        '..CCCCC..',
     ],
     palette: { C: '#3f9a55', e: '#214a2a', p: '#f3a6c2' },
 }
@@ -837,16 +837,16 @@ const SUN: PetDef = {
     palette: { S: '#f7d24a', r: '#f0a02e', e: '#2a2a2a', n: '#e0902e', m: '#f0a060' },
 }
 
-// 하트 — 분홍.
+// 하트 — 분홍 (중앙 정렬).
 const HEART: PetDef = {
     id: 'heart',
     name: '하트',
     pixels: [
-        '.HH.HH...',
-        'HHHHHHH..',
-        'HHwHHHwH.',
-        'HHHHHHHH.',
-        'HHHeHeHH.',
+        '..HH.HH..',
+        '.HHHHHHH.',
+        '.HwHHHwH.',
+        '.HHHHHHH.',
+        '.HHeHeHH.',
         '.HHHHHHH.',
         '..HHHHH..',
         '...HHH...',
@@ -866,11 +866,11 @@ const SNOWMAN: PetDef = {
         'oWeWWWeWo',
         'oWWWcWWWo',
         '.ooooooo.',
-        'oWbWWWbWo',
-        'oWWWbWWWo',
+        'oWWWWWWWo',
+        'oWWWWWWWo',
         '.ooooooo.',
     ],
-    palette: { W: '#fbfdff', k: '#3a3a3a', e: '#2a2a2a', c: '#f0922e', o: '#bcd0e4', b: '#3a3a3a' },
+    palette: { W: '#fbfdff', k: '#3a3a3a', e: '#2a2a2a', c: '#f0922e', o: '#bcd0e4' },
 }
 
 // 로봇 — 회색 + 안테나.
@@ -944,7 +944,7 @@ const GOAT: PetDef = {
 }
 const HORSE: PetDef = {
     id: 'horse',
-    name: '망아지',
+    name: '밤톨이',
     pixels: [
         '.mm......',
         '.mmoooo..',
@@ -999,7 +999,7 @@ const HIPPO: PetDef = {
         '.oHHHHHo.',
         'oHeHHHeHo',
         'oHHHHHHHo',
-        'oHnHHHnHo',
+        'oHHnHnHHo',
         'oHHHHHHHo',
         '.oHHHHHo.',
         '..ooooo..',
@@ -1010,14 +1010,14 @@ const RHINO: PetDef = {
     id: 'rhino',
     name: '코뿔이',
     pixels: [
-        '....n....',
-        '...nn....',
+        '.........',
         '..ooooo..',
         '.oRRRRRo.',
         'oReRRReRo',
-        'oRRRRRRRo',
-        'oRRRRRRRo',
-        '.oRRRRRo.',
+        'oRRRnRRRo',
+        'oRRnnnRRo',
+        'oRRnnnRRo',
+        '.oRnnnRo.',
         '..ooooo..',
     ],
     palette: { o: '#6a6f78', R: '#a8aeb8', e: '#2a2a2a', n: '#cfcfcf' },
@@ -1235,14 +1235,14 @@ const FLAMINGO: PetDef = {
     name: '홍학',
     pixels: [
         '.ooo.....',
-        'oPePo....',
-        'oPPok....',
+        'oPePk....',
         '.oPo.....',
-        '.oPo.....',
-        '.oPooo...',
-        'oPPPPPo..',
-        'oPPPPPPo.',
-        '.oo.oo...',
+        '.oPPo....',
+        'oPPPPo...',
+        '.oPPo....',
+        '..k.k....',
+        '..k.k....',
+        '.kk.kk...',
     ],
     palette: { o: '#d06a8a', P: '#f3a6c2', e: '#2a2a2a', k: '#f0a02e' },
 }
@@ -1346,11 +1346,11 @@ const DRAGONFLY: PetDef = {
     id: 'dragonfly',
     name: '잠자리',
     pixels: [
-        'w.......w',
-        'ww.ooo.ww',
-        '.wwoeoww.',
-        '..wooow..',
         '...ooo...',
+        '..oeeeo..',
+        '...oBo...',
+        'wwooBooww',
+        '.wwoBoww.',
         '...oBo...',
         '...oBo...',
         '...oBo...',
@@ -1570,15 +1570,15 @@ const CANDY: PetDef = {
     id: 'candy',
     name: '사탕',
     pixels: [
-        '.r.....r.',
-        'rroooorr.',
-        '.oCsCsCo.',
-        'oCsCsCsCo',
-        'oCeCsCeCo',
-        'oCsCsCsCo',
-        '.oCsCsCo.',
-        'rroooorr.',
-        '.r.....r.',
+        '.........',
+        '..ooooo..',
+        '.oCCCCCo.',
+        'rrCeCeCrr',
+        'rrCCsCCrr',
+        'rrCCCCCrr',
+        '.oCCCCCo.',
+        '..ooooo..',
+        '.........',
     ],
     palette: { o: '#c25a8a', C: '#f3a6c2', s: '#fbe0ec', e: '#2a2a2a', r: '#e88ab0' },
 }
@@ -1662,33 +1662,34 @@ const PLANET: PetDef = {
     ],
     palette: { o: '#3a5a8a', P: '#5a7ac0', w: '#9ab0e8', r: '#e0b060' },
 }
-const COMET: PetDef = {
-    id: 'comet',
-    name: '혜성',
+// 풍선 — 빨강 풍선 + 하이라이트 + 실.
+const BALLOON: PetDef = {
+    id: 'balloon',
+    name: '풍선',
     pixels: [
-        't........',
-        'tt.......',
-        '.tt......',
-        '..tt.....',
-        '...tCo...',
-        '...CCCo..',
-        '..CeCCo..',
-        '...CCo...',
-        '....o....',
+        '...ooo...',
+        '..oRRRo..',
+        '.oRwRRRo.',
+        '.oeRRReo.',
+        '.oRRRRRo.',
+        '..oRRRo..',
+        '...ooo...',
+        '....s....',
+        '...s.s...',
     ],
-    palette: { t: '#9ac0f0', C: '#f6d24a', o: '#c79a2a', e: '#2a2a2a' },
+    palette: { o: '#b0342e', R: '#e85a54', w: '#ffd8cf', e: '#2a2a2a', s: '#9a9a9a' },
 }
 const CRYSTAL: PetDef = {
     id: 'crystal',
     name: '수정',
     pixels: [
         '...ooo...',
-        '..oCCCo..',
-        '.oCwCCCo.',
-        'oCCwCCCCo',
-        'oCCCCCCCo',
-        '.oCCCCCo.',
-        '..oCCCo..',
+        '..oCwCo..',
+        '.oCwCwCo.',
+        'oCwCCCwCo',
+        'oCCCwCCCo',
+        '.owCCCwo.',
+        '..oCwCo..',
         '...oCo...',
         '....o....',
     ],
@@ -1809,7 +1810,7 @@ export const PET_CATALOG: PetDef[] = [
     CAKE,
     RAINBOW,
     PLANET,
-    COMET,
+    BALLOON,
     CRYSTAL,
     EGG,
 ]

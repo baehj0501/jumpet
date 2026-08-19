@@ -168,6 +168,8 @@ const api = {
         get: (): Promise<CharacterSelectionState> => ipcRenderer.invoke('characterSelection:get'),
         apply: (event: CharacterSelectionEvent): Promise<CharacterSelectionState> =>
             ipcRenderer.invoke('characterSelection:apply', event),
+        // 캐릭터 뽑기 비용 차감(원자적) — 성공 시 renderer가 미보유 캐릭터를 추첨해 unlock한다.
+        gacha: (): Promise<{ success: boolean }> => ipcRenderer.invoke('characterSelection:gacha'),
         onChange: (handler: (state: CharacterSelectionState) => void): (() => void) => {
             const listener = (_event: unknown, state: CharacterSelectionState) => {
                 handler(state)
@@ -200,6 +202,8 @@ const api = {
         get: (): Promise<PetSelectionState> => ipcRenderer.invoke('petSelection:get'),
         apply: (event: PetSelectionEvent): Promise<PetSelectionState> =>
             ipcRenderer.invoke('petSelection:apply', event),
+        // 펫 뽑기 비용 차감(원자적) — 성공 시 renderer가 미보유 펫을 추첨해 unlock한다.
+        gacha: (): Promise<{ success: boolean }> => ipcRenderer.invoke('petSelection:gacha'),
         onChange: (handler: (state: PetSelectionState) => void): (() => void) => {
             const listener = (_event: unknown, state: PetSelectionState) => {
                 handler(state)

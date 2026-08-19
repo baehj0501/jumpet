@@ -1,7 +1,6 @@
 // 유튜브 별창 테마 프레임 정의 — 메뉴 유튜브 탭(미리 선택)과 별창(YoutubePage)이 공유.
 import theme1 from './assets/theme1.png'
 import theme2 from './assets/theme2.png'
-import theme3 from './assets/theme3.png'
 import theme4 from './assets/theme4.png'
 import theme5 from './assets/theme5.png'
 import theme6 from './assets/theme6.png'
@@ -18,7 +17,6 @@ export type YoutubeTheme = { id: number; name: string; src: string }
 export const YOUTUBE_THEMES: YoutubeTheme[] = [
     { id: 1, name: '빼꼼1', src: theme1 },
     { id: 2, name: '빼꼼2', src: theme2 },
-    { id: 3, name: '구경', src: theme3 },
     { id: 4, name: '쿠피', src: theme4 },
     { id: 5, name: '슈피', src: theme5 },
     { id: 6, name: '피요', src: theme6 },
@@ -32,7 +30,6 @@ export const THEME_HOLES: Record<
 > = {
     1: { left: 126, top: 147, width: 249, height: 139 },
     2: { left: 126, top: 139, width: 250, height: 140 },
-    3: { left: 126, top: 146, width: 249, height: 140 },
     4: { left: 107, top: 111, width: 355, height: 198 },
     5: { left: 103, top: 108, width: 359, height: 203 },
     6: { left: 103, top: 107, width: 360, height: 204 },

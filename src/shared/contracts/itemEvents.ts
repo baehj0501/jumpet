@@ -25,8 +25,8 @@ export const CONSUMABLE_ITEMS: ConsumableItemDef[] = [
     { id: 'toy_disc', category: 'toy', name: '원반', emoji: '🥏' },
 ]
 
-// 뽑기 1회 비용(포인트). 점수 부족 시 뽑기 비활성.
-export const GACHA_COST = 20
+// 뽑기 1회 비용(포인트). 점수 부족 시 뽑기 비활성. (데코·펫·캐릭터 모두 50pt 통일)
+export const GACHA_COST = 50
 
 // itemId → 보유 개수. 0이거나 없으면 미보유.
 export type ItemState = {

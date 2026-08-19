@@ -81,6 +81,7 @@ declare global {
             characterSelection: {
                 get: () => Promise<CharacterSelectionState>
                 apply: (event: CharacterSelectionEvent) => Promise<CharacterSelectionState>
+                gacha: () => Promise<{ success: boolean }>
                 onChange: (handler: (state: CharacterSelectionState) => void) => () => void
             }
             profile: {
@@ -91,6 +92,7 @@ declare global {
             petSelection: {
                 get: () => Promise<PetSelectionState>
                 apply: (event: PetSelectionEvent) => Promise<PetSelectionState>
+                gacha: () => Promise<{ success: boolean }>
                 onChange: (handler: (state: PetSelectionState) => void) => () => void
             }
             settings: {

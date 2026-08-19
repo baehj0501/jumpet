@@ -150,27 +150,27 @@ const GACHA: TabIconArt = {
     },
 }
 
-// 발바닥 — 갈색 펫 발자국(외곽선 + 음영).
+// 삐약이(병아리) — 노랑 몸 + 골드 외곽 + 주황 부리/다리. (펫 카탈로그 CHICK 색과 동일)
 const PET: TabIconArt = {
     pixels: [
         '................',
-        '..oo......oo....',
-        '.oppo....oppo...',
-        '.oppo....oppo...',
-        '..oo......oo....',
+        '......oooo......',
+        '.....oyyyyo.....',
+        '....oyyyyyyo....',
+        '...oyyyyyyyyo...',
+        '..oyyyyyyyyyyo..',
+        '..oyyeyyyyeyyo..',
+        '..oyyyybbyyyyo..',
+        '..oyyyyyyyyyyo..',
+        '...oyyyyyyyyo...',
+        '....oyyyyyyo....',
+        '.....oyyyyo.....',
+        '......oyyo......',
+        '......b..b......',
+        '.....bb..bb.....',
         '................',
-        '....oo....oo....',
-        '...oppo..oppo...',
-        '...oppo..oppo...',
-        '....oo....oo....',
-        '....oooooooo....',
-        '...oppppppppo...',
-        '..oppppppppppo..',
-        '..oppppppppppo..',
-        '...oppppppppo...',
-        '....oooooooo....',
     ],
-    palette: { o: '#6e4a28', p: '#a06a3c' },
+    palette: { o: '#c79a3a', y: '#f7df85', e: '#2a2a2a', b: '#f0922e' },
 }
 
 // 가방(백팩) — 갈색 가방 + 버클 + 주머니.
