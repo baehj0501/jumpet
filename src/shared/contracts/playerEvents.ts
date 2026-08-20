@@ -19,5 +19,6 @@ export type PlayerEvent =
     | { type: 'gachaSpin'; cost: number }
 
 export const INITIAL_PLAYER_STATE: PlayerState = {
-    score: 0,
+    // 첫 실행 시작 포인트.
+    score: 100,
 }
