@@ -49,6 +49,19 @@ const api = {
         }
         return unsubscribe
     },
+    // 메뉴 창 JS 리사이즈 — 투명 핸들 드래그로 창 크기를 조절(네이티브 리사이즈의 Windows 검정 플래시 회피).
+    // 마우스 화면좌표(screenX/Y)를 그대로 넘기고 main이 델타로 setBounds 한다.
+    menu: {
+        startResize: (edge: string, mouseX: number, mouseY: number): void => {
+            ipcRenderer.send('menu:startResize', edge, mouseX, mouseY)
+        },
+        resizeTo: (mouseX: number, mouseY: number): void => {
+            ipcRenderer.send('menu:resizeTo', mouseX, mouseY)
+        },
+        endResize: (): void => {
+            ipcRenderer.send('menu:endResize')
+        },
+    },
     // 플레이어 영속 데이터(점수 등) API.
     // main이 SSOT이므로 get/apply는 main을 거치고, onChange로 broadcast를 구독한다.
     player: {
@@ -243,6 +256,11 @@ const api = {
         apply: (event: WorldEvent): Promise<WorldState> => ipcRenderer.invoke('world:apply', event),
         // 가챠 비용 차감(원자적). 데코 추첨은 renderer가 한다.
         gacha: (): Promise<{ success: boolean }> => ipcRenderer.invoke('world:gacha'),
+        // 고정 모드에서 데코가 놓인 영역 크기로 월드 오버레이 창을 축소(전체화면 투명 창이 일부
+        // Windows에서 흰색으로 굳는 문제 회피). null이면 전체화면으로 복귀. 좌표는 화면 논리 px.
+        setOverlayBounds: (
+            bounds: { x: number; y: number; w: number; h: number } | null,
+        ): void => ipcRenderer.send('world:setOverlayBounds', bounds),
         onChange: (handler: (state: WorldState) => void): (() => void) => {
             const listener = (_event: unknown, state: WorldState) => {
                 handler(state)

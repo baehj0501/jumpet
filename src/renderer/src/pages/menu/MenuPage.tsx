@@ -41,6 +41,30 @@ const TABS: { id: TabId; label: string }[] = [
     { id: 'settings', label: '설정' },
 ]
 
+// 창 가장자리/모서리 8방향 리사이즈 핸들.
+const RESIZE_EDGES = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'] as const
+
+// 투명 핸들을 드래그해 창 크기를 조절한다. 네이티브 프레임리스 리사이즈는 Windows에서
+// 새로 늘어난 영역이 잠깐 검게 보이는 GPU 버그가 있어, main이 setBounds로 처리하도록 위임한다.
+const startEdgeResize = (edge: string) => (event: React.PointerEvent) => {
+    // 좌클릭만.
+    if (event.button !== 0) {
+        return
+    }
+    event.preventDefault()
+    window.api.menu.startResize(edge, event.screenX, event.screenY)
+    const onMove = (moveEvent: PointerEvent) => {
+        window.api.menu.resizeTo(moveEvent.screenX, moveEvent.screenY)
+    }
+    const onUp = () => {
+        window.removeEventListener('pointermove', onMove)
+        window.removeEventListener('pointerup', onUp)
+        window.api.menu.endResize()
+    }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+}
+
 // 통합 메뉴 창의 루트. 우클릭으로 열리며 탭으로 각 기능을 전환한다.
 // 별창 패턴을 대체 — 모든 패널이 이 한 창의 탭으로 산다.
 export const MenuPage = () => {
@@ -179,6 +203,14 @@ export const MenuPage = () => {
             </div>
 
             {renderTab()}
+
+            {RESIZE_EDGES.map((edge) => (
+                <div
+                    key={edge}
+                    className={`menu-resize-handle rh-${edge}`}
+                    onPointerDown={startEdgeResize(edge)}
+                />
+            ))}
         </>
     )
 }

@@ -50,6 +50,11 @@ declare global {
             getDisplayWorkArea: () => Promise<Rect>
             showContextMenu: () => void
             onMenuStateChange: (handler: (state: 'opened' | 'closed') => void) => () => void
+            menu: {
+                startResize: (edge: string, mouseX: number, mouseY: number) => void
+                resizeTo: (mouseX: number, mouseY: number) => void
+                endResize: () => void
+            }
             player: {
                 get: () => Promise<PlayerState>
                 apply: (event: PlayerEvent) => Promise<PlayerState>
@@ -109,6 +114,9 @@ declare global {
                 get: () => Promise<WorldState>
                 apply: (event: WorldEvent) => Promise<WorldState>
                 gacha: () => Promise<{ success: boolean }>
+                setOverlayBounds: (
+                    bounds: { x: number; y: number; w: number; h: number } | null,
+                ) => void
                 onChange: (handler: (state: WorldState) => void) => () => void
             }
             youtube: {

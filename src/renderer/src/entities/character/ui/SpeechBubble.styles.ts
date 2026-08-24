@@ -15,6 +15,9 @@ const PIXEL_CLIP = `polygon(
 )`
 
 // 머리 위 배치 + 픽셀 오프셋 그림자(드롭섀도라 계단 모양을 따라간다).
+// '위(창 top)'에서 시작해 아래로 자란다(top 기준) — 이렇게 해야 2줄 이상 긴 메시지에서도
+// 말풍선 윗부분(과 X 버튼)이 작은 캐릭터 창 위 경계에 잘리지 않는다.
+// 캐릭터 머리는 창의 ~28% 지점이라, 보통 길이의 말풍선은 그 위에서 끝나 겹치지 않고 간격이 생긴다.
 export const wrapperStyle = css({
     position: 'absolute',
     top: 2,
@@ -57,13 +60,14 @@ export const tagStyle = css({
     whiteSpace: 'nowrap',
 })
 
-// sticky 알림 말풍선의 닫기(X) 버튼 — 우상단 모서리에 작은 원형 배지.
+// sticky 알림 말풍선의 닫기(X) 버튼 — 우상단 '안쪽' 모서리에 작은 원형 배지.
+// 밖으로 튀어나오면(top/right 음수) 작은 캐릭터 창 경계에 잘리므로 안쪽에 둔다.
 export const closeStyle = css({
     position: 'absolute',
-    top: -7,
-    right: -7,
-    width: 17,
-    height: 17,
+    top: 2,
+    right: 2,
+    width: 16,
+    height: 16,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

@@ -397,6 +397,14 @@ export const App = () => {
     // 말풍선 배율 — 캐릭터가 작을수록(고정 px라 상대적으로 커짐) 같이 줄여서 겹침/잘림을 막는다.
     // 최대 크기(PET_SCALE_MAX)에서 1.0, 최소(PET_SCALE_MIN)에서 비례 축소.
     const bubbleScale = Math.min(1, petScale / PET_SCALE_MAX)
+    // 말풍선 크기는 모든 캐릭터 동일. 큰 캐릭터(머리가 창 위쪽)만 '위치'를 바꿔 겹침/잘림을 푼다.
+    const effectiveBubbleScale = bubbleScale
+    // 큰 캐릭터는 말풍선 아래변(꼬리)을 '머리 바로 위'에 고정하고 위로 자라게 한다.
+    // 값 = 창 바닥에서의 %(말풍선 아래변 위치). 머리 위 공간을 최대한 써서 같은 크기 2줄도 안 잘리고
+    // 캐릭터도 안 덮는다. 윙피는 CharacterView에서 8% 아래로 내려(머리 ~33.6%) 위 공간을 넓혔으므로,
+    // 아래변을 위에서 ~33%(bottom 67%)에 둬 위로 자랄 공간을 창의 33%(≈79px)로 확보 → 3줄도 안 잘림.
+    const CHARACTER_BUBBLE_BOTTOM_PCT: Record<string, number> = { wingpee: 67 }
+    const bubbleBottomPct = CHARACTER_BUBBLE_BOTTOM_PCT[selectedCharacterId]
     useEffect(() => {
         // preload가 아직 setWindowSize를 노출하지 않으면(dev에서 preload 미재시작) 건너뛴다.
         if (!window.api?.setWindowSize) {
@@ -428,9 +436,10 @@ export const App = () => {
             <SpeechBubble
                 text={speech.text}
                 tag={speech.tag}
-                scale={bubbleScale}
+                scale={effectiveBubbleScale}
                 sticky={speech.sticky}
                 onClose={dismissSpeech}
+                bottomAnchorPct={bubbleBottomPct}
             />
             <CharacterView
                 characterId={selectedCharacterId}

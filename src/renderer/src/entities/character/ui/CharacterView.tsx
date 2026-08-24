@@ -40,6 +40,13 @@ const CHARACTER_MOTION_SCALE: Partial<Record<CharacterId, number>> = {
     wingpee: 1.1,
 }
 
+// 캐릭터별 세로 위치 오프셋(창 높이 대비 %, 양수=아래로). 크기는 그대로 두고 위치만 내린다.
+// 창을 많이 채워 머리가 위쪽인 캐릭터(윙피)는 아래로 내려 머리 위 말풍선 공간을 확보한다.
+// 모든 프레임(idle/모션)에 동일 적용되어 발 정렬(그라운딩)은 유지된다.
+const CHARACTER_VERTICAL_OFFSET: Partial<Record<CharacterId, number>> = {
+    wingpee: 8,
+}
+
 // 캐릭터의 시각만 담당하는 dumb 컴포넌트.
 // 행동/감정 로직은 hooks(behaviors)와 features에 분산되어 있다.
 export const CharacterView = ({
@@ -60,7 +67,9 @@ export const CharacterView = ({
     // 클릭/걷기 '모션' 프레임만 모션 배율을 쓰고, 기본 포즈·표정은 base 배율을 쓴다(표정은 idle 기준 정규화).
     const baseScale = CHARACTER_DISPLAY_SCALE[characterId] ?? 1
     const displayScale = isMotionFrame ? (CHARACTER_MOTION_SCALE[characterId] ?? baseScale) : baseScale
-    const transform = `scale(${displayScale})${flip ? ' scaleX(-1)' : ''}`
+    // translateY(%)는 요소(=창) 높이 기준. scale보다 바깥(먼저 기술)에 둬서 스케일과 무관하게 창 대비로 내린다.
+    const verticalOffset = CHARACTER_VERTICAL_OFFSET[characterId] ?? 0
+    const transform = `translateY(${verticalOffset}%) scale(${displayScale})${flip ? ' scaleX(-1)' : ''}`
 
     return (
         <div

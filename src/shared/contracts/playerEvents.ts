@@ -18,6 +18,7 @@ export type PlayerEvent =
     // 먼저 판단하고, player는 잔액 invariant(음수 금지)만 책임진다.
     | { type: 'gachaSpin'; cost: number }
 
+// 첫 실행(영속 데이터 없음) 시 지급하는 시작 포인트.
 export const INITIAL_PLAYER_STATE: PlayerState = {
-    score: 0,
+    score: 100,
 }

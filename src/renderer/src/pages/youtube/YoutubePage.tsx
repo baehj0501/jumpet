@@ -18,22 +18,31 @@ const DEFAULT_SIZE_STEP = 3
 // (1280=데스크탑 원본 → 영상 작음. 값이 작을수록 크게 확대된다.)
 const BROWSE_VIEWPORT_W = 450
 
+// 전용 영상(watch 페이지)에서 쓸 가상 뷰포트 폭(px). watch 플레이어는 최소 높이 ~240px라,
+// 폭이 240*16/9≈427px 이상일 때 비로소 플레이어=영상이 정확히 16:9로 최상단을 꽉 채운다.
+// 이보다 좁으면 영상이 플레이어 안에서 어긋나 위/아래에 검은 여백이 생긴다.
+// 그래서 뷰포트를 427로 고정 렌더한 뒤 zoom(=구멍폭/427)으로 구멍 크기에 맞춰 축소한다.
+const VIDEO_VIEWPORT_W = 427
+
 // 메뉴에서 열 때 넘어온 옵션(쿼리). theme=프레임, video=재생할 유튜브 URL.
 const openParams = new URLSearchParams(window.location.search)
 const initialTheme = Number(openParams.get('theme') || localStorage.getItem('yt_theme') || '1')
 // 특정 영상이면 플레이어만 꽉 채움, 아니면 유튜브 홈 둘러보기.
 const { src: initialVideo, isVideo, videoId } = resolveYoutubeSrc(openParams.get('video') || '')
 
-// 전용 영상으로 열었을 때 — 플레이어만 남기고 꽉 채움(검증된 규칙). 스크롤 잠금 + 검정 배경.
+// 전용 영상(watch 페이지)으로 열었을 때 — 상단 헤더/댓글/추천 등 잡동사니만 숨기고
+// 플레이어 레이아웃/영상 요소는 건드리지 않는다.
+// (과거처럼 #player/#movie_player/video에 width·height 100%를 강제하면 Windows webview에서
+//  플레이어 내부 레이아웃이 깨져 영상이 검정으로만 나왔다(소리만). 강제 규칙 제거.
+//  #secondary를 숨기면 #primary가 뷰포트 전체 폭이 되어, 영상이 프레임 폭을 자연히 채운다.)
 const FILL_CSS =
     'ytd-masthead,#masthead,#masthead-container{display:none!important;}' +
-    '#secondary,#below,ytd-comments,#chat{display:none!important;}' +
-    'ytd-page-manager{margin-top:0!important;}' +
-    'ytd-watch-flexy #primary,#primary,#primary-inner,#player,#player-container,' +
-    '#player-container-outer,#player-container-inner,#movie_player,.html5-video-player' +
-    '{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;}' +
-    'video.html5-main-video{width:100%!important;height:100%!important;}' +
-    'html,body{overflow:hidden!important;background:#000!important;}'
+    '#secondary,#secondary-inner,#below,#comments,ytd-comments,#chat,#related{display:none!important;}' +
+    // 헤더를 숨겨도 #page-manager엔 헤더 높이만큼 padding-top(~56px)이 남아 영상을 아래로 밀어
+    // 위쪽에 검은 여백이 생긴다. padding/margin과 헤더 높이 변수를 모두 0으로 만들어 최상단 정렬.
+    'ytd-app{--ytd-masthead-height:0px!important;}' +
+    'ytd-page-manager,#page-manager{margin-top:0!important;padding-top:0!important;}' +
+    'html,body{overflow:hidden!important;}'
 
 // 홈/둘러보기 — 상단 헤더만 숨김(검증된 원래 규칙, 재생 레이아웃 안 건드림).
 const BROWSE_CSS =
@@ -66,17 +75,30 @@ export const YoutubePage = () => {
         const scaleY = window.innerHeight / BASE_H
         // 삭제된 테마 id가 저장돼 있어도 안전하게 — 없으면 기본(1)으로 폴백.
         const base = THEME_HOLES[themeId] ?? THEME_HOLES[1]
-        const width = Math.round(base.width * scaleX)
-        const height = Math.round(base.height * scaleY)
-        wv.style.left = `${Math.round(base.left * scaleX)}px`
-        wv.style.top = `${Math.round(base.top * scaleY)}px`
+        const holeWidth = Math.round(base.width * scaleX)
+        const holeHeight = Math.round(base.height * scaleY)
+        let left = Math.round(base.left * scaleX)
+        let top = Math.round(base.top * scaleY)
+        let width = holeWidth
+        let height = holeHeight
+        // 전용 영상은 webview를 16:9로 잡아 구멍 세로 중앙에 둔다. 뷰포트 폭을 VIDEO_VIEWPORT_W(427)로
+        // 고정 렌더(아래 zoom)하면 플레이어=영상이 16:9로 최상단을 꽉 채우므로, 이 16:9 webview에 딱 맞는다.
+        // (둘러보기는 페이지 전체를 봐야 하므로 구멍 전체를 그대로 쓴다.)
+        if (isVideo) {
+            width = holeWidth
+            height = Math.round((holeWidth * 9) / 16)
+            top += Math.round((holeHeight - height) / 2)
+        }
+        wv.style.left = `${left}px`
+        wv.style.top = `${top}px`
         wv.style.width = `${width}px`
         wv.style.height = `${height}px`
         try {
-            // 임베드로 재생 중인 전용 영상은 줌 1(이미 프레임을 꽉 채움).
-            // 둘러보기·watch 폴백 영상은 좁은 가상 뷰포트로 렌더해 영상을 크게 확대한다.
-            const isEmbedFull = isVideo && !watchFallbackRef.current
-            wv.setZoomFactor(isEmbedFull ? 1 : width / BROWSE_VIEWPORT_W)
+            // 전용 영상: 뷰포트를 427폭으로 렌더(=구멍폭/427 zoom)해 영상이 딱 맞게 축소된다.
+            // 둘러보기: 좁은 가상 뷰포트로 렌더해 영상을 크게 확대한다.
+            wv.setZoomFactor(
+                isVideo ? width / VIDEO_VIEWPORT_W : width / BROWSE_VIEWPORT_W,
+            )
         } catch {
             // dom-ready 전이면 무시.
         }

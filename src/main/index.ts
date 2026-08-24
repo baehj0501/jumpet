@@ -16,7 +16,7 @@ import { registerSettingsIpc, applyLaunchAtLogin, readSettingsState } from './se
 import { registerWorldIpc, readWorldState } from './world'
 import type { WorldState } from './world'
 import { registerYoutubeIpc } from './youtube'
-import { setMenuPanelOnTop } from './panels/openMenuPanel'
+import { setMenuPanelOnTop, registerMenuResizeIpc } from './panels/openMenuPanel'
 import { broadcastCharacterSpeech, registerCharacterIpc } from './character'
 import { GACHA_COST } from '@shared/contracts/itemEvents'
 import { PET_GACHA_COST } from '@shared/contracts/petEvents'
@@ -146,10 +146,17 @@ const setWorldEditable = (editable: boolean): void => {
     }
     worldWindow.setIgnoreMouseEvents(!editable)
     if (editable) {
-        // 편집 중엔 최하단 고정을 풀고(일반 레벨) 앞으로 올려 상호작용 가능하게 한다.
-        // 단, 'floating'(메뉴와 같은 레벨)로 올리면 전체화면 데코가 메뉴 창을 덮어 버튼이 안 눌리므로
-        // 일반(normal) 레벨로만 올리고, 메뉴 창은 그보다 위(floating)에 두어 항상 클릭 가능하게 한다.
-        worldWindow.setAlwaysOnTop(false)
+        // 편집 중엔 오버레이를 최상위로 올려 데코가 다른 창/바탕화면 뒤로 숨지 않게 한다.
+        // - macOS: 'normal' 레벨로만 올린다(기존 동작). Space 특성상 이걸로 충분하고,
+        //   'floating'으로 올리면 전체화면 데코가 메뉴 창을 덮는다.
+        // - Windows: always-on-top이 아니면 다른 창/바탕화면을 클릭하는 순간 오버레이가 그 뒤로
+        //   깔려 올린 데코가 안 보이고 편집이 막힌다("화면 멈춤"처럼 느껴짐). 그래서 항상 최상위로 유지.
+        //   메뉴 창은 아래 setMenuPanelOnTop에서 이 오버레이보다 더 위로 올려 저장/취소를 보장한다.
+        if (process.platform === 'darwin') {
+            worldWindow.setAlwaysOnTop(false)
+        } else {
+            worldWindow.setAlwaysOnTop(true)
+        }
         worldWindow.moveTop()
     } else {
         // 고정 모드로 돌아오면 다시 최하단 레벨로 못박는다.
@@ -159,35 +166,56 @@ const setWorldEditable = (editable: boolean): void => {
     setMenuPanelOnTop(editable)
 }
 
-// 전체화면 데코 오버레이 표시 여부 — 꾸미기 모드이거나 배치된 데코가 있을 때만 보인다.
-// (배치가 없고 고정 모드면 숨겨, 투명 미지원 환경에서 화면을 가리지 않게 한다.)
+// 데코 오버레이 표시/크기 정책.
+// - 꾸미기(edit): 전체화면으로 키운다(어디에나 배치). 항상 위로 둬 투명 합성이 정상(=흰색 안 됨).
+// - 고정(fixed)+데코: 전체화면으로는 절대 표시하지 않는다(흰색 방지). renderer가 데코 영역(bbox)을
+//   계산해 world:setOverlayBounds로 보내면, 그때 작은 창으로 리사이즈한 뒤 표시한다(아래 IPC 핸들러).
+//   따라서 여기서는 고정 모드에서 (전체화면 상태로) 보이는 창이 있으면 일단 숨긴다.
+// - 데코 없음(고정): 숨긴다.
 const syncWorldWindowVisibility = (state: WorldState): void => {
     if (!worldWindow || worldWindow.isDestroyed()) {
         return
     }
     const shouldShow = state.mode === 'edit' || state.placed.length > 0
-    if (shouldShow) {
+    if (!shouldShow) {
+        if (worldWindow.isVisible()) {
+            worldWindow.hide()
+        }
+        return
+    }
+    if (state.mode === 'edit') {
+        const display = screen.getPrimaryDisplay().bounds
+        worldWindow.setBounds({
+            x: display.x,
+            y: display.y,
+            width: display.width,
+            height: display.height,
+        })
+        // 표시 전에 최상위로 올려(항상 위) 전체화면 투명이 흰색으로 굳지 않게 한다(Windows).
+        if (process.platform !== 'darwin') {
+            worldWindow.setAlwaysOnTop(true)
+        }
         if (!worldWindow.isVisible()) {
             worldWindow.showInactive()
         }
-        // 고정(비편집) 모드로 보일 땐 항상 최하단 레벨에 못박아, 앱 활성화 시 위로 안 올라오게.
-        if (state.mode !== 'edit') {
-            pinWorldToBottom()
-        }
+        worldWindow.moveTop()
     } else if (worldWindow.isVisible()) {
+        // 고정 모드: 전체화면 상태로 보이면 흰색이 되므로 숨기고, setOverlayBounds가 bbox로 재표시.
         worldWindow.hide()
     }
 }
 
 const createWorldWindow = (): BrowserWindow => {
     const primary = screen.getPrimaryDisplay()
-    const { x, y, width, height } = primary.bounds
 
+    // 작게 생성한다. 전체화면 크기 투명 창은 일부 Windows에서 흰색으로 굳어 바탕화면을 덮으므로,
+    // 절대 전체화면 상태로 표시하지 않는다: 편집 모드에서만 전체화면으로 키우고(항상 위=투명 정상),
+    // 고정 모드에선 renderer가 계산한 데코 영역(bbox)만큼만 키워 작은 투명 창으로 표시한다.
     const win = new BrowserWindow({
-        x,
-        y,
-        width,
-        height,
+        x: primary.bounds.x,
+        y: primary.bounds.y,
+        width: 100,
+        height: 100,
         show: false,
         frame: false,
         transparent: true,
@@ -241,6 +269,9 @@ app.whenReady().then(() => {
 
     // 펫 윈도우 위치/크기 조작 IPC — 드래그, 자율 이동, 모니터 경계 조회.
     registerWindowIpc()
+
+    // 메뉴 창 JS 리사이즈 IPC — 네이티브 드래그 리사이즈의 Windows 검정 플래시를 피한다.
+    registerMenuResizeIpc()
 
     // 캐릭터 우클릭 컨텍스트 메뉴 IPC — 메뉴 열림/닫힘 broadcast로 자율 행동 정지 신호도 같이 보낸다.
     registerMenuIpc()
@@ -362,6 +393,43 @@ app.whenReady().then(() => {
 
     // 데스크탑 하단 월드 창 — 배치된 데코를 고정 표시.
     createWorldWindow()
+
+    // 고정 모드에서 renderer가 계산한 '데코가 놓인 영역'만큼 월드 오버레이 창을 축소한다.
+    // 전체화면 투명 창이 일부 Windows에서 흰색으로 합성돼 바탕화면을 덮는 문제를,
+    // 작은 투명 창(캐릭터 창처럼 정상 동작)으로 만들어 회피한다. null이면 전체화면으로 복귀(편집 모드).
+    ipcMain.on(
+        'world:setOverlayBounds',
+        (_event, bounds: { x: number; y: number; w: number; h: number } | null) => {
+            if (!worldWindow || worldWindow.isDestroyed()) {
+                return
+            }
+            const display = screen.getPrimaryDisplay().bounds
+            if (!bounds) {
+                // 편집 모드: 전체화면으로(어디에나 배치). 표시/z-order는 syncWorldWindowVisibility가 처리.
+                worldWindow.setBounds({
+                    x: display.x,
+                    y: display.y,
+                    width: display.width,
+                    height: display.height,
+                })
+                return
+            }
+            // 고정 모드: 데코 영역(bbox)만큼만 리사이즈한 뒤에야 표시한다(전체화면 노출→흰색 방지).
+            worldWindow.setBounds({
+                x: display.x + Math.round(bounds.x),
+                y: display.y + Math.round(bounds.y),
+                width: Math.max(1, Math.round(bounds.w)),
+                height: Math.max(1, Math.round(bounds.h)),
+            })
+            const state = readWorldState()
+            if (state.mode !== 'edit' && state.placed.length > 0) {
+                if (!worldWindow.isVisible()) {
+                    worldWindow.showInactive()
+                }
+                pinWorldToBottom()
+            }
+        },
+    )
 
     // 앱 시작 시 오늘 운세를 보장한다(없으면 추첨 + 점수 보상). 날짜당 멱등.
     // (통합 메뉴 창으로 바뀐 뒤 자동 팝업은 없앴다 — 운세는 우클릭 메뉴 → 운세 탭에서 본다.)

@@ -49,9 +49,9 @@ const extractVideoId = (input: string): string | null => {
 }
 
 // 재생 소스 결정.
-// isVideo=특정 영상 → 임베드 플레이어로 연다(페이지 잡동사니·레터박스 없이 프레임을 꽉 채움).
-//   (watch 페이지는 작은 창에서 영상이 작게 letterbox 되는 문제가 있어 임베드를 쓴다.
-//    단, 업로더가 임베드를 막아둔 일부 영상은 오류가 날 수 있음.)
+// isVideo=특정 영상 → watch 페이지로 연다. (임베드 플레이어는 Windows webview에서 영상이 검게만
+//   나오는 문제가 있어(소리만) 쓰지 않는다. 둘러보기(watch)는 정상 재생되므로 특정 영상도 watch로 연다.
+//   FILL_CSS가 watch 페이지의 잡동사니를 숨기고 플레이어를 꽉 채우도록 만들어져 있다.)
 // false=홈/검색 등 둘러보기.
 export const resolveYoutubeSrc = (
     input?: string,
@@ -63,7 +63,7 @@ export const resolveYoutubeSrc = (
     const id = extractVideoId(value)
     if (id) {
         return {
-            src: `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`,
+            src: `https://www.youtube.com/watch?v=${id}`,
             isVideo: true,
             videoId: id,
         }

@@ -116,7 +116,7 @@ export const CHARACTER_WALK_FRAMES: Partial<Record<CharacterId, string[]>> =
 export const CHARACTER_FALL_FRAMES: Partial<Record<CharacterId, string[]>> =
     buildMotionFrames(motionFiles, 'falldown')
 
-// 캐릭터별 정적 표정 세트(<character>/expressions/*.png). 가만히 있을 때 가끔 랜덤으로 보여준다.
+// 캐릭터별 정적 표정 세트(<character>/expressions/*.png). 가만히 있을 때/hover 시 랜덤으로 보여준다.
 // 애니가 아니라 각 프레임이 독립된 한 표정 — 순서 무관.
 export const CHARACTER_EXPRESSIONS: Partial<Record<CharacterId, string[]>> =
     buildMotionFrames(motionFiles, 'expressions')
