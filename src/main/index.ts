@@ -6,7 +6,7 @@ import { registerWindowIpc } from './window'
 import { registerMenuIpc } from './menu'
 import { applyPlayerEvent, readPlayerState, registerPlayerStateIpc } from './playerState'
 import { registerTodoIpc } from './todo'
-import { applyFortuneEvent, registerFortuneIpc } from './fortune'
+import { registerFortuneIpc } from './fortune'
 import { registerItemIpc } from './item'
 import { registerScheduleIpc } from './schedule'
 import { registerCharacterSelectionIpc } from './characterSelection'
@@ -431,9 +431,8 @@ app.whenReady().then(() => {
         },
     )
 
-    // 앱 시작 시 오늘 운세를 보장한다(없으면 추첨 + 점수 보상). 날짜당 멱등.
-    // (통합 메뉴 창으로 바뀐 뒤 자동 팝업은 없앴다 — 운세는 우클릭 메뉴 → 운세 탭에서 본다.)
-    applyFortuneEvent({ type: 'roll' }, onFortuneRolled)
+    // 앱 시작 시엔 운세를 자동으로 굴리지 않는다 — 시작 잔고를 정확히 100으로 유지하기 위함.
+    // (운세 추첨 + 점수 보상은 사용자가 운세 탭을 열 때 FortuneTab에서 roll()로 지급된다. 날짜당 멱등.)
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {

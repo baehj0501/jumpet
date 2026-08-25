@@ -36,7 +36,8 @@ const CHARACTER_DISPLAY_SCALE: Record<CharacterId, number> = {
 // 모션/표정(override 프레임)일 때 쓸 배율 오버라이드 — 모션 원본이 기본 포즈와 프레이밍이 달라
 // 기본 배율로는 크기가 안 맞는 캐릭터만 지정한다. 없으면 위 기본 배율을 그대로 쓴다.
 const CHARACTER_MOTION_SCALE: Partial<Record<CharacterId, number>> = {
-    piyoo: 1,
+    // piyoo는 모션 배율을 idle(base 0.9)과 통일한다 — 모션↔idle 전환 순간 스케일이 바뀌며
+    // 걷기 종료 등에서 한 프레임 축소되어 보이던 '작아짐'을 없애기 위함. 프레임은 0.9 기준으로 재정규화됨.
     wingpee: 1.1,
 }
 
