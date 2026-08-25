@@ -34,12 +34,10 @@ const CHARACTER_DISPLAY_SCALE: Record<CharacterId, number> = {
 }
 
 // 모션/표정(override 프레임)일 때 쓸 배율 오버라이드 — 모션 원본이 기본 포즈와 프레이밍이 달라
-// 기본 배율로는 크기가 안 맞는 캐릭터만 지정한다. 없으면 위 기본 배율을 그대로 쓴다.
-const CHARACTER_MOTION_SCALE: Partial<Record<CharacterId, number>> = {
-    // piyoo는 모션 배율을 idle(base 0.9)과 통일한다 — 모션↔idle 전환 순간 스케일이 바뀌며
-    // 걷기 종료 등에서 한 프레임 축소되어 보이던 '작아짐'을 없애기 위함. 프레임은 0.9 기준으로 재정규화됨.
-    wingpee: 1.1,
-}
+// 기본 배율로는 크기가 안 맞는 캐릭터만 지정한다. 없으면 위 기본 배율(=idle)을 그대로 쓴다.
+// piyoo·wingpee는 모션 배율을 idle(base 0.9)과 통일했다 — 모션↔idle 전환 순간 스케일이 바뀌며
+// 걷기 종료 등에서 한 프레임 축소돼 보이던 '작아짐'을 없애기 위함. 프레임은 0.9 기준으로 재정규화됨.
+const CHARACTER_MOTION_SCALE: Partial<Record<CharacterId, number>> = {}
 
 // 캐릭터별 세로 위치 오프셋(창 높이 대비 %, 양수=아래로). 크기는 그대로 두고 위치만 내린다.
 // 창을 많이 채워 머리가 위쪽인 캐릭터(윙피)는 아래로 내려 머리 위 말풍선 공간을 확보한다.

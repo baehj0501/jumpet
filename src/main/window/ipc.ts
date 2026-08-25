@@ -100,7 +100,9 @@ export const registerWindowIpc = (): void => {
         const nextWidth = Math.round(width)
         const nextHeight = Math.round(height)
         const nextX = Math.round(currentX + (currentWidth - nextWidth) / 2)
-        const nextY = Math.round(currentY + (currentHeight - nextHeight) / 2)
+        // 세로는 '아래 변'을 고정한다 — 캐릭터는 창 하단 정사각 영역에 그라운딩돼 있어,
+        // 높이가 바뀌어도(캐릭터 전환/크기 변경) 캐릭터가 화면에서 제자리에 있도록 한다.
+        const nextY = Math.round(currentY + (currentHeight - nextHeight))
         // 이후 이동(dragTo/moveTo)이 이 크기로 매번 못박도록 고정 크기를 갱신한다.
         // 이렇게 하면 그간 쌓인 드리프트도 크기 변경 시 원래 의도한 크기로 교정된다.
         lockedSizes.set(win, { width: nextWidth, height: nextHeight })

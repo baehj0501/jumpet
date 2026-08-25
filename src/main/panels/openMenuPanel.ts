@@ -80,9 +80,13 @@ export const registerMenuResizeIpc = (): void => {
 // 오버레이보다 확실히 앞에 두어야 저장/취소 버튼이 항상 눌린다.
 export const setMenuPanelOnTop = (flag: boolean): void => {
     if (menuWindow && !menuWindow.isDestroyed()) {
-        menuWindow.setAlwaysOnTop(flag)
         if (flag) {
+            // 편집 중엔 오버레이('normal' 레벨)보다 확실히 높은 레벨로 올려, 데코 카드·저장/취소 클릭이
+            // 오버레이에 가려지지 않게 한다(z-order 경쟁 방지 → 전 화면 클릭 막힘 방지).
+            menuWindow.setAlwaysOnTop(true, 'pop-up-menu')
             menuWindow.moveTop()
+        } else {
+            menuWindow.setAlwaysOnTop(false)
         }
     }
 }

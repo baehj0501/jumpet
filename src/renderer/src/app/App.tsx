@@ -263,8 +263,9 @@ export const App = () => {
             return
         }
 
-        // 마지막 두 프레임만 번갈아 반복해 걸음걸이를 만든다.
-        const loop = frames.slice(-2)
+        // 걷기 순환 프레임. 기본은 마지막 두 프레임만 번갈아 반복.
+        // 윙피는 3프레임 전체를 순환한다(1번 포즈도 걷기에 포함되도록).
+        const loop = selectedCharacterId === 'wingpee' ? frames : frames.slice(-2)
         let frameIndex = 0
         setWalkFrameSrc(loop[0])
         const frameTimer = setInterval(() => {
@@ -403,16 +404,25 @@ export const App = () => {
     // 값 = 창 바닥에서의 %(말풍선 아래변 위치). 머리 위 공간을 최대한 써서 같은 크기 2줄도 안 잘리고
     // 캐릭터도 안 덮는다. 윙피는 CharacterView에서 8% 아래로 내려(머리 ~33.6%) 위 공간을 넓혔으므로,
     // 아래변을 위에서 ~33%(bottom 67%)에 둬 위로 자랄 공간을 창의 33%(≈79px)로 확보 → 3줄도 안 잘림.
-    const CHARACTER_BUBBLE_BOTTOM_PCT: Record<string, number> = { wingpee: 67 }
-    const bubbleBottomPct = CHARACTER_BUBBLE_BOTTOM_PCT[selectedCharacterId]
+    // 큰 캐릭터(윙피)는 창 높이를 폭보다 크게 잡아 머리 위 말풍선(3줄)이 창 밖으로 잘리지 않게 한다.
+    // 캐릭터는 아래 정사각 영역에 그대로 그려지고, 늘어난 위쪽은 말풍선 여유 공간으로만 쓴다.
+    const WINDOW_HEIGHT_RATIO: Record<string, number> = { wingpee: 1.2 }
+    const windowHeightRatio = WINDOW_HEIGHT_RATIO[selectedCharacterId] ?? 1
+    // 말풍선 아래변 위치(창 바닥 대비 %). 창이 높아진 만큼 %를 낮춰, 캐릭터 대비 위치는 그대로 유지한다.
+    const CHARACTER_BUBBLE_BOTTOM_PCT: Record<string, number> = { wingpee: 74 }
+    const rawBubbleBottomPct = CHARACTER_BUBBLE_BOTTOM_PCT[selectedCharacterId]
+    const bubbleBottomPct =
+        rawBubbleBottomPct === undefined
+            ? undefined
+            : Math.round(rawBubbleBottomPct / windowHeightRatio)
     useEffect(() => {
         // preload가 아직 setWindowSize를 노출하지 않으면(dev에서 preload 미재시작) 건너뛴다.
         if (!window.api?.setWindowSize) {
             return
         }
         const size = Math.round(BASE_WINDOW_SIZE * petScale)
-        window.api.setWindowSize(size, size)
-    }, [petScale])
+        window.api.setWindowSize(size, Math.round(size * windowHeightRatio))
+    }, [petScale, windowHeightRatio])
 
     // 생일 축하 — 생일 당일이면 축하 멘트 + 보너스 포인트(연 1회, localStorage로 중복 방지).
     const profileForBirthday = useProfile()
@@ -441,18 +451,30 @@ export const App = () => {
                 onClose={dismissSpeech}
                 bottomAnchorPct={bubbleBottomPct}
             />
-            <CharacterView
-                characterId={selectedCharacterId}
-                mood={mood}
-                state={characterState}
-                overrideSrc={overrideSrc}
-                isMotionFrame={isMotionFrame}
-                flip={walkDirection === 'left'}
-                onMouseDown={handleMouseDown}
-                onContextMenu={handleContextMenu}
-                onMouseEnter={startHoverExpression}
-                onMouseLeave={stopHoverExpression}
-            />
+            {/* 캐릭터는 창 하단의 정사각 영역에 그린다(그라운딩 유지). 창이 폭보다 높으면
+                늘어난 위쪽은 말풍선 공간으로만 남는다. 정사각일 땐 창 전체와 동일. */}
+            <div
+                style={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    aspectRatio: '1 / 1',
+                }}
+            >
+                <CharacterView
+                    characterId={selectedCharacterId}
+                    mood={mood}
+                    state={characterState}
+                    overrideSrc={overrideSrc}
+                    isMotionFrame={isMotionFrame}
+                    flip={walkDirection === 'left'}
+                    onMouseDown={handleMouseDown}
+                    onContextMenu={handleContextMenu}
+                    onMouseEnter={startHoverExpression}
+                    onMouseLeave={stopHoverExpression}
+                />
+            </div>
             {petId && (
                 <div
                     className='pet-companion'

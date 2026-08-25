@@ -144,25 +144,37 @@ const setWorldEditable = (editable: boolean): void => {
     if (!worldWindow || worldWindow.isDestroyed()) {
         return
     }
-    worldWindow.setIgnoreMouseEvents(!editable)
     if (editable) {
-        // 편집 중엔 오버레이를 최상위로 올려 데코가 다른 창/바탕화면 뒤로 숨지 않게 한다.
-        // - macOS: 'normal' 레벨로만 올린다(기존 동작). Space 특성상 이걸로 충분하고,
-        //   'floating'으로 올리면 전체화면 데코가 메뉴 창을 덮는다.
-        // - Windows: always-on-top이 아니면 다른 창/바탕화면을 클릭하는 순간 오버레이가 그 뒤로
-        //   깔려 올린 데코가 안 보이고 편집이 막힌다("화면 멈춤"처럼 느껴짐). 그래서 항상 최상위로 유지.
-        //   메뉴 창은 아래 setMenuPanelOnTop에서 이 오버레이보다 더 위로 올려 저장/취소를 보장한다.
+        // 편집 진입을 여기서 원자적으로 완성한다(창 크기/표시/클릭수신/최상위를 한 번에).
+        // 창 축소(고정 모드) 리라이트 이후, 편집 진입 시 반드시 전체화면 + 상호작용 상태가 되도록
+        // sync 타이밍에 의존하지 않고 직접 설정한다. (패키지 빌드에서 클릭이 안 먹던 문제 방지.)
+        const display = screen.getPrimaryDisplay().bounds
+        worldWindow.setBounds({
+            x: display.x,
+            y: display.y,
+            width: display.width,
+            height: display.height,
+        })
+        worldWindow.setIgnoreMouseEvents(false)
+        // Windows: always-on-top이 아니면 다른 창/바탕화면을 클릭하는 순간 오버레이가 뒤로 깔려
+        // 편집이 막힌다("화면 멈춤"처럼 느껴짐). 단 오버레이는 '낮은(normal) 레벨'로만 올려,
+        // 메뉴 창(아래 setMenuPanelOnTop에서 더 높은 레벨)이 항상 오버레이 위에 오게 한다.
+        // (두 창 다 단순 always-on-top이면 z-order 경쟁으로 오버레이가 메뉴를 덮어 전 화면 클릭이 막힘.)
         if (process.platform === 'darwin') {
             worldWindow.setAlwaysOnTop(false)
         } else {
-            worldWindow.setAlwaysOnTop(true)
+            worldWindow.setAlwaysOnTop(true, 'normal')
+        }
+        if (!worldWindow.isVisible()) {
+            worldWindow.showInactive()
         }
         worldWindow.moveTop()
     } else {
+        worldWindow.setIgnoreMouseEvents(true)
         // 고정 모드로 돌아오면 다시 최하단 레벨로 못박는다.
         pinWorldToBottom()
     }
-    // 메뉴 창을 데코 창 위로 — 편집 중 메뉴 버튼/보관함 클릭이 가려지지 않게.
+    // 메뉴 창을 데코 창 위로 — 편집 중 메뉴 버튼/보관함/데코 카드 클릭이 가려지지 않게(오버레이보다 앞).
     setMenuPanelOnTop(editable)
 }
 
