@@ -76,13 +76,10 @@ export const openYoutubePanel = (options: OpenOptions = {}): void => {
         youtubeWindow?.show()
     })
 
-    // 투명 창 안 <webview>(유튜브)가 HTML 전체화면(⛶)에 들어갔다 ESC로 나오면
-    // Electron/Chromium 버그로 창의 투명 영역이 검정으로 굳는다(특히 Windows).
-    // 전체화면 이탈 시 배경색을 투명으로 다시 지정하고 크기를 1px 흔들어
-    // 컴포지터가 알파 채널로 표면을 재할당하게 해 투명을 복구한다.
+    // <webview>(유튜브)가 HTML 전체화면(⛶)에 들어갔다 ESC로 나오면 표면이 검게 굳는 경우가 있어,
+    // 전체화면 이탈 시 배경색을 다시 지정하고 크기를 1px 흔들어 컴포지터가 표면을 재할당하게 한다.
     youtubeWindow.webContents.on('did-attach-webview', (_event, guest) => {
-        const restoreTransparency = () => {
-            // 전체화면 표면 정리가 끝난 뒤 복구하도록 한 틱 미룬다(즉시 실행 시 놓치는 경우가 있음).
+        const nudgeRepaint = () => {
             setTimeout(() => {
                 if (!youtubeWindow || youtubeWindow.isDestroyed()) {
                     return
@@ -93,7 +90,7 @@ export const openYoutubePanel = (options: OpenOptions = {}): void => {
                 youtubeWindow.setBounds(bounds)
             }, 80)
         }
-        guest.on('leave-html-full-screen', restoreTransparency)
+        guest.on('leave-html-full-screen', nudgeRepaint)
     })
 
     const q = buildQuery(options)
