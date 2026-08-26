@@ -272,9 +272,11 @@ app.whenReady().then(() => {
     })
 
     // 운세 영속 데이터 IPC — todo와 같은 패턴. 새 운세가 떴을 때만 점수 보상을 조립한다.
-    // (fortune은 player를 직접 import하지 않고, 보상 금액(단계 기반)만 콜백으로 위임.)
+    // 크리스탈볼에 표시되는 운세 점수(60~100)와 별개로, 실제 지급 포인트는 최대 30으로 환산한다.
+    // (운세가 좋을수록 많이 — scoreAwarded 60→18 … 100→30.)
     const onFortuneRolled = (record: { scoreAwarded: number }) => {
-        applyPlayerEvent({ type: 'fortune', amount: record.scoreAwarded })
+        const reward = Math.min(30, Math.round(record.scoreAwarded * 0.3))
+        applyPlayerEvent({ type: 'fortune', amount: reward })
     }
     registerFortuneIpc({ onFortuneRolled })
 

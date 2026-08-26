@@ -40,11 +40,12 @@ export const LEVEL_DISTRIBUTION: Record<FortuneLevel, number> = {
     1: 0.1,
 }
 
-// 단계별 지급 포인트 범위 [min, max] (둘 다 포함). 운세에 따라 최대 30점.
+// 단계별 '운세 점수' 범위 [min, max] (둘 다 포함) — 크리스탈볼에 표시되는 운 점수(60~100).
+// 실제 지급 포인트는 이 점수에 비례해 최대 30으로 환산한다(main/index.ts onFortuneRolled).
 export const SCORE_BY_LEVEL: Record<FortuneLevel, [number, number]> = {
-    5: [26, 30],
-    4: [20, 25],
-    3: [14, 19],
-    2: [8, 13],
-    1: [3, 7],
+    5: [91, 100],
+    4: [81, 90],
+    3: [71, 80],
+    2: [66, 75],
+    1: [60, 70],
 }
