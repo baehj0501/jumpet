@@ -40,12 +40,11 @@ export const LEVEL_DISTRIBUTION: Record<FortuneLevel, number> = {
     1: 0.1,
 }
 
-// 단계별 점수 범위 [min, max] (둘 다 포함).
-// 운세 보상 점수 — 랜덤, 최대 30점. 등급이 높을수록 더 많이 받되 상한은 30.
+// 단계별 지급 포인트 범위 [min, max] (둘 다 포함). 운세에 따라 최대 30점.
 export const SCORE_BY_LEVEL: Record<FortuneLevel, [number, number]> = {
     5: [26, 30],
-    4: [21, 25],
-    3: [16, 20],
-    2: [11, 15],
-    1: [5, 10],
+    4: [20, 25],
+    3: [14, 19],
+    2: [8, 13],
+    1: [3, 7],
 }
