@@ -1,4 +1,4 @@
-import { createElement, useEffect, useRef, useState } from 'react'
+import { createElement, useEffect, useRef, useState, type CSSProperties } from 'react'
 import {
     BASE_H,
     BASE_W,
@@ -64,6 +64,8 @@ export const YoutubePage = () => {
     const webviewRef = useRef<any>(null)
     // 임베드가 오류 153(임베드 차단)으로 실패하면 watch 페이지로 한 번만 폴백한다.
     const watchFallbackRef = useRef(false)
+    // 우클릭 메뉴(뷰어 안에 직접 그림). null이면 닫힘. {x,y}는 창 기준 위치.
+    const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null)
 
     // 뷰포트(실제 창) 크기 기준으로 webview를 프레임 구멍에 맞춘다.
     const positionWebview = (themeId: number) => {
@@ -142,22 +144,32 @@ export const YoutubePage = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [theme])
 
-    // 프레임 우클릭 → OS 네이티브 컨텍스트 메뉴를 main에 요청한다.
-    // (HTML 메뉴는 작은 창 안에 그려져 잘리므로, 창 크기와 무관한 네이티브 메뉴로 띄운다.)
+    // 프레임 우클릭 → 뷰어 안에 메뉴를 직접 띄운다(별도 창 없음 → 즉시·안정적).
+    // 창 기준 위치로 클램프(메뉴 크기 ~200x360). macOS는 렌더러 contextmenu로,
+    // Windows는 프레임이 드래그 영역이라 contextmenu가 안 와서, main이 system-context-menu를
+    // 가로채 'youtube:openMenuRequest'(화면좌표)로 신호 → 창 기준으로 변환해 연다.
+    const openMenuAt = (clientX: number, clientY: number) => {
+        const MW = 200
+        const MH = 360
+        const x = Math.max(4, Math.min(clientX, window.innerWidth - MW - 4))
+        const y = Math.max(4, Math.min(clientY, window.innerHeight - MH - 4))
+        setMenuPos({ x, y })
+    }
     useEffect(() => {
         const onCtx = (event: MouseEvent) => {
             event.preventDefault()
-            window.api.youtube.openContextMenu({
-                theme,
-                sizeStep,
-                alwaysOnTop,
-                sizeCount: SIZE_STEP_PCTS.length,
-                themes: THEMES.map((t) => ({ id: t.id, name: t.name })),
-            })
+            openMenuAt(event.clientX, event.clientY)
         }
         window.addEventListener('contextmenu', onCtx)
-        return () => window.removeEventListener('contextmenu', onCtx)
-    }, [theme, sizeStep, alwaysOnTop])
+        const unsubscribe = window.api.youtube.onOpenMenuRequest((point) => {
+            // point는 화면 좌표 → 창 좌상단 기준으로 변환.
+            openMenuAt(point.x - window.screenX, point.y - window.screenY)
+        })
+        return () => {
+            window.removeEventListener('contextmenu', onCtx)
+            unsubscribe()
+        }
+    }, [])
 
     const applySize = (step: number) => {
         const pct = SIZE_STEP_PCTS[step - 1] ?? SIZE_STEP_PCTS[DEFAULT_SIZE_STEP - 1]
@@ -219,6 +231,94 @@ export const YoutubePage = () => {
                 alt=''
                 draggable={false}
             />
+
+            {menuPos && (
+                <>
+                    {/* 바깥 클릭 시 닫힘 — 창 전체를 덮는 투명 백드롭(드래그 영역 아님). */}
+                    <div
+                        style={{
+                            position: 'fixed',
+                            inset: 0,
+                            zIndex: 19,
+                            WebkitAppRegion: 'no-drag',
+                        } as CSSProperties}
+                        onMouseDown={() => setMenuPos(null)}
+                        onContextMenu={(event) => {
+                            event.preventDefault()
+                            openMenuAt(event.clientX, event.clientY)
+                        }}
+                    />
+                    <div
+                        className='yt-ctx yt-ctx-popup'
+                        style={{
+                            position: 'fixed',
+                            left: menuPos.x,
+                            top: menuPos.y,
+                            zIndex: 20,
+                            maxHeight: 'calc(100vh - 8px)',
+                            overflowY: 'auto',
+                            WebkitAppRegion: 'no-drag',
+                        } as CSSProperties}
+                        onMouseDown={(event) => event.stopPropagation()}
+                        onContextMenu={(event) => event.preventDefault()}
+                    >
+                        <div className='yt-ctx-title'>🎨 테마</div>
+                        <div className='yt-ctx-themes'>
+                            {THEMES.map((t) => (
+                                <button
+                                    type='button'
+                                    key={t.id}
+                                    className={t.id === theme ? 'yt-ctx-theme active' : 'yt-ctx-theme'}
+                                    title={t.name}
+                                    onClick={() => {
+                                        chooseTheme(t.id)
+                                        setMenuPos(null)
+                                    }}
+                                >
+                                    <img
+                                        src={t.src}
+                                        alt={t.name}
+                                        draggable={false}
+                                    />
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className='yt-ctx-title'>📐 크기</div>
+                        <div className='yt-ctx-sizes'>
+                            {SIZE_STEP_PCTS.map((_, index) => index + 1).map((step) => (
+                                <button
+                                    type='button'
+                                    key={step}
+                                    className={step === sizeStep ? 'yt-ctx-size active' : 'yt-ctx-size'}
+                                    onClick={() => {
+                                        chooseSize(step)
+                                        setMenuPos(null)
+                                    }}
+                                >
+                                    {step}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className='yt-ctx-title'>📌 표시</div>
+                        <button
+                            type='button'
+                            className={alwaysOnTop ? 'yt-ctx-item active' : 'yt-ctx-item'}
+                            onClick={() => applyAlwaysOnTop(!alwaysOnTop)}
+                        >
+                            {alwaysOnTop ? '✓ 항상 위에 표시' : '항상 위에 표시'}
+                        </button>
+                        <button
+                            type='button'
+                            className='yt-ctx-item danger'
+                            onClick={() => window.api.youtube.close()}
+                        >
+                            닫기
+                        </button>
+                    </div>
+                </>
+            )}
         </>
     )
 }

@@ -305,6 +305,13 @@ const api = {
             ipcRenderer.on('youtube:menuAction', listener)
             return () => ipcRenderer.removeListener('youtube:menuAction', listener)
         },
+        // Windows에서 프레임 우클릭(OS 창 메뉴 대신) 시 main이 보내는 '메뉴 열기' 신호(화면 좌표).
+        onOpenMenuRequest: (handler: (point: { x: number; y: number }) => void): (() => void) => {
+            const listener = (_event: unknown, point: { x: number; y: number }): void =>
+                handler(point)
+            ipcRenderer.on('youtube:openMenuRequest', listener)
+            return () => ipcRenderer.removeListener('youtube:openMenuRequest', listener)
+        },
         close: (): void => ipcRenderer.send('youtube:close'),
     },
 }

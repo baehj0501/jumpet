@@ -72,6 +72,14 @@ export const openYoutubePanel = (options: OpenOptions = {}): void => {
         youtubeWindow = null
     })
 
+    // Windows: 프레임(-webkit-app-region: drag) 우클릭 시 OS 창 시스템 메뉴(이동/최소화/닫기 등)가
+    // 떠서 우리 커스텀 메뉴를 가로챈다. 이 이벤트를 막고 렌더러에 우리 메뉴를 열라고 신호한다.
+    // (macOS는 이 이벤트가 없어 렌더러의 contextmenu가 그대로 우리 메뉴를 연다.)
+    youtubeWindow.on('system-context-menu', (event, point) => {
+        event.preventDefault()
+        youtubeWindow?.webContents.send('youtube:openMenuRequest', point)
+    })
+
     youtubeWindow.on('ready-to-show', () => {
         youtubeWindow?.show()
     })

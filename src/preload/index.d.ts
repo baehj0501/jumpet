@@ -136,6 +136,7 @@ declare global {
                 onMenuAction: (
                     handler: (action: { type: string; value?: number | boolean }) => void,
                 ) => () => void
+                onOpenMenuRequest: (handler: (point: { x: number; y: number }) => void) => () => void
                 close: () => void
             }
             character: {

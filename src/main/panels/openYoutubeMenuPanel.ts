@@ -57,9 +57,26 @@ export const openYoutubeMenuPanel = (state: MenuState): void => {
     menuWindow.on('closed', () => {
         menuWindow = null
     })
-    // 바깥을 클릭(포커스 상실)하면 닫는다 — 일반 메뉴처럼.
-    menuWindow.on('blur', () => closeYoutubeMenuPanel())
-    menuWindow.on('ready-to-show', () => menuWindow?.show())
+    // 바깥 클릭(포커스 상실) 시 닫되, '뜨자마자' 닫히는 것을 막는다.
+    // Windows에선 항상-위 뷰어 위에 팝업을 띄우면 포커스가 뷰어로 되돌아가며 즉시 blur가 나
+    // 메뉴가 안 뜬 것처럼 보였다. 팝업이 자리잡은 뒤(약간의 지연)부터 바깥클릭-닫기를 활성화한다.
+    let closeOnBlur = false
+    menuWindow.on('blur', () => {
+        if (closeOnBlur) {
+            closeYoutubeMenuPanel()
+        }
+    })
+    // 유튜브 뷰어가 '항상 위'(기본값)면 팝업이 그 뒤로 가려질 수 있다. 뷰어보다 높은 레벨로 올려
+    // 항상 앞에 뜨게 한다.
+    menuWindow.setAlwaysOnTop(true, 'pop-up-menu')
+    menuWindow.on('ready-to-show', () => {
+        menuWindow?.show()
+        menuWindow?.focus()
+        menuWindow?.moveTop()
+        setTimeout(() => {
+            closeOnBlur = true
+        }, 300)
+    })
 
     const params = new URLSearchParams({
         menu: '1',
