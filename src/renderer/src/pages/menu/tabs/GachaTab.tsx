@@ -1,12 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePlayerStore } from '@renderer/entities/player'
 import { GACHA_COST } from '@renderer/entities/item'
-import {
-    PET_CATALOG,
-    PetSprite,
-    useOwnedPets,
-    useRollPetGacha,
-} from '@renderer/entities/pet'
+import { PET_CATALOG, PetSprite, useOwnedPets, useRollPetGacha } from '@renderer/entities/pet'
 import {
     CHARACTER_ASSETS,
     CHARACTER_DISPLAY_NAMES,
@@ -20,9 +15,7 @@ import { PixelArt } from '../PixelArt'
 // 뽑기 결과 카테고리 — 한 번 뽑으면 데코(꾸미기)·펫(동반)·캐릭터 중 랜덤으로 나온다.
 type GachaCategory = 'decor' | 'pet' | 'character'
 // reveal 대상 — 데코·캐릭터는 이미지(src), 펫은 픽셀 스프라이트(petId).
-type Reveal =
-    | { kind: 'image'; src: string; name: string }
-    | { kind: 'pet'; petId: string; name: string }
+type Reveal = { kind: 'image'; src: string; name: string } | { kind: 'pet'; petId: string; name: string }
 
 // 캐릭터 전체 id — 미보유 캐릭터 추첨 가중치 계산용.
 const ALL_CHARACTER_IDS = Object.keys(CHARACTER_ASSETS) as CharacterId[]
@@ -200,6 +193,8 @@ export const GachaTab = () => {
     const [spinning, setSpinning] = useState(false)
     const [reveal, setReveal] = useState<Reveal | null>(null)
     const [sparkFrame, setSparkFrame] = useState(0)
+    const spinInFlightRef = useRef(false)
+    const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     // 머신 주변 반짝이 형태를 천천히 바꾼다(프레임 순환).
     useEffect(() => {
@@ -207,60 +202,78 @@ export const GachaTab = () => {
         return () => clearInterval(intervalId)
     }, [])
 
-    const canSpin = !spinning && score >= GACHA_COST
+    useEffect(() => {
+        return () => {
+            if (revealTimerRef.current) {
+                clearTimeout(revealTimerRef.current)
+            }
+        }
+    }, [])
+
+    const canSpin = !spinning && !spinInFlightRef.current && score >= GACHA_COST
 
     const handleSpin = async () => {
-        if (!canSpin) {
+        if (spinInFlightRef.current || score < GACHA_COST) {
             return
         }
+        spinInFlightRef.current = true
         setSpinning(true)
+        if (revealTimerRef.current) {
+            clearTimeout(revealTimerRef.current)
+            revealTimerRef.current = null
+        }
         setReveal(null)
         // 유리돔 알사탕이 섞이는 연출 (~1초) — 추첨과 병렬로 돌린다.
         const spin = new Promise((resolve) => setTimeout(resolve, SPIN_DURATION_MS))
 
-        // 데코 + 미보유 펫 + 미보유 캐릭터를 한 통에 넣고 랜덤 추첨(카테고리는 개수로 가중).
-        const unownedPetCount = PET_CATALOG.filter((pet) => !ownedPets.includes(pet.id)).length
-        const unownedCharCount = ALL_CHARACTER_IDS.filter(
-            (id) => !ownedCharacters.includes(id),
-        ).length
-        const bag: GachaCategory[] = [
-            ...Array<GachaCategory>(DECOR_ITEMS.length).fill('decor'),
-            ...Array<GachaCategory>(unownedPetCount).fill('pet'),
-            ...Array<GachaCategory>(unownedCharCount).fill('character'),
-        ]
-        const category = bag[Math.floor(Math.random() * bag.length)] ?? 'decor'
+        try {
+            // 데코 + 미보유 펫 + 미보유 캐릭터를 한 통에 넣고 랜덤 추첨(카테고리는 개수로 가중).
+            const unownedPetCount = PET_CATALOG.filter((pet) => !ownedPets.includes(pet.id)).length
+            const unownedCharCount = ALL_CHARACTER_IDS.filter((id) => !ownedCharacters.includes(id)).length
+            const bag: GachaCategory[] = [
+                ...Array<GachaCategory>(DECOR_ITEMS.length).fill('decor'),
+                ...Array<GachaCategory>(unownedPetCount).fill('pet'),
+                ...Array<GachaCategory>(unownedCharCount).fill('character'),
+            ]
+            const category = bag[Math.floor(Math.random() * bag.length)] ?? 'decor'
 
-        let nextReveal: Reveal | null = null
-        if (category === 'decor') {
-            const won = await rollGacha()
-            if (won) {
-                nextReveal = { kind: 'image', src: won.src, name: won.name }
-            }
-        } else if (category === 'pet') {
-            const won = await rollPetGacha()
-            if (won) {
-                nextReveal = { kind: 'pet', petId: won.id, name: won.name }
-            }
-        } else {
-            const won = await rollCharacterGacha()
-            if (won) {
-                nextReveal = {
-                    kind: 'image',
-                    src: CHARACTER_ASSETS[won].default,
-                    name: CHARACTER_DISPLAY_NAMES[won] ?? won,
+            let nextReveal: Reveal | null = null
+            if (category === 'decor') {
+                const won = await rollGacha()
+                if (won) {
+                    nextReveal = { kind: 'image', src: won.src, name: won.name }
+                }
+            } else if (category === 'pet') {
+                const won = await rollPetGacha()
+                if (won) {
+                    nextReveal = { kind: 'pet', petId: won.id, name: won.name }
+                }
+            } else {
+                const won = await rollCharacterGacha()
+                if (won) {
+                    nextReveal = {
+                        kind: 'image',
+                        src: CHARACTER_ASSETS[won].default,
+                        name: CHARACTER_DISPLAY_NAMES[won] ?? won,
+                    }
                 }
             }
-        }
-        await spin
-        setSpinning(false)
+            await spin
 
-        if (!nextReveal) {
-            setMessage('포인트가 부족해요')
-            return
+            if (!nextReveal) {
+                setMessage('포인트가 부족해요')
+                return
+            }
+            setMessage('포인트를 모아\n뽑아 보세요')
+            setReveal(nextReveal)
+            revealTimerRef.current = setTimeout(() => {
+                setReveal(null)
+                revealTimerRef.current = null
+            }, REVEAL_DURATION_MS)
+        } finally {
+            spinInFlightRef.current = false
+            setSpinning(false)
         }
-        setMessage('포인트를 모아\n뽑아 보세요')
-        setReveal(nextReveal)
-        setTimeout(() => setReveal(null), REVEAL_DURATION_MS)
     }
 
     return (
@@ -358,9 +371,7 @@ export const GachaTab = () => {
                                 >
                                     <PixelArt
                                         pixels={
-                                            AMBIENT_SPARK_FRAMES[
-                                                (sparkFrame + index) % AMBIENT_SPARK_FRAMES.length
-                                            ]
+                                            AMBIENT_SPARK_FRAMES[(sparkFrame + index) % AMBIENT_SPARK_FRAMES.length]
                                         }
                                         palette={sparklePalette(spark.color)}
                                         cell={spark.cell}
