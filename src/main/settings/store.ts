@@ -1,6 +1,8 @@
 import Store from 'electron-store'
 import {
     INITIAL_SETTINGS_STATE,
+    PET_SCALE_MAX,
+    PET_SCALE_MIN,
     THEME_IDS,
     type SettingsState,
 } from '@shared/contracts/settingsEvents'
@@ -29,11 +31,22 @@ const isValidSettings = (raw: unknown): raw is SettingsState => {
     )
 }
 
+const clampPetScale = (value: number): number => Math.min(PET_SCALE_MAX, Math.max(PET_SCALE_MIN, value))
+
 export const readSettingsState = (): SettingsState => {
     const raw = store.get('settings') as unknown
     if (isValidSettings(raw)) {
         // 누락 필드(구버전 데이터의 launchAtLogin 등)는 기본값으로 보강한다.
-        return { ...INITIAL_SETTINGS_STATE, ...raw, launchAtLogin: Boolean(raw.launchAtLogin) }
+        const next = {
+            ...INITIAL_SETTINGS_STATE,
+            ...raw,
+            petScale: clampPetScale(raw.petScale),
+            launchAtLogin: Boolean(raw.launchAtLogin),
+        }
+        if (next.petScale !== raw.petScale || next.launchAtLogin !== raw.launchAtLogin) {
+            store.set('settings', next)
+        }
+        return next
     }
     store.set('settings', INITIAL_SETTINGS_STATE)
     return INITIAL_SETTINGS_STATE

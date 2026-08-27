@@ -31,7 +31,7 @@ const overlayStyle: CSSProperties = {
     justifyContent: 'flex-start',
     gap: 8,
     overflowY: 'auto',
-    background: 'rgba(255, 255, 255, 0.94)',
+    background: '#fff8df',
     borderRadius: 16,
     boxSizing: 'border-box',
     padding: '12px 10px',

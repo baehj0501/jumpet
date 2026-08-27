@@ -423,6 +423,10 @@ export const App = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [profileForBirthday.birthday])
 
+    if (!hasChosenCharacter) {
+        return <CharacterPicker />
+    }
+
     return (
         <>
             <SpeechBubble
@@ -462,7 +466,6 @@ export const App = () => {
                     />
                 </div>
             )}
-            {!hasChosenCharacter && <CharacterPicker />}
         </>
     )
 }

@@ -29,6 +29,7 @@ const createWindow = (): BrowserWindow => {
         show: false,
         frame: false,
         transparent: true,
+        backgroundColor: '#00000000',
         resizable: false,
         hasShadow: false,
         // 일반 창 z-order: always-on-top을 쓰지 않는다. 클릭하면 앞으로 나오고
@@ -191,6 +192,7 @@ const createWorldWindow = (): BrowserWindow => {
         show: false,
         frame: false,
         transparent: true,
+        backgroundColor: '#00000000',
         resizable: false,
         movable: false,
         focusable: false,

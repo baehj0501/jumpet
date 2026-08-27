@@ -15,12 +15,23 @@ const DEFAULT_SIZE_STEP = 3
 // 둘러보기(비-전용영상)에서 webview에 렌더할 유튜브 페이지의 가상 뷰포트 폭(px).
 // 값이 작을수록 페이지가 더 좁은(=크게 확대된) 레이아웃으로 렌더돼 영상이 커진다.
 const BROWSE_VIEWPORT_W = 450
+// 전용 영상(watch 페이지)에서 쓸 가상 뷰포트 폭(px). watch 플레이어는 최소 높이 ~240px라,
+// 폭을 427px 기준으로 렌더한 뒤 zoom으로 프레임 구멍에 맞춘다.
+const VIDEO_VIEWPORT_W = 427
 
 // 메뉴에서 열 때 넘어온 옵션(쿼리). theme=프레임, video=재생할 유튜브 URL.
 const openParams = new URLSearchParams(window.location.search)
 const initialTheme = Number(openParams.get('theme') || localStorage.getItem('yt_theme') || '1')
-// 특정 영상이면 임베드 iframe으로 재생, 아니면 유튜브 홈 둘러보기(webview).
+// 특정 영상이면 플레이어만 꽉 채움, 아니면 유튜브 홈 둘러보기.
 const { src: initialSrc, isVideo } = resolveYoutubeSrc(openParams.get('video') || '')
+
+// 전용 영상(watch 페이지) — 상단 헤더/댓글/추천을 숨기고 플레이어를 프레임 위쪽에 맞춘다.
+const FILL_CSS =
+    'ytd-masthead,#masthead,#masthead-container{display:none!important;}' +
+    '#secondary,#secondary-inner,#below,#comments,ytd-comments,#chat,#related{display:none!important;}' +
+    'ytd-app{--ytd-masthead-height:0px!important;}' +
+    'ytd-page-manager,#page-manager{margin-top:0!important;padding-top:0!important;}' +
+    'html,body{overflow:hidden!important;}'
 
 // 홈/둘러보기 — 상단 헤더만 숨김(재생 레이아웃 안 건드림).
 const BROWSE_CSS =
@@ -52,19 +63,23 @@ export const YoutubePage = () => {
         const scaleY = window.innerHeight / BASE_H
         // 삭제된 테마 id가 저장돼 있어도 안전하게 — 없으면 기본(1)으로 폴백.
         const base = THEME_HOLES[themeId] ?? THEME_HOLES[1]
-        const width = Math.round(base.width * scaleX)
-        const height = Math.round(base.height * scaleY)
+        const holeWidth = Math.round(base.width * scaleX)
+        const holeHeight = Math.round(base.height * scaleY)
+        let width = holeWidth
+        let height = holeHeight
+        let top = Math.round(base.top * scaleY)
+        if (isVideo) {
+            height = Math.round((holeWidth * 9) / 16)
+            top += Math.round((holeHeight - height) / 2)
+        }
         el.style.left = `${Math.round(base.left * scaleX)}px`
-        el.style.top = `${Math.round(base.top * scaleY)}px`
+        el.style.top = `${top}px`
         el.style.width = `${width}px`
         el.style.height = `${height}px`
-        // 둘러보기 webview만 좁은 가상 뷰포트로 확대. 영상(iframe 임베드)은 그대로 프레임을 꽉 채운다.
-        if (!isVideo) {
-            try {
-                el.setZoomFactor(width / BROWSE_VIEWPORT_W)
-            } catch {
-                // dom-ready 전이면 무시.
-            }
+        try {
+            el.setZoomFactor(isVideo ? width / VIDEO_VIEWPORT_W : width / BROWSE_VIEWPORT_W)
+        } catch {
+            // dom-ready 전이면 무시.
         }
     }
 
@@ -77,22 +92,18 @@ export const YoutubePage = () => {
         const onResize = () => positionPlayer(theme)
         window.addEventListener('resize', onResize)
         const el = playerRef.current
-        // 둘러보기 webview는 dom-ready에서 헤더 숨김 CSS 주입. 영상 iframe은 load에서 위치만 재보정.
-        const readyEvent = isVideo ? 'load' : 'dom-ready'
         const onReady = () => {
             positionPlayer(theme)
-            if (!isVideo) {
-                try {
-                    el.insertCSS(BROWSE_CSS)
-                } catch {
-                    // webview 미준비면 무시.
-                }
+            try {
+                el.insertCSS(isVideo ? FILL_CSS : BROWSE_CSS)
+            } catch {
+                // webview 미준비면 무시.
             }
         }
-        el?.addEventListener(readyEvent, onReady)
+        el?.addEventListener('dom-ready', onReady)
         return () => {
             window.removeEventListener('resize', onResize)
-            el?.removeEventListener(readyEvent, onReady)
+            el?.removeEventListener('dom-ready', onReady)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [theme])
@@ -159,21 +170,13 @@ export const YoutubePage = () => {
 
     return (
         <>
-            {isVideo
-                ? createElement('iframe', {
-                      id: 'yt-webview',
-                      ref: playerRef,
-                      src: initialSrc,
-                      allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen',
-                      allowFullScreen: true,
-                  })
-                : createElement('webview', {
-                      id: 'yt-webview',
-                      ref: playerRef,
-                      src: initialSrc,
-                      allowpopups: '',
-                      webpreferences: 'contextIsolation=false',
-                  })}
+            {createElement('webview', {
+                id: 'yt-webview',
+                ref: playerRef,
+                src: initialSrc,
+                allowpopups: '',
+                webpreferences: 'contextIsolation=false',
+            })}
 
             <img
                 className='yt-frame-img'
