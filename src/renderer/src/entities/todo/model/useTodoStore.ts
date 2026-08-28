@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
-import type { Todo } from '@shared/contracts/todoEvents'
+import type { Todo, TodoSource } from '@shared/contracts/todoEvents'
 
 // banner 자동 사라짐 시간 (ms). 4초면 사용자가 어떤 todo가 정리됐는지 읽을 수 있는 정도.
 const EVICTION_BANNER_DURATION_MS = 4000
@@ -10,11 +10,14 @@ const EVICTION_BANNER_DURATION_MS = 4000
 // usePlayerStore와 같은 패턴 — entrypoint(pages/todo/main.tsx)가 initializeTodoSync()를 1회 호출.
 
 type TodoActions = {
-    addTodo: (text: string) => Promise<void>
+    // 추가된 todo의 id를 반환(일정 연동에서 링크용). 추가 실패 시 undefined.
+    addTodo: (text: string, source?: TodoSource, project?: string) => Promise<string | undefined>
     // 단방향: 완료 처리만 가능하다 (main reducer 정책).
     toggleTodo: (id: string) => Promise<void>
     removeTodo: (id: string) => Promise<void>
     updateTodoText: (id: string, text: string) => Promise<void>
+    // 프로젝트 태그 변경/해제(빈 문자열이면 미분류).
+    setTodoProject: (id: string, project: string) => Promise<void>
 }
 
 type TodoStore = {
@@ -23,12 +26,15 @@ type TodoStore = {
     lastEvictedTodo: Todo | null
 } & TodoActions
 
-const useTodoStoreInternal = create<TodoStore>((set) => ({
+const useTodoStoreInternal = create<TodoStore>((set, get) => ({
     todos: [],
     lastEvictedTodo: null,
-    addTodo: async (text) => {
-        const next = await window.api.todo.apply({ type: 'add', text })
+    addTodo: async (text, source, project) => {
+        const previousIds = new Set(get().todos.map((todo) => todo.id))
+        const next = await window.api.todo.apply({ type: 'add', text, source, project })
         set({ todos: next.todos })
+        // 직전 목록에 없던 항목 = 방금 추가된 todo. 그 id를 반환(일정 연동 링크용).
+        return next.todos.find((todo) => !previousIds.has(todo.id))?.id
     },
     toggleTodo: async (id) => {
         const next = await window.api.todo.apply({ type: 'toggle', id })
@@ -40,6 +46,10 @@ const useTodoStoreInternal = create<TodoStore>((set) => ({
     },
     updateTodoText: async (id, text) => {
         const next = await window.api.todo.apply({ type: 'updateText', id, text })
+        set({ todos: next.todos })
+    },
+    setTodoProject: async (id, project) => {
+        const next = await window.api.todo.apply({ type: 'setProject', id, project })
         set({ todos: next.todos })
     },
 }))
@@ -111,6 +121,7 @@ export const useTodoActions = (): TodoActions =>
             toggleTodo: state.toggleTodo,
             removeTodo: state.removeTodo,
             updateTodoText: state.updateTodoText,
+            setTodoProject: state.setTodoProject,
         })),
     )
 // evict banner 전용 selector — 한 슬라이스만 구독해 다른 변경에 묻어 재렌더되지 않게.

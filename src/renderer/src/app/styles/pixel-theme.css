@@ -1,0 +1,2929 @@
+/* JUMPET 메뉴 창 픽셀아트 테마 — JUMPET_4 menu.html에서 포팅.
+   통합 탭 메뉴 창(pages/menu)에서만 사용한다. 펫/다른 창과 격리. */
+
+@font-face {
+    font-family: 'Galmuri11';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('./fonts/Galmuri11.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Galmuri11';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('./fonts/Galmuri11-Bold.woff2') format('woff2');
+}
+
+:root {
+    --pix: 'Galmuri11', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    /* 계단(픽셀) 라운드 모서리 — 3px×2단으로 깎음. 부드러운 radius가 아닌 픽셀 블록. */
+    --pixel-clip: polygon(
+        0 6px, 2px 6px, 2px 4px, 4px 4px, 4px 2px, 6px 2px, 6px 0,
+        calc(100% - 6px) 0, calc(100% - 6px) 2px, calc(100% - 4px) 2px, calc(100% - 4px) 4px,
+        calc(100% - 2px) 4px, calc(100% - 2px) 6px, 100% 6px,
+        100% calc(100% - 6px), calc(100% - 2px) calc(100% - 6px), calc(100% - 2px) calc(100% - 4px),
+        calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) calc(100% - 2px),
+        calc(100% - 6px) calc(100% - 2px), calc(100% - 6px) 100%,
+        6px 100%, 6px calc(100% - 2px), 4px calc(100% - 2px), 4px calc(100% - 4px),
+        2px calc(100% - 4px), 2px calc(100% - 6px), 0 calc(100% - 6px)
+    );
+    --bg: #e8f4ff;
+    --panel: #d4eaff;
+    --border: #7bbde0;
+    --accent: #3a8fc4;
+    --accent2: #5ab0e8;
+    --text: #0a3050;
+    --dim: #5a90b8;
+    --card: #f4faff;
+    --btn-bg: #b8d8f8;
+    --btn-bg-hover: #9cc8f2;
+    --emboss-hi: #d8ecff;
+    --emboss-lo: #2c6b94;
+    /* 비활성 메뉴 탭 3겹(테두리/베벨/채움) — 기본은 테마 토큰을 따라가고, 테마별로 오버라이드 가능. */
+    --tab-border: var(--border);
+    --tab-bevel: var(--emboss-hi);
+    /* 베벨 (하,우) 어두운 쪽 — 기본은 베벨과 동일(=방향성 없음). 테마별로 어둡게 오버라이드. */
+    --tab-bevel-lo: var(--tab-bevel);
+    --tab-fill: var(--card);
+    /* 비활성 탭 글자색 — 기본은 테마 본문색. 테마별(예: 다크의 미디엄그레이) 오버라이드 가능. */
+    --tab-text: var(--text);
+    /* 활성 탭 — 기본은 테두리=비활성, 베벨=비활성, 채움=accent, 글자=흰색. 테마별 오버라이드 가능. */
+    --tab-active-border: var(--tab-border);
+    --tab-active-bevel: var(--tab-bevel);
+    --tab-active-bevel-lo: var(--tab-bevel-lo);
+    --tab-active-fill: var(--accent);
+    --tab-active-text: #fff;
+    /* 주 버튼(할일 필터·타이머 등) 활성 색 — 기본은 테마 accent 기반(테마별로 자동 변함), 테마별 오버라이드 가능. */
+    --btn-primary: var(--accent);
+    --btn-primary-edge: color-mix(in srgb, var(--accent) 68%, #000);
+    /* 홈 인사 말풍선 — 기본: 흰 안 + 테마 테두리 + 테마 글자. 테마별 오버라이드 가능. */
+    --bubble-bg: #ffffff;
+    --bubble-border: var(--border);
+    --bubble-text: var(--text);
+}
+/* 스카이블루 탭 — :root는 다른 테마 fallback이라, 스카이블루 전용 탭 색은 여기서 지정. */
+[data-theme='skyblue'] {
+    /* 비활성: 옅은 하늘 테두리 + 베벨(상좌 밝음/하우 약간 진함) + 거의 흰 채움. */
+    --tab-border: #a9d3f0;
+    --tab-bevel: #d8ecff;
+    --tab-bevel-lo: #c0e0f6;
+    --tab-fill: #eaf6ff;
+    /* 활성: 진한 하늘 테두리 + 베벨(상좌 밝음/하우 진함=테두리) + 미디엄 블루 채움. */
+    --tab-active-border: #5a9fd8;
+    --tab-active-bevel: #c4e2fb;
+    --tab-active-bevel-lo: #5a9fd8;
+    --tab-active-fill: #8cc3f0;
+    --tab-active-text: #1c4a72;
+    /* 스카이블루 주 버튼 활성 — 선호 톤(로열 블루) 유지. */
+    --btn-primary: #3f8de0;
+    --btn-primary-edge: #2f6cc4;
+}
+[data-theme='green'] {
+    /* 연두 테마 — 순수 초록에서 노란기를 섞은 라임/올리브 연두로. (탭 크림옐로우와 톤 맞춤) */
+    --bg: #f0f6e0;
+    --panel: #e2efc6;
+    --border: #a5cf6b;
+    --accent: #67922b;
+    --accent2: #8fbf3e;
+    --text: #29360d;
+    --dim: #7c9440;
+    --card: #f7fae5;
+    --btn-bg: #d3e795;
+    --btn-bg-hover: #c1de79;
+    --emboss-hi: #ebf4bd;
+    --emboss-lo: #566d1c;
+    /* 연두 테마 비활성 탭 — 연두 테두리 + 파스텔 옐로우(크림) 베벨/채움. 베벨 (하,우)는 진한 연두. */
+    --tab-border: #a5cc6b;
+    --tab-bevel: #eeecb2;
+    --tab-bevel-lo: #c5d86d;
+    --tab-fill: #f9f8d3;
+    /* 연두 테마 활성 탭 — 진한 올리브 테두리 + 라이트(상좌)/다크(하우) 베벨 + 미디엄 그린 채움. */
+    --tab-active-border: #7c9555;
+    --tab-active-bevel: #cdd87a;
+    --tab-active-bevel-lo: #7c9555;
+    --tab-active-fill: #a6c569;
+    --tab-active-text: #2f4414;
+}
+[data-theme='babypink'] {
+    /* 핑크 테마 — 차가운 마젠타핑크에서 노란기를 살짝만 섞은 웜 로즈핑크로(과하지 않게). */
+    --bg: #fde9ec;
+    --panel: #fbd6e0;
+    --border: #f0a3bc;
+    --accent: #d45486;
+    --accent2: #e880ac;
+    --text: #4e0e2c;
+    --dim: #b0768c;
+    --card: #fff1f4;
+    --btn-bg: #f8c6da;
+    --btn-bg-hover: #f4a6c4;
+    --emboss-hi: #ffe0ea;
+    --emboss-lo: #a83a64;
+    /* 핑크 테마 탭 — 비활성: 연핑크 테두리/베벨 + 거의 흰 채움. 활성: 진핑크 테두리 + 미디엄 핑크 채움. (웜톤 살짝 반영) */
+    --tab-border: #f0b4c6;
+    --tab-bevel: #f9dce4;
+    --tab-bevel-lo: #f3c8d6;
+    --tab-fill: #fdf3f6;
+    --tab-active-border: #df7098;
+    --tab-active-bevel: #f2c4d4;
+    --tab-active-bevel-lo: #df7098;
+    --tab-active-fill: #f0a4c0;
+    --tab-active-text: #6e2842;
+}
+[data-theme='brown'] {
+    --bg: #f5ede4;
+    --panel: #ecddd0;
+    --border: #c8a882;
+    --accent: #8b5e3c;
+    --accent2: #b07848;
+    --text: #3c1c08;
+    --dim: #9a7858;
+    --card: #fdf5ec;
+    --btn-bg: #dfc4a0;
+    --btn-bg-hover: #d2b088;
+    --emboss-hi: #f2ddc6;
+    --emboss-lo: #6b431f;
+    /* 브라운 테마 탭 — 비활성: 연탄/크림. 활성: 진갈색 테두리 + 미디엄 탄 채움. */
+    --tab-border: #d9bd97;
+    --tab-bevel: #f6e8d4;
+    --tab-bevel-lo: #e6cfb0;
+    --tab-fill: #fbf4ea;
+    --tab-active-border: #9c6a44;
+    --tab-active-bevel: #e3c9a6;
+    --tab-active-bevel-lo: #9c6a44;
+    --tab-active-fill: #c39368;
+    --tab-active-text: #3c2410;
+}
+[data-theme='light'] {
+    --bg: #ffffff;
+    --panel: #f4f4f4;
+    --border: #d0d0d0;
+    --accent: #505050;
+    --accent2: #808080;
+    --text: #1a1a1a;
+    --dim: #909090;
+    --card: #f8f8f8;
+    --btn-bg: #e2e2e2;
+    --btn-bg-hover: #d2d2d2;
+    --emboss-hi: #ffffff;
+    --emboss-lo: #bcbcbc;
+    /* 라이트(그레이) 테마 탭 — 비활성: 옅은 회색 테두리 + 흰 채움. 활성: 미디엄 회색 채움. */
+    --tab-border: #cccccc;
+    --tab-bevel: #e6e6e6;
+    --tab-bevel-lo: #d6d6d6;
+    --tab-fill: #ffffff;
+    --tab-active-border: #a0a0a0;
+    --tab-active-bevel: #cacaca;
+    --tab-active-bevel-lo: #a0a0a0;
+    --tab-active-fill: #c6c6c6;
+    --tab-active-text: #3a3a3a;
+}
+[data-theme='dark'] {
+    --bg: #1a1a1a;
+    --panel: #242424;
+    --border: #404040;
+    --accent: #c0c0c0;
+    --accent2: #e0e0e0;
+    --text: #f0f0f0;
+    --dim: #707070;
+    --card: #2e2e2e;
+    --btn-bg: #3a3a3a;
+    --btn-bg-hover: #454545;
+    --emboss-hi: #545454;
+    --emboss-lo: #0e0e0e;
+    /* 다크 테마 탭 — (비활성/활성 반전) 비활성: 짙은 차콜로 묻힘. 활성: 미디엄 그레이로 도드라짐. 글자 흰색. */
+    --tab-border: #1a1a1a;
+    --tab-bevel: #3e3e3e;
+    --tab-bevel-lo: #141414;
+    --tab-fill: #2c2c2c;
+    --tab-text: #f0f0f0;
+    --tab-active-border: #3a3a3a;
+    --tab-active-bevel: #9c9c9c;
+    --tab-active-bevel-lo: #5e5e5e;
+    --tab-active-fill: #808080;
+    --tab-active-text: #f0f0f0;
+    /* 다크 테마 인사 말풍선 — 안=블랙, 테두리=화이트, 글자=화이트. */
+    --bubble-bg: #000000;
+    --bubble-border: #ffffff;
+    --bubble-text: #ffffff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+html,
+body,
+#root {
+    /* 100vh 대신 100% — 창 리사이즈(특히 Windows)를 정확히 추적해 아래쪽 미도색 영역(검정 바)을 막는다. */
+    height: 100%;
+}
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--pix);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 2px solid var(--border);
+    image-rendering: pixelated;
+    transition: background 0.3s;
+}
+#root {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── 타이틀바 ── */
+.titlebar {
+    background: var(--accent);
+    border-bottom: 2px solid var(--border);
+    padding: 7px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    -webkit-app-region: drag;
+    flex-shrink: 0;
+}
+.title {
+    font-family: var(--pix);
+    font-size: 14px;
+    color: #fff;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
+}
+.dot {
+    width: 8px;
+    height: 8px;
+    background: #fff;
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+    animation: pulse 1s steps(2, end) infinite;
+}
+.title-leaf {
+    font-size: 15px;
+    line-height: 1;
+    text-shadow: none;
+}
+.title-sparkle {
+    font-size: 11px;
+    line-height: 1;
+    text-shadow: none;
+    animation: pulse 1.4s steps(2, end) infinite;
+}
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.25;
+    }
+}
+.close-btn {
+    -webkit-app-region: no-drag;
+    background: #ff5b5b;
+    border: 4px solid #fff;
+    color: #fff;
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--pix);
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.35),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.25);
+}
+.close-btn:hover {
+    background: #e84545;
+}
+.close-btn:active {
+    box-shadow:
+        inset -2px -2px 0 rgba(255, 255, 255, 0.3),
+        inset 2px 2px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* ── 탭 ── */
+/* 탭바 — 5칸씩 2줄, 각 탭은 둥근(계단 픽셀) 카드. 활성=파랑 카드. */
+.tabs {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+    padding: 10px;
+    border-bottom: 2px solid var(--border);
+    flex-shrink: 0;
+    background: var(--panel);
+}
+.tab {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 9px 2px 7px;
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--tab-text);
+    cursor: pointer;
+    text-align: center;
+    white-space: nowrap;
+    line-height: 1.3;
+    /* 3겹 계단 레이어 중 가장 바깥 = 테두리색(테마별 --tab-border). ::before(베벨), ::after(채움)가
+       안쪽을 덮어 바깥만 테두리로 남는다. 세 겹 모두 clip-path라 계단 모서리를 평행하게 따라간다. */
+    background: var(--tab-border);
+    border: none;
+    clip-path: var(--pixel-clip);
+}
+/* 베벨 띠 — 테두리 안쪽. inset 1.5px(테두리폭) ~ ::after inset 3.5px = 2px 띠.
+   대각선 split: (상,좌)=--tab-bevel, (하,우)=--tab-bevel-lo. 'to bottom right' 축의 50% 하드스톱이
+   TR→BL 대각선으로 갈라 상좌/하우를 나눈다. clip-path라 계단 모서리는 그대로 따라간다. */
+.tab::before {
+    content: '';
+    position: absolute;
+    inset: 1.5px;
+    z-index: -2;
+    clip-path: var(--pixel-clip);
+    background: linear-gradient(to bottom right, var(--tab-bevel) 50%, var(--tab-bevel-lo) 50%);
+    pointer-events: none;
+}
+/* 채움 면 — 베벨 띠(2px) 안쪽(테마별 --tab-fill). */
+.tab::after {
+    content: '';
+    position: absolute;
+    inset: 3.5px;
+    z-index: -1;
+    clip-path: var(--pixel-clip);
+    background: var(--tab-fill);
+    pointer-events: none;
+}
+
+.tab .tab-icon {
+    display: flex;
+    justify-content: center;
+}
+/* hover = active 와 동일한 색. 기본(선택 안 함)은 비활성 색 그대로. */
+.tab:hover,
+.tab.active {
+    color: var(--tab-active-text);
+    background: var(--tab-active-border);
+}
+.tab:hover::before,
+.tab.active::before {
+    background: linear-gradient(
+        to bottom right,
+        var(--tab-active-bevel) 50%,
+        var(--tab-active-bevel-lo) 50%
+    );
+}
+.tab:hover::after,
+.tab.active::after {
+    background: var(--tab-active-fill);
+}
+
+/* ── 패널 공통 ── */
+.panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 10px;
+    gap: 8px;
+}
+
+/* 홈 프로필 (캐릭터 이름/이름/생일) */
+.profile {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.profile-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.profile-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.edit-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--dim);
+    padding: 0 2px;
+    line-height: 1;
+}
+.edit-btn:hover {
+    color: var(--accent);
+}
+.profile-value {
+    font-family: var(--pix);
+    font-size: 14px;
+    color: var(--text);
+    padding: 2px 2px;
+}
+
+/* 홈 캐릭터 씬 — 하늘 배경 + 구름·반짝이 + 잔디 + 좌우 화살표 + 인사 말풍선 */
+.home-scene {
+    position: relative;
+    /* isolation: ::before(z-index:-1)가 자기 배경(테두리색) 위·내용 아래에 칠해지도록 stacking context 생성. */
+    isolation: isolate;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    min-height: 300px;
+    padding: 10px;
+    /* 바깥 면 = 테두리색 staircase, 안쪽 ::before가 2px 작게 덮어 계단 모서리에도 테두리를 남긴다. */
+    background: var(--border);
+    border: none;
+    clip-path: var(--pixel-clip);
+}
+.home-scene::before {
+    content: '';
+    position: absolute;
+    /* inset = 테두리 두께(1px). */
+    inset: 1px;
+    z-index: -1;
+    clip-path: var(--pixel-clip);
+    /* 테마를 따라가는 배경 — 위(밝게)에서 아래(테두리색 쪽으로 짙게)로 뚜렷한 세로 그라데이션. */
+    background: linear-gradient(
+        color-mix(in srgb, var(--bg) 82%, #fff),
+        color-mix(in srgb, var(--panel) 58%, var(--border))
+    );
+    /* 컬러 베벨 — 큰 씬이라 탭·버튼보다 톤을 낮춘다(진한 쪽은 패널색과 섞어 부드럽게). */
+    box-shadow:
+        inset 2px 2px 0 color-mix(in srgb, var(--emboss-hi) 60%, var(--bg)),
+        inset -2px -2px 0 color-mix(in srgb, var(--emboss-lo) 35%, var(--panel));
+    pointer-events: none;
+}
+/* 홈 씬 합본 이미지 (캐릭터 + 바닥) — 씬 하단 가득 */
+.home-figure {
+    position: absolute;
+    z-index: 2;
+    left: 50%;
+    bottom: 20px;
+    transform: translateX(-50%);
+    width: calc(100% - 80px);
+    height: auto;
+    image-rendering: pixelated;
+    pointer-events: none;
+}
+/* 구름 (이미지) */
+.home-cloud {
+    position: absolute;
+    z-index: 1;
+    image-rendering: pixelated;
+    height: auto;
+}
+.home-cloud.c1 {
+    width: 64px;
+    top: 22px;
+    left: 14px;
+}
+.home-cloud.c2 {
+    width: 76px;
+    top: 36px;
+    right: 12px;
+}
+/* 반짝이 */
+.home-sparkle {
+    position: absolute;
+    z-index: 1;
+    color: #ffffff;
+    font-size: 20px;
+    opacity: 0.85;
+}
+.home-sparkle.s1 {
+    top: 64px;
+    left: 36px;
+}
+.home-sparkle.s2 {
+    top: 120px;
+    right: 28px;
+}
+.home-sparkle.s3 {
+    bottom: 96px;
+    left: 26px;
+}
+.home-sparkle.s4 {
+    top: 96px;
+    right: 64px;
+}
+.home-sparkle.s5 {
+    top: 176px;
+    left: 58px;
+}
+.home-sparkle.s6 {
+    bottom: 54px;
+    right: 44px;
+}
+.home-sparkle.s7 {
+    top: 44px;
+    right: 110px;
+}
+.home-sparkle.s8 {
+    bottom: 132px;
+    left: 96px;
+}
+/* 잔디 바닥 (이미지) */
+.home-ground {
+    position: absolute;
+    z-index: 2;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 82%;
+    height: auto;
+    image-rendering: pixelated;
+    pointer-events: none;
+}
+/* 인사 말풍선 — 바깥=테두리색 staircase + ::before(흰 채움)로 계단 모서리까지 테두리 유지. */
+.home-bubble {
+    position: absolute;
+    z-index: 4;
+    top: 58px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bubble-border);
+    clip-path: var(--pixel-clip);
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--bubble-text);
+    padding: 6px 12px;
+    white-space: nowrap;
+}
+.home-bubble::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    z-index: -1;
+    clip-path: var(--pixel-clip);
+    background: var(--bubble-bg);
+    pointer-events: none;
+}
+/* 말풍선 꼬리 — 45° 다이아몬드. 위 절반은 말풍선(z 4)이 덮어 가리고 아래 V만 보인다. */
+.home-bubble-tail {
+    position: absolute;
+    z-index: 3;
+    top: 80px;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    background: var(--bubble-bg);
+    border: 2px solid var(--bubble-border);
+    transform: translateX(-50%) rotate(45deg);
+}
+/* 잠긴 캐릭터 미리보기 오버레이 — 흐린 캐릭터 위 가운데 자물쇠 + 안내. */
+.home-lock {
+    position: absolute;
+    z-index: 3;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    pointer-events: none;
+}
+.home-lock-icon {
+    font-size: 30px;
+    line-height: 1;
+}
+.home-lock-text {
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--text);
+    background: var(--card);
+    border: 2px solid var(--border);
+    padding: 3px 8px;
+    clip-path: var(--pixel-clip);
+}
+/* 좌우 캐릭터 전환 버튼 */
+.char-nav {
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    font-family: var(--pix);
+    font-size: 18px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    line-height: 1;
+    flex-shrink: 0;
+    clip-path: var(--pixel-clip);
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.4),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.3);
+}
+.home-scene .char-nav {
+    position: absolute;
+    z-index: 4;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.home-scene .char-nav:first-of-type {
+    left: 8px;
+}
+.home-scene .char-nav:last-of-type {
+    right: 8px;
+}
+.char-nav:hover {
+    background: var(--accent2);
+}
+.char-nav:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ⭐ 포인트 칩 — 씬 아래 우측 */
+.home-points {
+    align-self: flex-end;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 10px 0;
+    padding: 6px 14px;
+    font-family: var(--pix);
+    font-size: 15px;
+    color: var(--text);
+    background: var(--card);
+    border: 2px solid var(--border);
+    clip-path: var(--pixel-clip);
+}
+
+/* 프로필 행 카드 */
+.profile-rows {
+    position: relative;
+    /* isolation: ::before(z-index:-1)가 자기 배경(테두리색) 위·내용 아래에 칠해지도록 stacking context 생성. */
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    /* 세로 여유 — 안쪽 값 박스들이 프레임에 붙지 않게 위아래 +10px씩. */
+    padding: 12px 10px;
+    /* 바깥 면 = 테두리색 staircase, 안쪽 ::before가 2px 작게 덮어 계단 모서리에도 테두리를 남긴다. */
+    background: var(--border);
+    border: none;
+    clip-path: var(--pixel-clip);
+}
+.profile-rows::before {
+    content: '';
+    position: absolute;
+    /* inset = 테두리 두께(1px). */
+    inset: 1px;
+    z-index: -1;
+    clip-path: var(--pixel-clip);
+    background: var(--card);
+    /* 컬러 베벨 — 밝은 카드 바탕이라 홈 씬보다 더 약하게(채움색과 더 많이 섞어 은은하게). */
+    box-shadow:
+        inset 2px 2px 0 color-mix(in srgb, var(--emboss-hi) 40%, var(--card)),
+        inset -2px -2px 0 color-mix(in srgb, var(--emboss-lo) 18%, var(--card));
+    pointer-events: none;
+}
+.profile-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 2px;
+    border-bottom: 2px solid color-mix(in srgb, var(--border) 25%, transparent);
+}
+.profile-row:last-child {
+    border-bottom: none;
+}
+.profile-row-icon {
+    flex: 0 0 auto;
+    width: 20px;
+    text-align: center;
+    font-size: 15px;
+}
+.profile-row-label {
+    flex: 0 0 96px;
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--text);
+}
+.profile-row-value {
+    flex: 1;
+    min-width: 0;
+    /* 계단(픽셀) 모서리: 바깥 = 테두리색 staircase, 안쪽 ::before가 2px 작게 채워 테두리를 남긴다. */
+    position: relative;
+    isolation: isolate;
+    text-align: center;
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--border);
+    border: none;
+    padding: 7px 8px;
+    clip-path: var(--pixel-clip);
+}
+.profile-row-value::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    z-index: -1;
+    clip-path: var(--pixel-clip);
+    background: var(--bg);
+}
+.profile-row-value.dday {
+    color: #e0568e;
+}
+.profile-row-value.points {
+    color: #e0a020;
+    font-weight: 700;
+}
+.profile-row-input {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    /* 표시 박스와 동일하게 계단(픽셀) 모서리. input은 ::before를 못 쓰므로 clip-path로 외곽만 깎는다. */
+    border-radius: 0;
+    clip-path: var(--pixel-clip);
+}
+.profile-row-edit {
+    /* 흐름에서 빼서 값 박스가 오른쪽 끝까지 늘어나게 — ✎는 박스 안쪽 오른편에 띄운다. */
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 21px;
+    background: none;
+    border: none;
+    color: var(--dim);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px 0;
+    text-align: center;
+}
+.profile-row-edit:hover {
+    color: var(--accent);
+}
+.profile-row-edit-placeholder {
+    display: none;
+}
+
+/* 액션 그리드 (돌봄) */
+/* 헤딩1에 인라인 구분선이 생겼으므로, 단독 구분선은 라인 없는 여백(스페이서)으로. */
+.divider {
+    height: 16px;
+}
+
+.agrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+}
+.section-title {
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--accent);
+    padding: 2px 0;
+}
+/* 운세 제목 — '포모도로 타이머'와 동일 크기(18px). */
+.fortune-card .section-title {
+    font-size: 18px;
+}
+/* 헤딩1 — 텍스트 옆에 인라인 구분선("텍스트  ──────"). 14px */
+.section-title-1 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--pix);
+    font-size: 14px;
+    /* Galmuri11은 400/700만 있어 500이 폴백된다. 얇은 외곽선으로 중간 굵기(500 느낌)를 낸다. */
+    font-weight: 400;
+    -webkit-text-stroke: 0.6px currentColor;
+    color: var(--accent);
+    padding: 2px 0;
+}
+.section-title-1::after {
+    content: '';
+    flex: 1;
+    height: 0;
+    border-top: 2px solid var(--border);
+}
+/* 작은 헤딩(heading2) — 홈 프로필/섹션용 */
+.section-title-2 {
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--accent);
+    padding: 1px 0;
+}
+.ac {
+    --btn-fill: var(--btn-bg);
+    padding: 8px 2px;
+    cursor: pointer;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 72px;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.6),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.22);
+}
+.ac:hover {
+    --btn-fill: var(--btn-bg-hover);
+}
+/* 아이템 없는 액션 — 그레이 비활성 */
+.ac.disabled {
+    cursor: not-allowed;
+    filter: grayscale(1);
+    opacity: 0.45;
+}
+.ac.disabled:hover {
+    --btn-fill: var(--btn-bg);
+}
+.ac:active {
+    box-shadow:
+        inset -2px -2px 0 rgba(255, 255, 255, 0.4),
+        inset 2px 2px 0 rgba(0, 0, 0, 0.25);
+}
+.ac .ic {
+    font-size: 22px;
+    line-height: 1;
+}
+.ac .nm {
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--text);
+    white-space: nowrap;
+}
+.ac .ct {
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--dim);
+}
+
+/* 피드백 줄 */
+.fr {
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--accent2);
+    text-align: center;
+    padding: 8px;
+    background: var(--panel);
+    border: 2px solid var(--border);
+    box-shadow: 3px 3px 0 0 rgba(0, 0, 0, 0.25);
+    min-height: 18px;
+}
+.empty-hint {
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--dim);
+    padding: 4px 2px;
+}
+.hint {
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--dim);
+    text-align: center;
+    line-height: 1.6;
+    /* 탭바↔멘트(위)와 멘트↔카드(아래) 여백을 16px로 동일하게. */
+    padding: 6px 0 8px;
+}
+
+/* 포인트 표시 줄 — 박스 없이 텍스트만. */
+.points-bar {
+    text-align: center;
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--accent2);
+    padding: 6px 0;
+}
+
+/* 공통 버튼 */
+.pbtn {
+    width: 100%;
+    --btn-fill: var(--accent);
+    color: #fff;
+    font-family: var(--pix);
+    font-size: 14px;
+    padding: 10px;
+    cursor: pointer;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.4),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.3);
+}
+.pbtn:hover {
+    --btn-fill: var(--accent2);
+}
+.pbtn:active {
+    box-shadow:
+        inset -2px -2px 0 rgba(255, 255, 255, 0.3),
+        inset 2px 2px 0 rgba(0, 0, 0, 0.3);
+}
+.pbtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.pbtn.ghost {
+    --btn-fill: var(--card);
+    color: var(--accent);
+}
+.pbtn.ghost:hover {
+    --btn-fill: var(--panel);
+}
+/* 다크 테마 가챠 뽑기 버튼만 반전 — 화이트 채움 + 블랙 글자(어두운 메뉴에서 또렷하게). */
+[data-theme='dark'] .gacha-bottom .pbtn {
+    background: #ffffff;
+    --btn-fill: #ffffff;
+    color: #000000;
+}
+[data-theme='dark'] .gacha-bottom .pbtn:hover {
+    --btn-fill: #e6e6e6;
+}
+
+/* TODO */
+.todo-add-row {
+    display: flex;
+    gap: 8px;
+}
+.fi {
+    background: var(--bg);
+    border: 2px solid var(--border);
+    color: var(--text);
+    font-family: var(--pix);
+    font-size: 13px;
+    padding: 6px 10px;
+    outline: none;
+    flex: 1;
+    box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.2);
+}
+.fi:focus {
+    border-color: var(--accent2);
+}
+.fi::placeholder {
+    color: var(--dim);
+}
+/* 프로필 편집 입력 — 비우면 기본값을 30% 투명도로 보여준다. */
+.profile-edit::placeholder {
+    color: var(--text);
+    opacity: 0.3;
+}
+.add-btn {
+    --btn-fill: var(--accent);
+    color: #fff;
+    font-family: var(--pix);
+    font-size: 13px;
+    padding: 6px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.4),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.28);
+}
+.add-btn:active {
+    box-shadow:
+        inset -2px -2px 0 rgba(255, 255, 255, 0.3),
+        inset 2px 2px 0 rgba(0, 0, 0, 0.28);
+}
+/* 입력 줄 — 새 할일 프로젝트 선택 드롭다운 */
+.todo-add-project-select {
+    flex: 0 0 auto;
+    max-width: 84px;
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--text);
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 4px;
+    outline: none;
+    cursor: pointer;
+    box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.2);
+}
+.todo-add-project-select:focus {
+    border-color: var(--accent2);
+}
+
+/* 프로젝트 선택 칩 줄 — '전체'/'수정' 고정 + 가운데 칩 좌우 스크롤 */
+.todo-projects {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 0;
+    border-bottom: 2px solid color-mix(in srgb, var(--border) 20%, transparent);
+}
+/* 양끝 고정(전체/수정) */
+.todo-chip-fixed {
+    flex: 0 0 auto;
+}
+/* 가운데 스크롤 영역 — 프로젝트 칩들이 넘치면 좌우로 스크롤 */
+.todo-chip-scroll {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    /* 스크롤바 숨김(스크롤 기능은 유지) */
+    scrollbar-width: none;
+}
+.todo-chip-scroll > * {
+    flex: 0 0 auto;
+}
+.todo-chip-scroll::-webkit-scrollbar {
+    display: none;
+}
+.todo-chip {
+    /* 기본 6px 계단보다 1px 작은 5px 계단(스텝 2·2·1) — 프로젝트 칩만 살짝 덜 둥글게. */
+    --chip-clip: polygon(
+        0 5px, 2px 5px, 2px 3px, 4px 3px, 4px 1px, 5px 1px, 5px 0,
+        calc(100% - 5px) 0, calc(100% - 5px) 1px, calc(100% - 4px) 1px, calc(100% - 4px) 3px,
+        calc(100% - 2px) 3px, calc(100% - 2px) 5px, 100% 5px,
+        100% calc(100% - 5px), calc(100% - 2px) calc(100% - 5px), calc(100% - 2px) calc(100% - 3px),
+        calc(100% - 4px) calc(100% - 3px), calc(100% - 4px) calc(100% - 1px),
+        calc(100% - 5px) calc(100% - 1px), calc(100% - 5px) 100%,
+        5px 100%, 5px calc(100% - 1px), 4px calc(100% - 1px), 4px calc(100% - 3px),
+        2px calc(100% - 3px), 2px calc(100% - 5px), 0 calc(100% - 5px)
+    );
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--pix);
+    font-size: 11px;
+    /* '전체'(텍스트 직접)와 프로젝트 칩(내부 라벨 line-height:1) 높이를 맞춘다. */
+    line-height: 1;
+    color: var(--text);
+    /* 바깥 면 = 테두리색 staircase(1px), 안쪽 ::before가 채움 — 계단 모서리에도 테두리가 남는다. */
+    background: var(--border);
+    border: none;
+    /* 상하·좌우 각 2px씩 더 키운 칩. */
+    padding: 5px 10px;
+    cursor: pointer;
+    clip-path: var(--chip-clip);
+}
+.todo-chip::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    z-index: -1;
+    clip-path: var(--chip-clip);
+    background: var(--card);
+    pointer-events: none;
+}
+.todo-chip:hover::before {
+    background: var(--btn-bg-hover);
+}
+.todo-chip.active {
+    background: var(--accent);
+    color: #fff;
+}
+.todo-chip.active::before {
+    background: var(--accent);
+}
+/* 칩 내부 라벨/삭제(x) — 투명 버튼 */
+.todo-chip-label,
+.todo-chip-x {
+    background: none;
+    border: none;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+.todo-chip-x {
+    font-size: 9px;
+    opacity: 0.55;
+}
+.todo-chip-x:hover {
+    opacity: 1;
+}
+/* 편집 모드: 칩 줄 안 인라인 '새 프로젝트' 입력 */
+.todo-chip-add {
+    flex: 0 0 110px;
+    min-width: 0;
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px dashed var(--border);
+    padding: 3px 8px;
+    outline: none;
+}
+.todo-chip-add:focus {
+    border-color: var(--accent2);
+    border-style: solid;
+}
+.todo-chip-add::placeholder {
+    color: var(--dim);
+}
+
+/* 칩 줄 맨 오른쪽 '수정' 버튼 — 누르면 칩에 x가 나타난다 */
+.todo-chip-edit {
+    margin-left: auto;
+    flex: 0 0 auto;
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--dim);
+    background: none;
+    border: none;
+    padding: 3px 4px;
+    cursor: pointer;
+}
+.todo-chip-edit:hover {
+    color: var(--accent);
+}
+.todo-chip-edit.active {
+    color: var(--accent);
+}
+
+/* 프로젝트 삭제 확인 — 할일 함께 삭제 / 남기기 / 취소 */
+.project-delete-confirm {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    background: var(--card);
+    border: 2px solid var(--border);
+}
+.project-delete-msg {
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--text);
+    text-align: center;
+}
+.project-delete-actions {
+    display: flex;
+    gap: 6px;
+}
+.project-delete-actions .pbtn {
+    flex: 1;
+    padding: 8px 2px;
+    font-size: 12px;
+}
+
+/* 하단 '프로젝트 추가' 줄 — 목록 아래 바닥에 고정 */
+.todo-add-project {
+    margin-top: auto;
+    padding-top: 10px;
+    display: flex;
+    gap: 8px;
+}
+
+/* 할 일 항목 내 프로젝트 태그 — 블루 박스 + 흰 글씨 + 계단식(끊김 없는) 테두리 */
+.todo-project-tag {
+    position: relative;
+    isolation: isolate;
+    display: inline-block;
+    vertical-align: middle;
+    font-family: var(--pix);
+    font-size: 11px;
+    color: #fff;
+    /* 바깥 면 = 테두리색(accent2) staircase, 안쪽 ::before가 accent 채움 */
+    background: var(--accent2);
+    padding: 3px 9px;
+    margin-right: 6px;
+    white-space: nowrap;
+    border: none;
+    border-radius: 0;
+    clip-path: var(--pixel-clip);
+}
+.todo-project-tag::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    z-index: -1;
+    clip-path: var(--pixel-clip);
+    background: var(--accent);
+    pointer-events: none;
+}
+
+/* 남은 할일 / 완료 필터 토글 */
+.todo-filters {
+    display: flex;
+    gap: 6px;
+}
+.todo-filter {
+    flex: 1;
+    padding: 6px 4px;
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--text);
+    --btn-fill: var(--btn-bg);
+    cursor: pointer;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.4),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.2);
+}
+.todo-filter.active {
+    /* 활성 색은 테마 토큰을 따른다(테마별로 다름). 바깥 staircase = 진한 톤, 채움 = 주 색. */
+    background: var(--btn-primary-edge);
+    --btn-fill: var(--btn-primary);
+    color: #fff;
+}
+.todo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+/* 완료 시각 표기 */
+.todo-date {
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--dim);
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+.todo-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    border: 2px solid var(--border);
+    padding: 9px 12px;
+    box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.2);
+}
+.todo-item.done {
+    opacity: 0.5;
+    border-style: dashed;
+}
+.todo-item.done .todo-text {
+    text-decoration: line-through;
+    color: var(--dim);
+}
+.todo-check {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--border);
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    background: var(--panel);
+    box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.2);
+}
+.todo-check.checked {
+    background: var(--accent);
+    color: #fff;
+}
+.todo-text {
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--text);
+    flex: 1;
+    line-height: 1.3;
+}
+.todo-del {
+    background: none;
+    border: none;
+    color: var(--dim);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px 4px;
+}
+.todo-del:hover {
+    color: #dc2626;
+}
+/* 항목(할일·일정) 수정 — 더블클릭 시 뜨는 ✎ 버튼 + 인라인 편집 입력. */
+.item-edit-btn {
+    flex: 0 0 auto;
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px 4px;
+}
+.item-edit-btn:hover {
+    color: var(--accent2);
+}
+.item-edit-input {
+    flex: 1;
+    min-width: 0;
+}
+/* 할일 알림 — 🔔 버튼 / 설정된 알림 시각 배지 / 시각 편집 행 */
+.item-remind-btn {
+    flex: 0 0 auto;
+    background: none;
+    border: none;
+    color: var(--dim);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px 4px;
+    opacity: 0.65;
+}
+.item-remind-btn:hover,
+.item-remind-btn.active {
+    opacity: 1;
+}
+.todo-remind-badge {
+    flex: 0 0 auto;
+    font-family: var(--pix);
+    font-size: 10px;
+    color: var(--accent);
+    white-space: nowrap;
+}
+/* 할일 알림 프리셋 팝업 */
+.remind-menu {
+    position: fixed;
+    z-index: 1000;
+    width: 150px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: var(--panel);
+    border: 2px solid var(--accent);
+    clip-path: var(--pixel-clip);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25);
+}
+.remind-menu-title {
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--accent);
+    padding-bottom: 2px;
+}
+.remind-menu-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+}
+.remind-menu-item {
+    font-family: var(--pix);
+    font-size: 10px;
+    padding: 5px 4px;
+    cursor: pointer;
+    color: var(--text);
+    background: var(--card);
+    border: 1px solid var(--border);
+    clip-path: var(--pixel-clip);
+}
+.remind-menu-item:hover:not(:disabled),
+.remind-menu-item.active {
+    background: var(--accent);
+    color: #fff;
+}
+/* 할일 추가 — 하단 플로팅 버튼 + 펼쳐지는 추가 패널 */
+.todo-add-fab.floating,
+.todo-add-panel.floating {
+    position: sticky;
+    bottom: 0;
+    /* 내용이 짧으면 패널 하단으로 밀고, 길면 sticky로 바닥에 고정. */
+    margin-top: auto;
+}
+/* 펼친 추가 패널만 — 스크롤되는 목록이 비치지 않게 패널 배경으로 덮는다.
+   (FAB 버튼은 자체 accent 배경이 불투명해 따로 덮지 않는다 — 덮으면 버튼이 흰색으로 사라짐) */
+.todo-add-panel.floating {
+    background: var(--bg);
+}
+/* 스타일(계단 테두리 stroke + 엠보 베벨 + accent 채움)은 .pbtn을 그대로 쓴다.
+   여기서는 위치(sticky)만 담당 — .todo-add-fab.floating 참고. */
+.todo-add-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+}
+.todo-add-actions {
+    display: flex;
+    gap: 8px;
+}
+.todo-add-actions .add-btn {
+    flex: 1;
+}
+/* 할일 추가 폼의 알림 영역(🔔 토글 시 펼쳐짐) */
+.todo-add-alarm {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    margin-bottom: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    clip-path: var(--pixel-clip);
+}
+.todo-add-alarm-chips {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+}
+/* 일정 추가 폼의 알람 선택 줄 */
+.sched-alarm-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--dim);
+}
+.sched-alarm-row select {
+    flex: 0 0 auto;
+}
+.remind-menu-item:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.remind-menu-sub {
+    font-family: var(--pix);
+    font-size: 10px;
+    color: var(--dim);
+    margin-top: 2px;
+}
+.remind-menu-hint {
+    font-family: var(--pix);
+    font-size: 9px;
+    color: var(--dim);
+    text-align: center;
+}
+.remind-menu-custom {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-family: var(--pix);
+    font-size: 10px;
+    color: var(--dim);
+}
+.remind-menu-clear {
+    font-family: var(--pix);
+    font-size: 10px;
+    padding: 5px 4px;
+    cursor: pointer;
+    color: var(--dim);
+    background: var(--card);
+    border: 1px solid var(--border);
+    clip-path: var(--pixel-clip);
+}
+.remind-menu-clear:hover {
+    color: var(--text);
+}
+.todo-empty {
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--dim);
+    text-align: center;
+    padding: 30px 0;
+    line-height: 2;
+}
+.todo-stats {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--dim);
+    padding-top: 4px;
+}
+
+/* 운세 카드 */
+.fortune-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* 오늘의 운세 제목·수정구슬·운세 텍스트·별 사이를 각각 60px 여백으로. */
+    gap: 60px;
+    text-align: center;
+    padding: 16px;
+}
+.fortune-level {
+    font-family: var(--pix);
+    font-size: 28px;
+    color: var(--accent);
+}
+.fortune-text {
+    font-family: var(--pix);
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.6;
+    max-width: 280px;
+    /* 한글 줄바꿈을 글자 단위가 아닌 단어(띄어쓰기) 단위로. */
+    word-break: keep-all;
+    overflow-wrap: break-word;
+}
+/* 수정구슬 + 안쪽 점수 오버레이 */
+.fortune-orb {
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
+/* 구슬 밖 반짝이 — 형태(프레임)는 JS가 바꾸고, 깜빡임/크기는 CSS가 준다. */
+.fortune-spark {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    animation: fortune-twinkle 1.8s ease-in-out infinite;
+}
+@keyframes fortune-twinkle {
+    0%,
+    100% {
+        opacity: 0.15;
+        transform: translate(-50%, -50%) scale(0.65);
+    }
+    50% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+}
+.fortune-orb-score {
+    position: absolute;
+    top: 47%;
+    left: 48%;
+    transform: translate(-50%, -50%);
+    font-family: var(--pix);
+    font-size: 28px;
+    font-weight: 700;
+    /* 구슬 위 점수 — 테마 accent의 진한 톤(흰 외곽선으로 가독성 확보). */
+    color: color-mix(in srgb, var(--accent) 55%, #000);
+    text-shadow:
+        1px 1px 0 #fff,
+        -1px -1px 0 #fff,
+        1px -1px 0 #fff,
+        -1px 1px 0 #fff;
+}
+/* 운세 등급 별 — 점수(단계)만큼, 30px. 멘트와의 간격만 30px(카드 gap 60에서 30 당김). */
+.fortune-stars {
+    font-size: 30px;
+    line-height: 1;
+    color: #f6c945;
+    letter-spacing: 3px;
+    margin-top: -30px;
+}
+.fortune-score {
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--accent2);
+    background: var(--panel);
+    border: 2px solid var(--border);
+    padding: 6px 14px;
+    box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.2);
+}
+
+/* 가챠 */
+.gacha-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 14px;
+    text-align: center;
+}
+/* 머신 주변 반짝이 — 형태는 JS, 깜빡임/크기는 fortune-twinkle 재사용 */
+.gacha-ambient-spark {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    animation: fortune-twinkle 1.8s ease-in-out infinite;
+}
+/* 뽑기 버튼 + 포인트 — 하단 플로팅(스크롤해도 바닥에 고정), 할일/꾸미기 버튼과 동일 패턴 */
+.gacha-bottom {
+    position: sticky;
+    bottom: 0;
+    margin-top: auto;
+    padding-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    /* 스크롤되는 머신 일러스트가 비치지 않게 패널 배경으로 덮는다. */
+    background: var(--bg);
+}
+/* 가챠 제목 — 상단 중앙 정렬. */
+.gacha-title {
+    text-align: center;
+}
+
+/* 뽑은 아이템 표시 슬롯 — 포인트와 뽑기 버튼 사이 여백 + 결과 표시. */
+.gacha-machine {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 132px;
+    /* 멘트↔일러스트 간격을 고정 px 대신 auto로 — 멘트/일러스트/하단버튼이
+       남는 높이를 균등 분배하도록(반응형). 창 높이에 따라 여백이 늘고 준다. */
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+/* 아이템 공개 — 머신이 사라지고 큰 아이템 + 이름 + 반짝이 */
+.gacha-reveal {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 132px;
+    height: 132px;
+}
+.reveal-emoji {
+    font-size: 46px;
+    line-height: 1;
+    animation: reveal-pop 0.4s ease-out;
+}
+.reveal-emoji img {
+    display: block;
+    width: 88px;
+    height: 88px;
+    object-fit: contain;
+}
+.reveal-name {
+    font-family: var(--pix);
+    font-size: 16px;
+    color: var(--accent);
+    animation: reveal-pop 0.4s ease-out;
+}
+@keyframes reveal-pop {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(1.15);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+.sparkle {
+    position: absolute;
+    image-rendering: pixelated;
+    animation: sparkle-twinkle 0.9s ease-in-out infinite;
+}
+.sparkle-1 {
+    top: 10px;
+    left: 22px;
+}
+.sparkle-2 {
+    top: 4px;
+    right: 26px;
+    animation-delay: 0.3s;
+}
+.sparkle-3 {
+    bottom: 16px;
+    right: 30px;
+    animation-delay: 0.6s;
+}
+@keyframes sparkle-twinkle {
+    0%,
+    100% {
+        opacity: 0.25;
+        transform: scale(0.7);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+}
+/* 유리돔 안 알사탕(오버레이) — stage 기준 px 배치 */
+.gacha-stage {
+    position: relative;
+}
+.gacha-balls {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+.gacha-ball {
+    position: absolute;
+    image-rendering: pixelated;
+}
+/* 바닥에 떨어진 알사탕(정적) */
+.gacha-floor-ball {
+    position: absolute;
+    image-rendering: pixelated;
+}
+/* 평소엔 천천히 계속 떠다니고(돌고), 뽑을 땐 빠르게 섞인다 */
+.gacha-ball {
+    animation: ball-mix 2.4s ease-in-out infinite;
+}
+.gacha-balls.mixing .gacha-ball {
+    animation-duration: 0.45s;
+    animation-timing-function: linear;
+}
+@keyframes ball-mix {
+    0% {
+        transform: translate(0, 0);
+    }
+    25% {
+        transform: translate(5px, -4px);
+    }
+    50% {
+        transform: translate(-4px, 4px);
+    }
+    75% {
+        transform: translate(4px, 5px);
+    }
+    100% {
+        transform: translate(0, 0);
+    }
+}
+/* 배출구로 또르륵 나오는 알사탕(픽셀 스프라이트) */
+.gacha-drop {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    image-rendering: pixelated;
+    animation: gacha-drop 0.6s ease-out;
+}
+@keyframes gacha-drop {
+    0% {
+        transform: translate(-50%, -16px);
+        opacity: 0;
+    }
+    25% {
+        opacity: 1;
+    }
+    65% {
+        transform: translate(-50%, 16px);
+    }
+    80% {
+        transform: translate(-50%, 8px);
+    }
+    100% {
+        transform: translate(-50%, 16px);
+    }
+}
+.gacha-result-slot {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--pix);
+    font-size: 22px;
+    color: var(--text);
+    margin: 4px 0;
+}
+
+/* 보유 포인트 — 박스 없이 일반 텍스트로. */
+.gacha-points {
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--accent);
+    text-align: center;
+    /* 뽑기 버튼 아래 — 버튼과 약간의 간격. */
+    margin-top: 2px;
+}
+
+/* 뽑기 결과/안내 멘트 — 박스 없이 '돌봄 아이템 뽑기' 위에 텍스트로. */
+.gacha-msg {
+    font-family: var(--pix);
+    font-size: 15px;
+    color: var(--accent2);
+    text-align: center;
+    min-height: 28px;
+    line-height: 1.5;
+    max-width: 240px;
+    white-space: pre-line;
+    /* 안내 멘트+일러스트를 (하단 버튼 그룹 위) 중앙으로. 하단 그룹도 margin-top:auto라 공간을 균등 분배. */
+    margin-top: auto;
+}
+
+/* placeholder 탭 */
+.placeholder {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--dim);
+    font-family: var(--pix);
+    font-size: 14px;
+    text-align: center;
+}
+.placeholder .big {
+    font-size: 34px;
+}
+
+/* ── 둥근 모서리 ── 요소 크기에 비례, 최소 5px. */
+/* 큰 카드/버튼 */
+.ac,
+.pbtn {
+    border-radius: 10px;
+}
+/* 중간 박스 */
+.fr,
+.points-bar,
+.todo-item,
+.gacha-points {
+    border-radius: 8px;
+}
+/* 입력/작은 버튼 */
+.fi,
+.todo-chip-add,
+.add-btn,
+.todo-filter {
+    border-radius: 10px;
+}
+/* 작은 컨트롤 */
+.todo-check,
+.close-btn {
+    border-radius: 5px;
+}
+
+/* ── 엠보 — 회색(흰/검) 대신 테마 컬러로 ── */
+/* close-btn은 자체에, 나머지 버튼은 안쪽 면(::before)에 엠보를 준다. */
+.close-btn {
+    box-shadow:
+        inset 2px 2px 0 var(--emboss-hi),
+        inset -2px -2px 0 var(--emboss-lo);
+}
+.close-btn:active {
+    box-shadow:
+        inset -2px -2px 0 var(--emboss-hi),
+        inset 2px 2px 0 var(--emboss-lo);
+}
+
+/* ── 버튼 계단(픽셀) 라운드 모서리 ──
+   테두리가 있는 버튼은 clip-path만 쓰면 모서리에서 테두리선이 끊긴다.
+   그래서 바깥 면 = 테두리색 staircase, 안쪽 ::before(2px 작은 staircase) = 채움색.
+   채움색은 상태별로 --btn-fill 변수로 전달한다. */
+.ac,
+.pbtn,
+.add-btn,
+.todo-filter {
+    position: relative;
+    isolation: isolate;
+    border: none;
+    border-radius: 0;
+    clip-path: var(--pixel-clip);
+    background: var(--border);
+    box-shadow: none;
+}
+.ac::before,
+.pbtn::before,
+.add-btn::before,
+.todo-filter::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    z-index: -1;
+    clip-path: var(--pixel-clip);
+    background: var(--btn-fill, var(--card));
+    box-shadow:
+        inset 2px 2px 0 var(--emboss-hi),
+        inset -2px -2px 0 var(--emboss-lo);
+    pointer-events: none;
+}
+.ac:active::before,
+.pbtn:active::before,
+.add-btn:active::before,
+.todo-filter.active::before {
+    box-shadow:
+        inset -2px -2px 0 var(--emboss-hi),
+        inset 2px 2px 0 var(--emboss-lo);
+}
+/* 할일 필터 버튼만 테두리 1px (공유 그룹 .ac/.pbtn/.add-btn는 2px 유지). */
+.todo-filter::before {
+    inset: 1px;
+    /* 비활성 베벨 어두운 톤을 채움색과 섞어 명도를 올린다(대비 완화). */
+    box-shadow:
+        inset 2px 2px 0 var(--emboss-hi),
+        inset -2px -2px 0 color-mix(in srgb, var(--emboss-lo) 45%, var(--btn-bg));
+}
+/* 활성 필터는 반전(눌린) 베벨 대신 일반 베벨 — 채움(중간 블루) 대비를 낮춘 은은한 톤. */
+.todo-filter.active::before {
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.22),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.15);
+}
+
+/* 타이머 버튼 — 활성(주 .pbtn)/비활성(.ghost)을 할일 필터와 같은 블루 체계로.
+   (.pbtn은 가챠·유튜브 등과 공유하므로 .timer-controls로 스코프) */
+.timer-controls .pbtn {
+    background: var(--btn-primary-edge); /* 바깥 staircase = 진한 톤(테마별) */
+    --btn-fill: var(--btn-primary); /* 채움 = 주 색(테마별) */
+    color: #fff;
+}
+.timer-controls .pbtn:hover {
+    --btn-fill: color-mix(in srgb, var(--btn-primary) 78%, #fff);
+}
+.timer-controls .pbtn::before {
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.22),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.15);
+}
+.timer-controls .pbtn.ghost {
+    background: var(--border); /* 바깥 = 옅은 테두리 */
+    --btn-fill: var(--btn-bg); /* 채움 = 옅은 periwinkle(비활성 필터와 동일) */
+    color: var(--accent);
+}
+.timer-controls .pbtn.ghost:hover {
+    --btn-fill: var(--btn-bg-hover);
+}
+.timer-controls .pbtn.ghost::before {
+    box-shadow:
+        inset 2px 2px 0 var(--emboss-hi),
+        inset -2px -2px 0 color-mix(in srgb, var(--emboss-lo) 45%, var(--btn-bg));
+}
+
+/* 가챠(뽑기) 버튼 — 활성은 주 색(테마별), 비활성(disabled)은 흐리게.
+   (.pbtn 공유라 .gacha-bottom로 스코프. 다크 테마 전용 override는 더 구체적이라 유지됨) */
+.gacha-bottom .pbtn {
+    background: var(--btn-primary-edge);
+    --btn-fill: var(--btn-primary);
+    color: #fff;
+}
+.gacha-bottom .pbtn:hover {
+    --btn-fill: color-mix(in srgb, var(--btn-primary) 78%, #fff);
+}
+.gacha-bottom .pbtn::before {
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.22),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.15);
+}
+
+/* ── 일정(달력) ── */
+/* 컴퓨터 기준 오늘 일자 라벨 */
+.cal-today {
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--accent2);
+    text-align: center;
+    padding: 2px 0;
+}
+.cal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+.cal-selects {
+    flex: 1;
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+}
+.cal-select {
+    font-family: var(--pix);
+    /* 헤딩1(14px)에 맞추고 웨이트 한 단계 올림. */
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    background: transparent;
+    /* 1.5px 두께 테두리 버튼. */
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 6px;
+    cursor: pointer;
+    outline: none;
+}
+.cal-select:hover {
+    color: var(--accent2);
+}
+.cal-nav {
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    font-family: var(--pix);
+    font-size: 16px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    line-height: 1;
+    clip-path: var(--pixel-clip);
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.4),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.3);
+}
+.cal-nav:hover {
+    background: var(--accent2);
+}
+.cal-weekdays,
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+}
+.cal-weekday {
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--dim);
+    text-align: center;
+    padding: 2px 0;
+}
+.cal-weekday.sun {
+    color: #d0506e;
+}
+.cal-weekday.sat {
+    color: var(--accent);
+}
+/* 날짜 셀 — 박스 없이 숫자만. 선택/오늘은 숫자 자체로 표시. */
+.cal-cell {
+    position: relative;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--pix);
+    cursor: pointer;
+    padding: 0;
+    background: none;
+    border: none;
+}
+.cal-cell.blank {
+    cursor: default;
+}
+.cal-cell .cal-day-num {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1;
+}
+.cal-cell:hover:not(.blank):not(.selected) .cal-day-num {
+    color: var(--accent2);
+}
+.cal-cell.today .cal-day-num {
+    color: var(--accent);
+    font-weight: 700;
+}
+/* 선택한 날 — 숫자에만 원형 강조. */
+.cal-cell.selected .cal-day-num {
+    color: #fff;
+    background: var(--accent);
+    border-radius: 50%;
+}
+/* 일정 있는 날 점들 — 일정 개수만큼(최대 3개), 숫자 아래 중앙 정렬. */
+.cal-dots {
+    position: absolute;
+    left: 50%;
+    top: calc(50% + 16px);
+    transform: translateX(-50%);
+    display: flex;
+    gap: 2px;
+}
+.cal-dot {
+    width: 5px;
+    height: 5px;
+    background: var(--accent2);
+}
+
+/* 캘린더 주(週) 아래로 펼쳐지는 인라인 추가 폼 — grid 전체 폭 차지 */
+.cal-inline-add {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 2px 0;
+    padding: 8px;
+    background: var(--card);
+    border: 2px solid var(--border);
+    clip-path: var(--pixel-clip);
+}
+
+.sched-add-row {
+    display: flex;
+    gap: 6px;
+}
+/* 시작 / 종료 각각 한 줄 — 라벨 + 날짜 + 시각 */
+.sched-datetime-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: nowrap;
+}
+.sched-dt-label {
+    flex: 0 0 auto;
+    width: 30px;
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--accent);
+}
+.sched-dt {
+    flex: 1 1 0;
+    min-width: 0;
+    font-size: 11px;
+    padding: 4px 4px;
+}
+/* 네이티브 date/time 위젯 내부 여백 축소(가능한 브라우저에서) */
+.sched-dt::-webkit-datetime-edit {
+    padding: 0;
+}
+.sched-dt::-webkit-calendar-picker-indicator {
+    margin: 0;
+    padding: 0;
+}
+.sched-date-sep {
+    font-family: var(--pix);
+    color: var(--dim);
+    flex: 0 0 auto;
+    font-size: 10px;
+}
+/* 제목 입력 — full-width 한 줄 */
+.sched-title-input {
+    display: block;
+    width: 100%;
+}
+/* 메모 입력 — 100자 이내, 여러 줄 */
+.sched-memo-input {
+    display: block;
+    width: 100%;
+    resize: none;
+    line-height: 1.4;
+    font-family: var(--pix);
+}
+/* 추가 폼 하단: 체크박스 + 추가 버튼 */
+.sched-add-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.sched-time {
+    flex: 0 0 auto;
+    width: 84px;
+}
+/* 기간 일정 날짜 범위 배지 */
+.sched-range {
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 1px 5px;
+    flex-shrink: 0;
+}
+/* '할 일에도 추가' 체크박스 줄 */
+.sched-todo-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--dim);
+    cursor: pointer;
+    user-select: none;
+}
+.sched-todo-check input {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+.sched-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.sched-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    border: 2px solid var(--border);
+    padding: 9px 12px;
+    box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.2);
+}
+.sched-time-badge {
+    font-family: var(--pix);
+    font-size: 12px;
+    color: #fff;
+    background: var(--accent);
+    padding: 2px 6px;
+    flex-shrink: 0;
+}
+/* 제목 + 메모 세로 묶음 */
+.sched-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+.sched-title {
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.3;
+    word-break: break-all;
+}
+.sched-memo {
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--dim);
+    line-height: 1.4;
+    word-break: break-all;
+    white-space: pre-wrap;
+}
+.sched-empty {
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--dim);
+    text-align: center;
+    padding: 24px 0;
+}
+/* 추가 폼이 닫혀 있을 때 안내 — 더블클릭 유도 */
+.sched-hint {
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--dim);
+    text-align: center;
+    padding: 4px 0;
+}
+
+/* ── 펫 컬렉션 ── */
+.pet-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: start;
+    gap: 8px;
+}
+.pet-card {
+    position: relative;
+    /* 바깥 면 = 테두리색 staircase + isolation, 안쪽 ::before가 2px 작게 덮어 계단 모서리까지 테두리. */
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1;
+    gap: 4px;
+    padding: 6px 4px;
+    background: var(--border);
+    /* 버튼 기본 테두리(2px outset black) 제거 — 하·우의 어두운 가장자리 원인. */
+    border: none;
+    cursor: pointer;
+    clip-path: var(--pixel-clip);
+}
+.pet-card::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    z-index: -1;
+    clip-path: var(--pixel-clip);
+    background: var(--card);
+    /* 어두운(검정) 베벨 제거 — 밝은 하이라이트만 남긴다. */
+    box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.5);
+    pointer-events: none;
+}
+.pet-card:hover::before {
+    background: var(--btn-bg-hover);
+}
+/* 장착(active) — 바깥 링을 accent로, 안쪽 면은 btn-bg로. */
+.pet-card.active {
+    background: var(--accent);
+}
+.pet-card.active::before {
+    background: var(--btn-bg);
+}
+.pet-card-sprite {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.pet-card-name {
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--text);
+}
+.pet-card-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-family: var(--pix);
+    font-size: 10px;
+    color: #fff;
+    background: var(--accent);
+    padding: 2px 5px;
+}
+/* 잠긴(미보유) 펫 — 스프라이트 대신 자물쇠 아이콘, 이름은 실제 이름 그대로. 클릭 불가. */
+.pet-card.locked {
+    cursor: not-allowed;
+}
+.pet-card-lock-icon {
+    font-size: 26px;
+    line-height: 1;
+    opacity: 0.75;
+}
+
+/* ── 아이템 인벤토리 ── */
+.item-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+.item-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* 큰 데코 이미지에 맞춰 세로로 늘어나게(정사각 고정 해제). */
+    min-height: 96px;
+    gap: 4px;
+    padding: 8px 4px;
+    background: var(--card);
+    /* 버튼 기본 테두리(2px outset black) 제거 — 하·우의 어두운 가장자리 원인. */
+    border: none;
+    clip-path: var(--pixel-clip);
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.5),
+        inset -2px -2px 0 rgba(96, 150, 210, 0.4);
+}
+/* 미보유(잠긴) 데코 카드 — 자물쇠가 또렷하도록 살짝만 흐리게(흑백 처리 안 함). */
+.item-card.empty {
+    opacity: 0.7;
+}
+/* 이미지든 자물쇠든 같은 크기 자리를 차지하게 고정 — 보유/미보유 카드 크기 통일. */
+.item-emoji {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+}
+.item-emoji img {
+    display: block;
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+}
+/* 미보유 데코 자물쇠 아이콘 — 이미지 자리(72px)를 대신한다. */
+.item-lock-icon {
+    font-size: 42px;
+    line-height: 1;
+}
+.item-name {
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--text);
+}
+.item-count {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-family: var(--pix);
+    font-size: 11px;
+    color: #fff;
+    background: var(--accent);
+    padding: 1px 5px;
+    clip-path: var(--pixel-clip);
+}
+
+/* 유튜브 탭 — 테마 선택 + 열기 */
+.yt-theme-pick {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+}
+.yt-pick {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    background: var(--card);
+    border: 2px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.yt-pick img {
+    width: 100%;
+    border-radius: 4px;
+    display: block;
+}
+.yt-pick span {
+    font-family: var(--pix);
+    font-size: 9px;
+    color: var(--dim);
+}
+.yt-pick.active {
+    border-color: var(--accent);
+}
+.yt-pick.active span {
+    color: var(--accent);
+}
+.yt-open-wrap {
+    margin-top: 16px;
+    display: flex;
+    justify-content: center;
+}
+.yt-open-wrap .pbtn {
+    width: auto;
+    padding: 10px 20px;
+}
+
+/* 꾸미기 중 — 배치된 데코 목록(✕ 회수) */
+.placed-panel {
+    background: var(--card);
+    clip-path: var(--pixel-clip);
+    padding: 8px 10px;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.6),
+        inset -2px -2px 0 rgba(96, 150, 210, 0.4);
+}
+.placed-empty {
+    font-family: var(--pix);
+    font-size: 11px;
+    color: var(--dim);
+    padding: 4px 0;
+}
+.placed-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 132px;
+    overflow-y: auto;
+    margin-top: 4px;
+}
+.placed-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.placed-thumb {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+.placed-name {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.placed-x {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    font-family: var(--pix);
+    font-size: 11px;
+    color: #fff;
+    background: #e0568e;
+    border: none;
+    cursor: pointer;
+    clip-path: var(--pixel-clip);
+}
+
+/* ── 데코 보관함 폴더 ── */
+.decor-folder-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+.decor-folder {
+    position: relative;
+    /* 바깥 면 = 테두리색 staircase + isolation, 안쪽 ::before가 2px 작게 덮어 계단 모서리까지 테두리. */
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 8px 10px;
+    background: var(--border);
+    /* 버튼 기본 테두리(2px outset black) 제거 — 어두운 가장자리 원인. */
+    border: none;
+    cursor: pointer;
+    clip-path: var(--pixel-clip);
+}
+.decor-folder::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    z-index: -1;
+    clip-path: var(--pixel-clip);
+    background: var(--card);
+    /* 어두운 베벨 제거 — 밝은 하이라이트만 남긴다. */
+    box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.6);
+    pointer-events: none;
+}
+.decor-folder:hover::before {
+    background: var(--btn-bg);
+}
+.decor-folder-thumb {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    /* PNG에 그려진 어두운 프레임을 가리려 안쪽만 보이게 크롭. */
+    object-view-box: inset(6%);
+    image-rendering: pixelated;
+    clip-path: var(--pixel-clip);
+}
+.decor-folder-name {
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--text);
+}
+.decor-folder-count {
+    font-family: var(--pix);
+    font-size: 10px;
+    color: var(--dim);
+}
+/* 폴더 안 헤더 — 뒤로 + 제목 */
+.decor-folder-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.decor-back {
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--accent);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 4px;
+}
+.decor-folder-title {
+    font-family: var(--pix);
+    font-size: 13px;
+    color: var(--text);
+    -webkit-text-stroke: 0.5px currentColor;
+}
+
+/* ── 월드 꾸미기 캔버스 ── */
+.world-canvas {
+    position: relative;
+    width: 100%;
+    height: 150px;
+    /* 하늘→잔디 느낌의 월드 미리보기 배경 */
+    background: linear-gradient(#cdeeff 0%, #cdeeff 62%, #bfe6a8 62%, #aadd92 100%);
+    clip-path: var(--pixel-clip);
+    overflow: hidden;
+    flex-shrink: 0;
+    touch-action: none;
+}
+.world-canvas.editing {
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.7),
+        inset -2px -2px 0 rgba(96, 150, 210, 0.5),
+        0 0 0 2px var(--accent);
+}
+.world-canvas-empty {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--dim);
+    white-space: nowrap;
+    pointer-events: none;
+}
+.world-token {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    font-size: 30px;
+    line-height: 1;
+    user-select: none;
+}
+.world-canvas.editing .world-token {
+    cursor: grab;
+}
+.world-token.selected {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+.world-toolbar {
+    display: flex;
+    gap: 8px;
+}
+/* 하단 고정(플로팅) 툴바 — 패널 스크롤과 무관하게 항상 바닥에 보인다. */
+.world-toolbar.floating {
+    position: sticky;
+    bottom: 0;
+    /* 내용이 짧으면 패널 하단으로 밀고, 길면 sticky로 바닥에 고정. */
+    margin-top: auto;
+    /* 스크롤되는 내용이 비치지 않게 패널 배경으로 덮는다(윗 여백·구분선 없음). */
+    background: var(--bg);
+}
+/* 아이템 탭 인트로 멘트 — 일반 hint보다 조금 크게. */
+.hint.item-intro {
+    font-size: 14px;
+}
+.world-reset {
+    align-self: center;
+    font-family: var(--pix);
+    font-size: 12px;
+    color: var(--dim);
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 4px;
+}
+
+/* ── 포모도로 타이머 ── */
+/* 완료 시 상단에 캐릭터가 떠서 멘트하는 배너 */
+.timer-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--accent);
+    color: #fff;
+    border-bottom: 3px solid var(--border);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.22);
+    cursor: pointer;
+    animation: timer-banner-in 0.3s ease-out;
+}
+@keyframes timer-banner-in {
+    from {
+        transform: translateY(-100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+.timer-banner-character {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    flex: 0 0 auto;
+}
+.timer-banner-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-family: var(--pix);
+    text-align: left;
+}
+.timer-banner-title {
+    font-size: 12px;
+    opacity: 0.85;
+}
+.timer-banner-line {
+    font-size: 15px;
+    line-height: 1.3;
+}
+.timer-panel {
+    align-items: center;
+    text-align: center;
+    /* 간격은 각 블록 margin으로 직접 제어한다. */
+    gap: 0;
+}
+/* 섹션 간 50px(포모도로 타이머 → 일러스트 → 버튼들 → 설정 헤딩)는 각 블록 margin에서 지정. */
+/* 가운데 정렬 패널이라 헤딩1(인라인 구분선)이 줄어든다 — 전체 폭으로 펴 주고, 버튼들과 20px. */
+.timer-panel .section-title-1 {
+    width: 100%;
+    margin-top: 20px;
+}
+.timer-phase {
+    font-family: var(--pix);
+    font-size: 18px;
+    margin-top: 8px;
+}
+.timer-phase.focus {
+    color: var(--accent);
+}
+.timer-phase.break {
+    color: var(--accent2);
+}
+/* 스톱워치 + 면 가운데 숫자 오버레이 — 일러스트 위 40px */
+.timer-stopwatch {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    margin: 40px 0 2px;
+}
+.timer-stopwatch-time {
+    position: absolute;
+    /* 시계 면 중심(크라운이 위에 있어 시각 중심은 약간 아래) */
+    top: 60%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--pix);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #0a3050;
+}
+.timer-tomatoes {
+    font-size: 16px;
+    min-height: 20px;
+    line-height: 1.2;
+    word-break: break-all;
+}
+.timer-controls {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    /* 일러스트(아래)와 40px */
+    margin-top: 40px;
+}
+.timer-controls .pbtn {
+    flex: 1;
+    padding: 10px 2px;
+    font-size: 13px;
+}
+.timer-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    margin-top: 14px;
+}
+.timer-setting {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    font-family: var(--pix);
+    font-size: 15px;
+    color: var(--text);
+}
+/* 라벨 '집중'/'휴식'은 고정폭, 입력칸이 남는 폭을 모두 차지(반응형) */
+.timer-setting > span:first-child {
+    flex: 0 0 36px;
+}
+.timer-setting input {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: center;
+    font-size: 18px;
+    padding: 5px 8px;
+}
+
+/* ===== 설정 탭 ===== */
+/* 섹션이 빽빽하지 않게 — 패널 자체 여백 + 헤딩마다 위 여백(첫 헤딩 제외). */
+.settings-panel {
+    padding: 16px 14px 24px;
+    gap: 10px;
+}
+.settings-panel .section-title-1 {
+    margin-top: 18px;
+}
+.settings-panel .section-title-1:first-child {
+    margin-top: 0;
+}
+/* 테마 선택 — 3열 칩 그리드 */
+.theme-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.theme-swatch {
+    position: relative;
+    /* 바깥 면 = 테두리색 staircase + isolation, 안쪽 ::before가 2px 작게 덮어 계단 모서리까지 테두리. */
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 4px;
+    cursor: pointer;
+    background: var(--border);
+    /* 버튼 기본 테두리(2px outset black) 제거 — 하·우의 어두운 가장자리 원인. */
+    border: none;
+    clip-path: var(--pixel-clip);
+    font-family: var(--pix);
+}
+.theme-swatch::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    z-index: -1;
+    clip-path: var(--pixel-clip);
+    background: var(--card);
+    pointer-events: none;
+}
+/* hover/active — 바깥 링(테두리) 색을 바꿔 강조. */
+.theme-swatch:hover {
+    background: var(--accent2);
+}
+.theme-swatch.active {
+    background: var(--accent);
+}
+.theme-swatch-chip {
+    width: 100%;
+    height: 26px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.theme-swatch-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+.theme-swatch-label {
+    font-size: 11px;
+    color: var(--text);
+}
+.theme-swatch.active .theme-swatch-label {
+    color: var(--accent);
+    font-weight: 700;
+}
+
+/* 캐릭터 크기 슬라이더 */
+.scale-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+.settings-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--panel);
+    border: 2px solid var(--border);
+    outline: none;
+    cursor: pointer;
+}
+.settings-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+}
+.scale-value {
+    flex: 0 0 44px;
+    text-align: right;
+    font-family: var(--pix);
+    font-size: 14px;
+    color: var(--accent);
+}
+/* 포인트 변동 토스트 — 점수가 바뀌면 타이틀바 아래에 +N/-N이 잠깐 떠오른다. */
+.point-fx {
+    position: fixed;
+    top: 46px;
+    left: 50%;
+    z-index: 50;
+    font-family: var(--pix);
+    font-size: 18px;
+    font-weight: 700;
+    pointer-events: none;
+    text-shadow:
+        1px 1px 0 #fff,
+        -1px -1px 0 #fff,
+        1px -1px 0 #fff,
+        -1px 1px 0 #fff;
+    animation: point-fx-rise 1.1s ease-out forwards;
+}
+.point-fx.plus {
+    color: #e0a020;
+}
+.point-fx.minus {
+    color: #d23b3b;
+}
+@keyframes point-fx-rise {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, 8px);
+    }
+    20% {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -22px);
+    }
+}
+/* 설정 토글(체크박스 + 라벨) — 자동 실행 등 on/off 옵션 */
+.settings-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--pix);
+    font-size: 14px;
+    color: var(--text);
+    cursor: pointer;
+}
+.settings-toggle input {
+    cursor: pointer;
+}

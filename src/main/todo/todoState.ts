@@ -1,5 +1,11 @@
 import { randomUUID } from 'node:crypto'
-import { MAX_TODO_TEXT_LENGTH, type Todo, type TodoEvent, type TodoState } from '@shared/contracts/todoEvents'
+import {
+    MAX_TODO_PROJECT_LENGTH,
+    MAX_TODO_TEXT_LENGTH,
+    type Todo,
+    type TodoEvent,
+    type TodoState,
+} from '@shared/contracts/todoEvents'
 
 // TODO reducer + 도메인 룰 (FIFO 정리, 텍스트 길이 제한 등).
 // 타입/시드는 @shared/contracts에서 import해 main·preload·renderer가 동일 정의를 공유한다.
@@ -7,6 +13,12 @@ import { MAX_TODO_TEXT_LENGTH, type Todo, type TodoEvent, type TodoState } from 
 
 // 완료한 to-do 보관 상한 (명세). 초과 시 createdAt 기준 가장 오래된 완료 항목부터 제거.
 const MAX_COMPLETED_TODOS = 100
+
+// 완료 보상 점수 범위(둘 다 포함). 완료 시 이 범위에서 랜덤 지급하고 todo에 저장한다.
+const TODO_REWARD_MIN = 1
+const TODO_REWARD_MAX = 5
+const pickTodoReward = (): number =>
+    TODO_REWARD_MIN + Math.floor(Math.random() * (TODO_REWARD_MAX - TODO_REWARD_MIN + 1))
 
 // 완료 보관 상한 정리.
 // 'toggle'은 단방향(+1)이라 한 호출당 완료 항목이 최대 1개만 늘어난다 — 초과는 정확히 1건.
@@ -41,28 +53,53 @@ export const reduceTodoState = (state: TodoState, event: TodoEvent): TodoState =
             if (trimmed === '') {
                 return state
             }
+            const project = (event.project ?? '').trim().slice(0, MAX_TODO_PROJECT_LENGTH)
             const newTodo: Todo = {
                 id: randomUUID(),
                 text: trimmed,
                 completed: false,
                 createdAt: Date.now(),
+                source: event.source ?? 'manual',
+                project,
             }
             return { todos: [...state.todos, newTodo] }
         }
         case 'toggle': {
             const target = state.todos.find((todo) => todo.id === event.id)
-            if (!target || target.completed) {
-                // 없는 id이거나 이미 완료된 항목 — 단방향 정책상 변경 없음.
+            if (!target) {
                 return state
             }
+            if (target.completed) {
+                // 완료 취소 → 미완료로 되돌린다(완료 시각 제거). 원래 섹션(할일/일정)으로 복귀.
+                return {
+                    todos: state.todos.map((todo) =>
+                        todo.id === event.id
+                            ? { ...todo, completed: false, completedAt: undefined }
+                            : todo,
+                    ),
+                }
+            }
             const now = Date.now()
+            // 완료 시 보상 점수를 뽑아 todo에 저장 — 완료 취소 시 정확히 같은 값을 차감하기 위함.
+            const reward = pickTodoReward()
             const updated = state.todos.map((todo) =>
-                todo.id === event.id ? { ...todo, completed: true, completedAt: now } : todo,
+                todo.id === event.id
+                    ? { ...todo, completed: true, completedAt: now, reward }
+                    : todo,
             )
             return { todos: pruneOldestCompleted(updated) }
         }
         case 'remove': {
             return { todos: state.todos.filter((todo) => todo.id !== event.id) }
+        }
+        case 'setProject': {
+            // 프로젝트 태그 변경/해제(빈 문자열이면 미분류).
+            const project = event.project.trim().slice(0, MAX_TODO_PROJECT_LENGTH)
+            return {
+                todos: state.todos.map((todo) =>
+                    todo.id === event.id ? { ...todo, project } : todo,
+                ),
+            }
         }
         case 'updateText': {
             // 빈 텍스트로 저장하면 삭제로 간주 (TodoMVC 표준).

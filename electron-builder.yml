@@ -1,5 +1,5 @@
-appId: com.rapportlabs.game
-productName: Game
+appId: com.rapportlabs.loopf
+productName: Loopf
 directories:
     buildResources: build
 files:
@@ -12,6 +12,7 @@ files:
 asarUnpack:
     - resources/**
 mac:
+    icon: build/icon.icns
     target:
         - target: dmg
           arch:
@@ -20,6 +21,7 @@ mac:
     category: public.app-category.games
     artifactName: ${name}-${version}-${arch}.${ext}
 win:
+    icon: build/icon.ico
     target:
         - target: nsis
           arch:

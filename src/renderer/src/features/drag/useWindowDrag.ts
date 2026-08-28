@@ -6,13 +6,18 @@ import type { MouseEvent } from 'react'
 type UseWindowDragOptions = {
     onDragStart?: () => void
     onDragEnd?: () => void
+    // 거의 움직이지 않고 눌렀다 뗀 경우(드래그가 아닌 단순 클릭)에 호출된다.
+    onClick?: () => void
 }
+
+// 이 거리(px) 이상 움직이면 드래그로 간주한다. 미만이면 클릭.
+const DRAG_THRESHOLD_PX = 4
 
 // 윈도우 자체를 드래그로 옮기는 기능.
 // mousedown만 React에서 받고, mousemove/mouseup은 window 레벨에 등록해
 // 마우스가 작은 펫 윈도우 밖으로 나가도 드래그가 끊기지 않게 한다.
 // IPC는 fire-and-forget(send) + requestAnimationFrame throttle 조합이다.
-export const useWindowDrag = ({ onDragStart, onDragEnd }: UseWindowDragOptions = {}) => {
+export const useWindowDrag = ({ onDragStart, onDragEnd, onClick }: UseWindowDragOptions = {}) => {
     const handleMouseDown = (event: MouseEvent) => {
         if (event.button !== 0) {
             return
@@ -22,6 +27,9 @@ export const useWindowDrag = ({ onDragStart, onDragEnd }: UseWindowDragOptions =
 
         window.api.startWindowDrag(event.screenX, event.screenY)
 
+        const startScreenX = event.screenX
+        const startScreenY = event.screenY
+        let moved = false
         let pendingPosition: { x: number; y: number } | null = null
         let rafId: number | null = null
 
@@ -35,6 +43,13 @@ export const useWindowDrag = ({ onDragStart, onDragEnd }: UseWindowDragOptions =
         }
 
         const handleMove = (moveEvent: globalThis.MouseEvent) => {
+            if (
+                !moved &&
+                (Math.abs(moveEvent.screenX - startScreenX) > DRAG_THRESHOLD_PX ||
+                    Math.abs(moveEvent.screenY - startScreenY) > DRAG_THRESHOLD_PX)
+            ) {
+                moved = true
+            }
             pendingPosition = { x: moveEvent.screenX, y: moveEvent.screenY }
             if (rafId === null) {
                 rafId = requestAnimationFrame(flushDrag)
@@ -55,6 +70,10 @@ export const useWindowDrag = ({ onDragStart, onDragEnd }: UseWindowDragOptions =
             }
             window.api.endWindowDrag()
             onDragEnd?.()
+            // 거의 안 움직였으면 단순 클릭으로 간주.
+            if (!moved) {
+                onClick?.()
+            }
         }
 
         // mousemove/mouseup은 preventDefault를 호출하지 않으므로 passive로 표시.

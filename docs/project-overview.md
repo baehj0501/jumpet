@@ -2,7 +2,7 @@
 
 ## 한 줄 정체성
 
-> OS 바탕화면 위에 상시 떠 있는 **캐릭터(강아지)** 와, 우클릭으로 호출되는 **9개 패널**(먹이·놀이·to-do·가챠·아이템·운세·정보·링크·종료) 로 구성된 Electron 기반 데스크탑 펫 게임.
+> OS 바탕화면 위에 상시 떠 있는 **캐릭터(강아지)** 와, 우클릭으로 호출되는 **패널들**(돌봄·to-do·운세·일정·가챠·아이템·유튜브·설정 + 종료) 로 구성된 Electron 기반 데스크탑 펫 게임.
 
 단순한 마스코트가 아니라 **펫 인터랙션 + 일상 도우미(메모/링크) + 가벼운 수집/가챠 루프** 가 결합된 형태를 지향한다.
 
@@ -30,11 +30,11 @@
 | 캐릭터 시스템 | 표시, 자율 walking, 드래그, PNG 3프레임 애니메이션, GIF 표정 모션 |
 | 행동 상태 | `idle`, `walking`, `sit`, `sleep`, `jump` 등 — 확률 기반 자율 전환 |
 | 인터랙션 | 클릭(말풍선·애니메이션), 우클릭(메뉴), 쓰다듬기 |
-| 패널 (우클릭 메뉴 9개) | 먹이주기 · 놀아주기 · To-Do · 가챠 · 아이템 · 운세 · 정보 · 링크 관리 · 종료 |
-| 재화 | 점수(score) — 모든 인터랙션의 보상이자 가챠 비용 |
-| 인벤토리 | 영구 아이템(머리·몸통·손·펫) + 소모성 아이템(먹이·놀이) |
-| 보상 루프 | 인터랙션·TODO·운세 → 점수 → 가챠 → 아이템 → 펫 꾸미기/소모 |
-| 도우미 | 링크 미니 버튼 (별도 플로팅 창) |
+| 패널 (우클릭 메뉴) | 🐾 돌봄 · ✅ To-Do · 🌸 운세 · 📅 일정 · 🎰 가챠 · 🎒 아이템 · 🎵 유튜브 · ⚙️ 설정 · ❌ 종료 |
+| 재화 | 점수(score) — 모든 인터랙션의 보상이자 뽑기 비용 |
+| 인벤토리 | 바탕화면 데코(꾸미기) + 동물 친구(펫 수집) — 둘 다 뽑기로 획득 |
+| 보상 루프 | 돌봄·TODO·운세 → 점수 → 뽑기 → 데코/펫 → 바탕화면 꾸미기 |
+| 도우미 | To-Do · 일정(캘린더+알림) · 유튜브 창 |
 
 자세한 동작은 [`features/README.md`](./features/README.md)에서 기능별로 분기.
 
@@ -62,11 +62,13 @@
 
 ## 향후 미정 사항 (Open Questions)
 
-- 가챠 풀(실제 아이템 목록, 등급별 분류, 시작 잠금 해제 항목) 확정 — [`features/gacha-and-inventory.md`](./features/gacha-and-inventory.md)
-- 레벨 시스템 (점수 → 레벨 변환 공식, 레벨업 보상) — [`features/info-panel.md`](./features/info-panel.md)
+- 뽑기 풀(데코 목록·등급, 펫 종류·등급 분포, 시작 시드) 확정 — [`features/gacha-and-inventory.md`](./features/gacha-and-inventory.md)
+- 레벨 시스템 (점수 → 레벨 변환 공식, 레벨업 보상) — [`features/settings.md`](./features/settings.md)
 - 운세 365개 풀 작성 방식 — [`features/fortune.md`](./features/fortune.md)
-- 먹이/놀이 멘트 30개씩 작성 — [`features/feeding-and-playing.md`](./features/feeding-and-playing.md)
-- 스탯 시스템(기분/에너지/포만감/친밀도) 폐기 여부 — v2.0 명세엔 있었지만 신 다이어그램엔 없음
+- 돌봄 멘트 작성 (액션별 풀) — [`features/care.md`](./features/care.md)
 - 자동 말풍선(45~90초마다) 유지 여부 — v2.0 명세 → 신 다이어그램 미언급
-- 링크 미니 버튼의 화면 위치·표시 방식
-- GIF 파일 작화 (먹이/놀이/TODO 완료/가챠/레벨업)
+- 캐릭터 다종화 (현재 `dog` 1종, 참조 앱은 4종) + 테마 6종 에셋 — [`features/settings.md`](./features/settings.md)
+- 바탕화면 데코/펫 렌더링 방식 (캐릭터 캔버스 통합 vs 전용 투명창) — [`features/gacha-and-inventory.md`](./features/gacha-and-inventory.md)
+- GIF 파일 작화 (돌봄/TODO 완료/뽑기/레벨업)
+
+> **결정됨**: 스탯 시스템(HP·배고픔·기분 등)은 도입하지 않는다 — 돌봄은 포인트 보상 + 감정/모션만. ([`features/care.md`](./features/care.md))

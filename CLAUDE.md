@@ -17,11 +17,54 @@
 
 이 CLAUDE.md는 컨벤션·작업 우선순위·금지 사항을 다루고, **상세 기능 명세는 docs/에 산다**.
 
+## 구현된 기능 현황 (스냅샷)
+
+> 현재까지 구현·합의된 기능 요약. 상세 맥락은 [`docs/session-context.md`](./docs/session-context.md), 명세는 각 `docs/features/*.md`. (코드가 진실 — 어긋나면 코드 기준으로 이 표를 갱신한다.)
+
+### SSOT 도메인 (main 영속 + IPC broadcast + Zustand 미러)
+
+`player`(점수/재화) · `todo` · `fortune` · `item`(소모 아이템+뽑기) · `schedule`(일정) · `characterSelection`(선택 캐릭터) · `profile`(캐릭터이름/내이름/생일) · `petSelection`(동반 펫) · `world`(데코 꾸미기) · `settings`(테마/캐릭터 크기).
+
+### 메뉴 창 탭 10종 (`pages/menu/MenuPage.tsx`)
+
+홈(care) · 일정(schedule) · 할일(todo) · 타이머(timer) · 운세(fortune) · 가챠(gacha) · 펫(pet) · 아이템(item) · 유튜브(youtube) · 설정(settings).
+
+| 탭 | 상태 | 핵심 |
+|---|---|---|
+| 홈 | ✅ | 하늘/구름/반짝이 씬 + 캐릭터 좌우 전환 + 인사 말풍선 + ⭐포인트 칩 + 프로필 행(캐릭터 이름/내 이름/생일/생일까지 D-day) + 돌봄 액션 그리드 |
+| 일정 | ✅ | 캘린더 + 년/월 드롭다운(버튼형) + 일정 추가(시작/종료 날짜·시간) + 날짜순 정렬, todo와 양방향 삭제 연동(`ScheduleItem.todoId`) |
+| 할일 | ✅ | 프로젝트(칩) 단위, 상단 드롭다운 선택(기본 전체) + 하단 프로젝트 추가, 칩 수정→x 삭제(내부 할일 동반 삭제 확인), 완료 양방향 토글·완료취소 시 보상 마이너스(음수 허용) |
+| 타이머 | ✅ | 포모도로 + 픽셀 스톱워치, 완료 시 상단 캐릭터 배너 멘트(휴식 동일), tick은 MenuPage 상주(`backgroundThrottling:false`) |
+| 운세 | ✅ | 수정구슬(사인파 그라데이션+애니메이션), 점수 구슬 내 표시, 등급 별 |
+| 가챠 | ✅ | 가챠 머신 반짝이 연출, 내 포인트 표시, 음수 점수면 뽑기 불가 |
+| 펫 | ✅ | 동반 펫 장착(삐약이/몰랑이/반짝이), 캐릭터와 별개 축 |
+| 아이템 | ⬜ placeholder | |
+| 유튜브 | ⬜ placeholder | |
+| 설정 | ✅ | 테마 6종(`data-theme` 전환) + 캐릭터 크기 슬라이더(50~200%, 캐릭터 창 리사이즈) + 내 정보(profile 재사용, `ProfileRow` 공유) + 앱(버전/데이터 초기화/종료). 새 `settings` 도메인 |
+
+홈 탭의 돌봄(밥/놀이/쓰다듬기/눕기) 액션 그리드는 제거됨 — 홈은 씬 + 프로필 4행(캐릭터 이름/내 이름/생일/⭐포인트)만.
+
+### 캐릭터 / 인터랙션
+
+- 캐릭터 4종: **piyoo / qupee / suupee / wingpee** (구 'dog' 제거). `CHARACTER_ASSETS`(감정별) + `HOME_SCENE_ASSETS`(홈 합본 이미지 `home.png`).
+- 동반 펫(`petSelection`)은 캐릭터 윈도우(`App.tsx`)에서 `.pet-companion`으로 우하단에 렌더. 펫 탭에서 장착/해제.
+- 좌클릭 멘트: 50% `"(캐릭터 이름)(이/가) …"`, 10% `"(내 이름)(아/야)"` 호격. 조사는 받침 유무로 결정. 우측 정렬, 하늘색 말풍선.
+- 탭 아이콘: `pages/menu/tabIcons.ts` 10종 16×16 다색 픽셀(`TAB_ICON_ART`), `PixelArt`로 렌더.
+
+### 메뉴 UI 픽셀 테마 규칙 (pixel-theme.css)
+
+- **계단(픽셀) 모서리**: `--pixel-clip`(현재 2px 3단=6px) clip-path 전역 토큰. 테두리가 필요한 요소(탭·버튼·태그)는 **바깥=테두리색 staircase + 안쪽 `::before` 채움(inset 2px)** 구조로 외곽을 끊김 없이 그린다(과거 mask-ring 방식 폐기). 버튼 채움색은 상태별 `--btn-fill` 변수로 전달.
+- **컬러 베벨**: 그레이 대신 블루 톤 inset box-shadow.
+
+### 배포
+
+- `electron-builder.yml` — mac(dmg, arm64+x64) · win(nsis, x64) · linux(AppImage). 스크립트: `package:mac`/`package:win`/`package:linux`. 미서명 빌드는 `CSC_IDENTITY_AUTO_DISCOVERY=false`. 산출물은 `dist/`.
+
 ## 프로젝트 개요
 
 ### 한 줄 정체성
 
-OS 데스크탑 위에 상시 떠 있는 **캐릭터(강아지)** 와, 우클릭 메뉴로 호출하는 **패널들**(먹이·놀이·to-do·가챠·아이템·링크·정보) + 즐겨찾기 바 표시 토글 + 종료 로 구성된 Electron 기반 데스크탑 펫 게임. 단순한 마스코트가 아니라 펫 인터랙션 + 일상 도우미(메모/링크) + 가벼운 수집/가챠 루프 가 결합된 형태를 지향한다. (운세 등 일부 기능은 `docs/`에 명세만 있고 아직 메뉴에 연결되지 않은 향후 확장 항목이다.)
+OS 데스크탑 위에 상시 떠 있는 **캐릭터(강아지)** 와, 우클릭하면 열리는 **탭형 통합 메뉴 창**(돌봄·할일·운세·가챠 동작 + 일정·아이템·유튜브·설정 placeholder)으로 구성된 Electron 기반 데스크탑 펫 게임. 단순한 마스코트가 아니라 펫 인터랙션 + 일상 도우미 + 가벼운 수집/가챠 루프 가 결합된 형태를 지향한다. **우클릭은 네이티브 드롭다운이 아니라 픽셀아트 테마의 탭 창 하나를 연다**(별창 패턴·링크 기능은 폐기됨). 메뉴 구조 상세는 [`docs/features/context-menu.md`](./docs/features/context-menu.md).
 
 ### 사용자 가치 (왜 만드는가)
 
@@ -44,23 +87,21 @@ OS 데스크탑 위에 상시 떠 있는 **캐릭터(강아지)** 와, 우클릭
 
 ### 멀티 윈도우 아키텍처
 
-이 앱은 단일 윈도우가 아니라 **여러 BrowserWindow 인스턴스**로 구성된다:
+이 앱은 **딱 두 종류의 BrowserWindow**로 구성된다:
 
 - **캐릭터 윈도우** (`createWindow`, `src/main/index.ts`):
-    - 300×300, transparent + frameless + `alwaysOnTop('screen-saver')` + `visibleOnAllWorkspaces` — 풀스크린 앱 위에도 표시, 모든 macOS Space 따라옴
-    - `focusable: false` — 펫 클릭/드래그가 뒷창 포커스를 빼앗지 않음
-    - `skipTaskbar: true` — 작업표시줄/Alt+Tab 숨김
-- **패널 윈도우** (`src/main/panels/`):
-    - PanelId별로 main이 BrowserWindow를 직접 띄움 (싱글톤 인스턴스, 중복 방지)
-    - 각 패널은 자기 HTML entry + 자기 renderer 진입점을 가짐 (예: `src/renderer/todo.html` → `pages/todo/main.tsx`)
-    - `electron.vite.config.ts`의 rollup `input`에 신규 패널 추가 시 entry를 등록
-    - 새 패널 추가 흐름: PanelId union 확장 → `src/main/panels/open{Name}Panel.ts` 작성 → `panels/index.ts`의 `openPanel` switch 등록 → `renderer/{name}.html` + `pages/{name}/` entry 추가
-    - 현재 실제 별창으로 구현된 패널: `todo`, `link`(링크 관리). 나머지(`feed`/`play`/`gacha`/`item`/`info`)는 `openPanel` switch에서 placeholder.
-- **링크 미니 바 윈도우** (`src/main/linkBar/`):
-    - 캐릭터 윈도우와 동일한 상시 표시 옵션(transparent + frameless + `alwaysOnTop('screen-saver')` + `focusable: false`)의 별도 플로팅 창. 앱 시작 시 1회 생성된다.
-    - 표시 여부는 우클릭 메뉴 '즐겨찾기 바 표시' 토글로 사용자가 제어 (`show: false`로 시작).
-    - 표시 상태(visible)·위치(position)는 `linkBar` 도메인이 영속화하고, 링크 개수 변화에 맞춰 창 높이를 자동 조정한다.
-    - entry: `renderer/link-bar.html` → `pages/link-bar/main.tsx`.
+    - 300×300, transparent + frameless. **일반 창 z-order** — always-on-top을 쓰지 않아, 클릭하면 앞으로 나오고 다른 앱/창을 클릭하면 그 아래로 깔린다(다른 앱처럼).
+    - (과거 `alwaysOnTop('screen-saver')` + `visibleOnAllWorkspaces` + `focusable:false`는 제거됨 — 사용자 요청으로 일반 창 동작 채택.)
+    - `skipTaskbar: true`, `fullscreenable: false`.
+- **통합 메뉴 창** (`src/main/panels/openMenuPanel.ts`):
+    - 우클릭 시 열리는 **frameless 싱글톤 창**. 네이티브 드롭다운을 대체.
+    - 모든 기능이 이 한 창의 **탭**으로 산다 (별창 패턴 폐기). entry: `renderer/menu.html` → `pages/menu/main.tsx` → `MenuPage`(타이틀바 + 탭바 + 탭 전환).
+    - 탭: 돌봄/할일/운세/가챠 **동작**, 일정/아이템/유튜브/설정 **placeholder**. 탭 컴포넌트는 `pages/menu/tabs/`.
+    - 비주얼: JUMPET_4 `menu.html` 픽셀아트 테마 이식 — `app/styles/pixel-theme.css`(Galmuri11 폰트 + 6종 테마 CSS 변수 + 셸/컴포넌트 클래스). 이 창은 emotion css prop이 아니라 **className 기반 CSS**를 쓴다(예외).
+    - 우클릭 IPC: `window:showContextMenu` → `openMenuPanel()` (`src/main/menu/ipc.ts`). 통합 창은 캐릭터와 별개라 자율 행동을 멈추지 않는다(`menu:state` 신호 제거).
+    - 새 탭 추가 흐름: 도메인 SSOT(필요 시) → `pages/menu/tabs/{Name}Tab.tsx` → `MenuPage`의 `TABS`/`renderTab()` 등록. (별창·html·vite input 추가 불필요.)
+
+> **폐기됨**: 링크 도메인·링크 미니 바(`linkBar`)·'즐겨찾기 바 표시' 토글, 그리고 기능별 별창(todo/fortune/care/gacha.html + `open{Name}Panel`). 모두 통합 탭 창으로 흡수.
 
 ### 폴더 아키텍처 (FSD-lite + Electron 3-tier)
 
@@ -69,24 +110,22 @@ src/
 ├── main/                       # Electron main process
 │   ├── index.ts                # 캐릭터 윈도우 생성 + IPC 등록 + 부수효과 조립
 │   ├── window/                 # 윈도우 위치·크기 IPC (드래그, 자율 이동)
-│   ├── menu/                   # 우클릭 메뉴 정의
-│   ├── panels/                 # 패널 디스패처 (PanelId → BrowserWindow)
+│   ├── menu/                   # 우클릭 IPC → 통합 메뉴 창 열기
+│   ├── panels/                 # openMenuPanel (통합 메뉴 창 싱글톤)
 │   ├── playerState/            # 점수 도메인 (SSOT)
 │   ├── todo/                   # TODO 도메인 (SSOT)
-│   ├── link/                   # 링크 데이터 도메인 (SSOT)
-│   └── linkBar/                # 링크 미니 바 윈도우 (생성·visibility·위치)
+│   ├── fortune/                # 운세 도메인 (SSOT)
+│   └── item/                   # 소모성 아이템 인벤토리 + 뽑기 도메인 (SSOT)
 ├── preload/                    # window.api 노출, IPC 브릿지
 ├── shared/
 │   └── contracts/              # main↔preload↔renderer가 공유하는 타입·시드
 └── renderer/
     ├── index.html              # 캐릭터 윈도우 entry
-    ├── todo.html               # TODO 별창 entry
-    ├── link-manager.html       # 링크 관리 별창 entry
-    ├── link-bar.html           # 링크 미니 바 별창 entry (별창 추가 시 늘어남)
+    ├── menu.html               # 통합 메뉴 창 entry
     └── src/
-        ├── app/                # 진입점, 글로벌 스타일
-        ├── pages/              # 각 별창의 페이지 컴포넌트
-        ├── entities/           # 도메인 모델 + 핵심 UI (character/, todo/, player/, link/)
+        ├── app/                # 진입점, 글로벌 스타일, pixel-theme.css(+fonts)
+        ├── pages/menu/         # 통합 메뉴 창 (MenuPage + tabs/)
+        ├── entities/           # 도메인 모델 + store (character/, todo/, player/, fortune/, item/)
         └── features/           # 사용자 인터랙션 (drag/, context-menu/)
 ```
 
@@ -100,7 +139,7 @@ src/
 - **자율 행동 일시정지**: `isInteractingRef` 단일 채널. 드래그 + 컨텍스트 메뉴 둘 다 같은 ref를 토글. behaviors hook은 read-only(`{ readonly current: boolean }`)로 받음 — write 권한은 features 계층에만.
 - **빌드 타임 에셋**: 런타임에서 사용자가 이미지를 추가하지 않음. 배포 시 번들에 포함. 미래에 GIF/WebP 도입 시에도 동일 카탈로그 구조.
 - **상태 머신 캡슐화**: `useStateMachine`이 raw `setState`가 아닌 의미 단위 액션(`interrupt`)만 노출.
-- **영속 데이터의 SSOT**: 모든 사용자 영속 데이터(점수, TODO, 링크 등)는 **main 프로세스가 SSOT** — `electron-store`로 영속화하고 IPC로 모든 윈도우에 broadcast. renderer는 **Zustand 글로벌 store**로 read-only 캐시. 도메인별 패턴은 동일: 타입·시드는 `@shared/contracts/{domain}Events.ts`에 두고, `src/main/{domain}/{domain}State.ts`(순수 reducer) + `store.ts`(electron-store wrapper) + `ipc.ts`(handle + broadcast) + `index.ts`(barrel). renderer는 `entities/{domain}/model/use{Domain}Store.ts`(Zustand). **동기화는 모듈 import 사이드이펙트로 시작하지 않는다** — 각 별창 entrypoint(`pages/{domain}/main.tsx` 또는 `app/main.tsx`)에서 `initialize{Domain}Sync()`를 1회 명시 호출한다. HMR listener 누적은 `import.meta.hot.dispose`로 방어.
+- **영속 데이터의 SSOT**: 모든 사용자 영속 데이터(점수, TODO, 운세, 아이템 등)는 **main 프로세스가 SSOT** — `electron-store`로 영속화하고 IPC로 모든 윈도우에 broadcast. renderer는 **Zustand 글로벌 store**로 read-only 캐시. 도메인별 패턴은 동일: 타입·시드는 `@shared/contracts/{domain}Events.ts`에 두고, `src/main/{domain}/{domain}State.ts`(순수 reducer) + `store.ts`(electron-store wrapper) + `ipc.ts`(handle + broadcast) + `index.ts`(barrel). renderer는 `entities/{domain}/model/use{Domain}Store.ts`(Zustand). **동기화는 모듈 import 사이드이펙트로 시작하지 않는다** — 각 윈도우 entrypoint(`pages/menu/main.tsx`, `app/main.tsx`)에서 `initialize{Domain}Sync()`를 1회 명시 호출한다(통합 메뉴 창은 여러 도메인 sync를 한 번에 호출). HMR listener 누적은 `import.meta.hot.dispose`로 방어.
 - **CSS 정책**: 비즈니스 UI는 emotion `css` prop, 글로벌 기본은 `base.css`. Tailwind/styled-components 미사용.
 - **포매팅**: Prettier (`tabWidth: 4`, `semi: false`, `singleQuote: true`, `singleAttributePerLine: true`).
 
@@ -109,21 +148,19 @@ src/
 | 영역                    | 파일                                                                        |
 | ----------------------- | --------------------------------------------------------------------------- |
 | 캐릭터 윈도우 생성·옵션 | `src/main/index.ts`                                                         |
-| 우클릭 메뉴 정의        | `src/main/menu/characterContextMenu.ts`                                     |
-| 패널 디스패처           | `src/main/panels/index.ts`, `src/main/panels/openTodoPanel.ts`              |
+| 우클릭 IPC → 메뉴 창    | `src/main/menu/ipc.ts`, `src/main/panels/openMenuPanel.ts`                  |
+| 통합 메뉴 창 (셸·탭)    | `src/renderer/src/pages/menu/` (`MenuPage.tsx`, `tabs/`)                    |
+| 픽셀 테마·폰트          | `src/renderer/src/app/styles/pixel-theme.css`, `styles/fonts/`             |
 | 캐릭터 상태/행동        | `src/renderer/src/entities/character/behaviors/`                            |
 | 캐릭터 카탈로그         | `src/renderer/src/entities/character/assets/index.ts`, `model/Character.ts` |
-| 플레이어 재화 (main SSOT) | `src/main/playerState/`                                                    |
-| 플레이어 재화 (renderer)  | `src/renderer/src/entities/player/`                                        |
-| TODO (main SSOT)        | `src/main/todo/`                                                            |
-| TODO (renderer)         | `src/renderer/src/entities/todo/`                                          |
-| 링크 데이터 (main SSOT) | `src/main/link/`                                                            |
-| 링크 미니 바 윈도우 (main) | `src/main/linkBar/`                                                      |
-| 링크 (renderer)         | `src/renderer/src/entities/link/`, `pages/link-bar/`, `pages/link-manager/` |
+| 플레이어 재화 (main/renderer) | `src/main/playerState/`, `src/renderer/src/entities/player/`          |
+| TODO (main/renderer)    | `src/main/todo/`, `src/renderer/src/entities/todo/`                         |
+| 운세 (main/renderer)    | `src/main/fortune/`, `src/renderer/src/entities/fortune/`                   |
+| 소모 아이템·뽑기 (main/renderer) | `src/main/item/`, `src/renderer/src/entities/item/`               |
 | 윈도우 위치/크기 IPC    | `src/main/window/`                                                          |
 | 드래그/메뉴 인터랙션    | `src/renderer/src/features/`                                                |
 | App 조립부              | `src/renderer/src/app/App.tsx`                                              |
-| 새 패널 entry 등록      | `electron.vite.config.ts` (rollupOptions.input), `src/renderer/{name}.html` |
+| 새 탭 추가              | `pages/menu/tabs/{Name}Tab.tsx` + `MenuPage` TABS/renderTab (별창·entry 불필요) |
 
 ## 개발 컨벤션
 

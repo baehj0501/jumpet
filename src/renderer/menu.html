@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+        />
+        <meta
+            http-equiv="Content-Security-Policy"
+            content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;"
+        />
+        <title>루프프 데스크메이트</title>
+    </head>
+    <!-- data-theme은 MenuPage가 <html>에 설정한다(설정 SSOT). body에 고정하면
+         가까운 조상으로서 --tab-* 같은 토큰을 가로채 테마가 어긋나므로 두지 않는다. -->
+    <body>
+        <div id="root"></div>
+        <script
+            type="module"
+            src="/src/pages/menu/main.tsx"
+        ></script>
+    </body>
+</html>

@@ -1,79 +1,74 @@
-# 가챠 시스템 + 아이템 인벤토리
+# 가챠(뽑기) + 아이템 인벤토리
 
-이 두 시스템은 한 쪽이 다른 쪽 없이 동작하지 못해서 한 문서에 묶음.
+> 참조 앱(JUMPET_4)의 "꾸미기(뽑기+바탕화면 데코)" + "펫 수집" 비즈니스 로직을 이식해 재편했다.
+
+## ⚙️ 구현 현황 (코드가 진실)
+
+현재 구현된 것은 **돌봄 소모 아이템 + 뽑기**뿐이다. 아래의 데코/펫 모델은 **후속 명세**(미구현).
+
+- **소모 아이템** — 먹이류(🦴뼈다귀/🥫사료/🍪간식) + 장난감류(🎾공/🧸인형/🥏원반). `itemId → 보유 개수`.
+  - `src/shared/contracts/itemEvents.ts`, `src/main/item/`, `src/renderer/src/entities/item/`
+- **뽑기** — 🎰 가챠 패널에서 1회 **20점**(`GACHA_COST`) 소모 → 시드 풀에서 균등 추첨해 1개 지급. 점수 부족 시 비활성. 중복은 개수 누적(환원 없음).
+  - `src/renderer/src/pages/gacha/`, `item:gacha` IPC
+- **소비** — [care.md](./care.md)의 밥/놀이가 해당 아이템 1개 소모.
+- **미구현** — 꾸미기(바탕화면 데코) 탭, 펫 수집 탭, '🎒 아이템' 패널(현재 placeholder), 등급, 데코/펫 뽑기 풀(30/50점).
+
+아래는 **데코/펫까지 포함한 최종 목표 명세**다.
+
+---
 
 ## 한 줄 정체성
 
-**가챠** — 점수를 소모해 아이템을 뽑는 핵심 보상 루프.
-**인벤토리** — 가챠로 얻은 영구/소모성 아이템을 보관·장착·사용하는 곳.
+- **가챠(뽑기)** — 포인트를 소모해 아이템을 뽑는 핵심 보상 루프. **우클릭 메뉴 '🎰 가챠'에서 실행.**
+- **아이템 인벤토리** — 뽑기로 모은 것을 보관·사용하는 곳. **우클릭 메뉴 '🎒 아이템'에서 열며, [꾸미기] [펫수집] 두 탭**으로 구성.
+
+→ 메뉴상 **뽑기(실행)와 인벤토리(보유 현황)는 분리**되어 있다. 두 종류의 뽑기 풀(데코 / 펫)이 있고, 각 풀의 결과물이 아이템 패널의 해당 탭에 쌓인다.
 
 ## 명세
 
-### 가챠 동작 (신 다이어그램 + v2.0 §5)
+### 두 개의 뽑기 풀
 
-- **비용**: 1회 50점 소모 (점수 부족 시 가챠 버튼 비활성화).
-- **카테고리**: 6개 카테고리에서 랜덤으로 1개 출현.
-- **등급별 확률**:
+| 풀 | 비용 | 결과물 | 등급 분포 | 인벤토리 탭 |
+|---|---|---|---|---|
+| **꾸미기(데코)** | 30점 | 바탕화면 데코 아이템 | 일반 60% / 희귀 30% / 전설 10% | 🎨 꾸미기 |
+| **펫 수집** | 50점 | 동물 친구(companion) | 일반 / 희귀 / 전설 (분포 미정) | 🐾 펫수집 |
 
-| 등급 | 확률 | 설명 |
-|---|---|---|
-| 🥉 노말 | 70% | 기본 아이템 |
-| 🥈 레어 | 25% | 조금 더 예쁜 아이템 |
-| ⭐ 특수 | 5% | 이펙트 포함 특수 아이템 |
+- 점수 부족 시 해당 뽑기 버튼 비활성화.
+- 뽑기 패널('🎰 가챠')은 어떤 풀을 돌릴지 선택(데코/펫) → 뽑기 → 결과 연출.
 
-- **중복 처리**:
-  - **영구형 중복** → 보유 안 추가, 10점으로 환원 (안내 메시지 표시).
-  - **소모형 중복** → 보유 개수 +1 (누적).
+### 가챠 연출
 
-### 가챠 연출 (v2.0 §5.4)
+- 박스 등장 → 흔들림/반짝임 → 열림 → 결과 아이템 표시.
+- 등급별 색상 차이(일반=회색 / 희귀=파랑 / 전설=주황 등).
+- 결과 표시 후 캐릭터가 기뻐하는 감정/모션 (3초) — [character.md](./character.md) 의존.
+- 신규 획득이면 인벤토리에 추가, 중복이면 아래 규칙.
 
-- 아이템 박스가 화면에 등장하는 애니메이션
-- 박스 흔들림/반짝임 효과
-- 박스 열림 → 결과 아이템 표시
-- 등급별 색상 차이 (노말=회색 / 레어=파랑 / 특수=주황)
-- 결과 표시 후 캐릭터가 "기뻐하는 GIF 모션" 재생 (3초) — [character.md](./character.md) 의존
+### 중복 처리
 
-### 인벤토리 구조 (신 다이어그램 4 아이템)
+- **데코·펫 모두 "보유 여부" 기반** (영구형). 이미 보유한 것이 또 나오면 → 보유 추가 없이 **포인트 일부 환원**(예: 10점) + 안내 메시지.
+- (참조 앱은 단순 컬렉션 채우기 모델. 소모성 누적 카운트는 더 이상 없음.)
 
-```
-아이템 패널
-├── 영구 패널
-│   ├── 머리
-│   ├── 몸통
-│   ├── 손
-│   └── 펫
-└── 소모성 패널
-    ├── 먹이
-    └── 놀이
-```
+### 탭 1 — 🎨 꾸미기 (바탕화면 데코)
 
-→ **카테고리 6개 = 영구 4 + 소모 2.**
+> **모델: 바탕화면 데코 (JUMPET_4 방식).** 캐릭터에 입히는 오버레이가 아니라, **바탕화면 위 전체화면 투명창에 아이템을 배치**하는 방식.
 
-### 영구 아이템
+- 뽑기로 얻은 데코 아이템(이모지 또는 PNG, 참조 앱 기준 약 22종: flower, butterfly, clover, bluebird, snowflake, igloo, rocket, gift 등)을 보유 그리드로 표시.
+- 보유 아이템 클릭 → **바탕화면에 배치**.
+- 배치된 데코는 **드래그로 이동**, **우클릭으로 삭제** 가능.
+- **전체 삭제** 버튼.
+- 데코는 전용 플로팅 창(전체화면, 투명, 마우스 통과) 또는 캐릭터 캔버스 위에 렌더링.
 
-- 카테고리: 머리 / 몸통 / 손 / 펫.
-- **같은 카테고리는 1개만 장착 가능** (v2.0 §7.2). 머리 모자 2개 동시 X.
-- 이미 장착된 아이템 다시 클릭 시 해제.
-- 장착 시 캐릭터 위에 오버레이로 표시.
-- **중복 보유 불가** — 가챠에서 또 나오면 10점 환원.
+### 탭 2 — 🐾 펫수집 (companions)
 
-### 소모성 아이템
+- 뽑기로 얻은 동물 친구(참조 앱 기준 약 8종: bunny, panda, penguin, pig, jellyfish 등)를 컬렉션으로 표시 + 수집 진행도.
+- 보유 펫 → **바탕화면(캐릭터 옆)에 추가**. 동시 표시 **최대 5마리** (초과 시 무시).
+- 펫별 **이름 편집** 가능.
+- 펫별 **크기 조정** 슬라이더(예: 0.5~2.0).
 
-- 카테고리: 먹이 / 놀이.
-- 종류 각 15개 (먹이 15개, 놀이 15개).
-- **개수 누적 가능** — 가챠에서 같은 종류 또 나오면 보유 개수 +1.
-- 사용 시 1개 소모 (먹이 패널·놀이 패널에서 사용).
-- 자세한 사용 흐름은 [feeding-and-playing.md](./feeding-and-playing.md).
+### 획득 / 시작 시 보유
 
-### 획득 방법 (v2.0 §7.3)
-
-- **기본 아이템 일부는 시작 시 잠금 해제** (어떤 것인지 미정).
-- 나머지는 가챠로만 획득.
-
-### 시작 시 보유
-
-- 명세 — 일부 영구 아이템(예: 기본 모자) + 일부 소모성(예: 먹이 5개) 보유한 상태로 시작?
-- 신 다이어그램 "보유한 먹이/놀이만 선택 가능" 룰을 고려하면 **최소 시드는 있어야** 새 사용자가 빈 인벤토리로 시작하지 않음.
+- 기본은 뽑기로만 획득.
+- 빈 컬렉션으로 시작하면 초기 경험이 비어 보일 수 있음 → 최소 시드(데코 몇 종/펫 1종) 여부는 Open Question.
 
 ## 아키텍처 / 데이터 흐름
 
@@ -82,133 +77,123 @@
 `src/shared/contracts/itemEvents.ts` (신규):
 
 ```ts
-export type ItemCategory = 'head' | 'body' | 'hand' | 'pet'    // 영구
-                        | 'food' | 'toy'                       // 소모성
+export type GachaPool = 'decor' | 'pet'
+export type ItemGrade = 'normal' | 'rare' | 'legendary'
 
-export type ItemGrade = 'normal' | 'rare' | 'special'
+export const GACHA_COST: Record<GachaPool, number> = { decor: 30, pet: 50 }
+export const GACHA_REFUND = 10                          // 중복 시 환원
 
-export type ItemDef = {
-    id: string                   // 'head_crown_01' 같은 고유 ID
-    category: ItemCategory
+export type DecorDef = {
+    id: string                 // 'decor_flower_01'
     grade: ItemGrade
     name: string
-    emoji: string                // 예: '👑'
-    // 영구형: 캐릭터 오버레이 이미지
-    // 소모형: 사용 시 표시할 이미지/효과
-    visual: string
+    visual: string             // 이모지 또는 PNG 경로
+    isPng: boolean
 }
 
-export type PermanentInventory = {
-    [itemId: string]: {
-        unlocked: true            // 영구형은 보유 여부만
-    }
+export type PetDef = {
+    id: string                 // 'pet_panda'
+    grade: ItemGrade
+    name: string               // 기본 이름
+    visual: string             // PNG 경로
 }
 
-export type ConsumableInventory = {
-    [itemId: string]: {
-        count: number             // 소모형은 개수 누적
-    }
-}
-
-export type EquippedSlots = {
-    head: string | null           // ItemDef.id 또는 null
-    body: string | null
-    hand: string | null
-    pet: string | null
-}
+// 바탕화면에 실제 배치된 데코 인스턴스
+export type PlacedDecor = { instanceId: string; defId: string; x: number; y: number; size: number }
+// 바탕화면에 올라온 펫 인스턴스 (최대 5)
+export type PlacedPet = { instanceId: string; defId: string; name: string; scale: number }
 
 export type ItemState = {
-    permanent: PermanentInventory
-    consumable: ConsumableInventory
-    equipped: EquippedSlots
+    ownedDecor: string[]            // 보유한 DecorDef.id (영구)
+    ownedPets: string[]             // 보유한 PetDef.id (영구)
+    placedDecor: PlacedDecor[]      // 바탕화면 배치 현황
+    placedPets: PlacedPet[]         // 바탕화면 표시 현황 (≤5)
 }
 
 export type ItemEvent =
-    | { type: 'gachaSpin' }                                        // 50점 소모 + 1개 뽑기
-    | { type: 'equipPermanent'; itemId: string }                   // 영구 장착/해제 토글
-    | { type: 'unequipPermanent'; category: ItemCategory }         // 명시적 해제
-    | { type: 'consumeFood'; itemId: string }                      // 먹이 1개 소모
-    | { type: 'consumeToy'; itemId: string }                       // 놀이 1개 소모
+    | { type: 'gachaSpin'; pool: GachaPool }
+    | { type: 'placeDecor'; defId: string; x: number; y: number }
+    | { type: 'moveDecor'; instanceId: string; x: number; y: number }
+    | { type: 'removeDecor'; instanceId: string }
+    | { type: 'clearDecor' }
+    | { type: 'addPet'; defId: string }              // 바탕화면에 펫 등장 (≤5)
+    | { type: 'removePet'; instanceId: string }
+    | { type: 'renamePet'; instanceId: string; name: string }
+    | { type: 'resizePet'; instanceId: string; scale: number }
 ```
 
 ### 가챠 결과 처리 흐름
 
 ```
-[사용자가 가챠 버튼 클릭]
-   ↓ useInventoryStore.apply({ type: 'gachaSpin' })
+[가챠 패널 — 사용자가 'pet' 풀 뽑기 클릭]
+   ↓ useItemStore.apply({ type: 'gachaSpin', pool: 'pet' })
    ↓ window.api.item.apply
 [main: gacha reducer]
-   1. 점수 >= 50 확인
-      - 부족하면 no-op + 에러 반환
-   2. applyPlayerEvent({ type: 'gachaSpin' }) → -50점
-   3. 가챠 풀에서 등급 추첨 (70/25/5)
-   4. 그 등급의 카테고리·아이템 풀에서 랜덤 1개
-   5. 결과 아이템이 영구형:
-      - 이미 보유 → applyPlayerEvent({ type: 'gachaRefund' }) +10
-      - 미보유 → permanent[itemId] = { unlocked: true }
-   6. 결과 아이템이 소모형:
-      - consumable[itemId].count += 1
-   ↓
-writeItemState + broadcastItemState
-   ↓
-'item:changed' broadcast
-   ↓
-가챠 결과 정보(획득 아이템 ID, 환원 여부)를 응답으로 반환 → 가챠 패널이 박스 애니메이션 재생
+   1. 점수 >= GACHA_COST[pool] 확인 (부족 시 no-op + 에러)
+   2. applyPlayerEvent({ type: 'gachaSpin', pool })   → -비용
+   3. 풀에서 등급 추첨 → 그 등급의 아이템 1개 랜덤
+   4. 이미 보유 → applyPlayerEvent({ type: 'gachaRefund' }) +10, 보유 추가 안 함
+      미보유 → ownedPets.push(defId)
+   ↓ writeItemState + broadcast 'item:changed'
+   ↓ 결과(획득 id, 등급, 환원 여부) 응답 반환 → 패널이 박스 연출 재생
 ```
 
-### 도메인 간 부수효과 조립
-
-가챠는 player 점수에 의존. 이전 패턴(`onTodoCompleted` 콜백)처럼 인벤토리 도메인이 player를 직접 import하지 않고 콜백 주입:
+### 도메인 간 부수효과 조립 (main/index.ts)
 
 ```ts
-// src/main/index.ts
-registerInventoryIpc({
-    onGachaSpinCost: () => applyPlayerEvent({ type: 'gachaSpin' }),
+registerItemIpc({
+    onGachaCost: (pool) => applyPlayerEvent({ type: 'gachaSpin', pool }),
     onGachaRefund: () => applyPlayerEvent({ type: 'gachaRefund' }),
     getCurrentScore: () => readPlayerState().score,
+    onPlacedItemsChanged: (state) => broadcastDesktopDecor(state),  // 데코/펫 창 갱신
 })
 ```
 
+item 도메인은 player를 직접 import하지 않고 콜백 주입(기존 패턴 일관).
+
+### 바탕화면 데코/펫 렌더링
+
+- 데코·펫은 **캐릭터 윈도우 캔버스 위** 또는 **별도 전체화면 투명 플로팅 창**에 그린다.
+  - 참조 앱은 전체화면 투명창(`focusable:false`, `setIgnoreMouseEvents(true, {forward})`) + 캐릭터 캔버스 양쪽을 썼다.
+  - jumpet 채택안: Open Question (캐릭터 캔버스 통합 vs 전용 데코 창).
+- `item:changed` broadcast → 렌더러가 placedDecor/placedPets를 미러링해 갱신.
+
 ### 새 패널 추가 흐름 (가챠, 아이템)
 
-[context-menu.md](./context-menu.md)의 "새 패널 추가 흐름" 그대로:
-1. PanelId union에 `'gacha'`, `'item'` 추가 (이미 메뉴에는 있음)
-2. `src/main/panels/openGachaPanel.ts`, `openItemPanel.ts` 작성
+1. PanelId union에 `'gacha'`, `'item'` (이미 메뉴에 있음)
+2. `src/main/panels/openGachaPanel.ts`, `openItemPanel.ts`
 3. `src/main/panels/index.ts` switch 등록
-4. `src/renderer/gacha.html`, `item.html` + `pages/gacha/`, `pages/item/` 추가
-5. `electron.vite.config.ts`의 rollup input 등록
+4. `src/renderer/gacha.html`, `item.html` + `pages/gacha/`, `pages/item/`(탭 UI) 추가
+5. `electron.vite.config.ts` rollup input 등록
 
 ### 관련 코드 (계획)
 
 | 영역 | 파일 |
 |---|---|
 | 타입 (공유) | `src/shared/contracts/itemEvents.ts` (신규) |
-| 가챠 풀 데이터 | `src/shared/contracts/gachaPool.ts` 또는 `src/main/item/pool.ts` (신규) |
+| 뽑기 풀 데이터 (데코/펫) | `src/main/item/pool.ts` (신규) |
 | reducer + 가챠 로직 | `src/main/item/itemState.ts` (신규) |
 | 영속화 | `src/main/item/store.ts` (신규) |
 | IPC | `src/main/item/ipc.ts` (신규) |
 | barrel | `src/main/item/index.ts` (신규) |
 | renderer slice | `src/renderer/src/entities/item/` (신규) |
 | 가챠 패널 | `src/renderer/src/pages/gacha/` (신규) |
-| 아이템 패널 | `src/renderer/src/pages/item/` (신규) |
+| 아이템 패널 (탭) | `src/renderer/src/pages/item/` (신규) |
 
 ## 의존성
 
 | 의존 방향 | 무엇 |
 |---|---|
-| **호출함** | player (50점 소모 + 환원), character (장착 오버레이) |
-| **호출됨** | 우클릭 메뉴의 '🎰 가챠' '🎒 아이템' / feeding·playing(소모성 사용) |
+| **호출함** | player (뽑기 비용 30/50 + 중복 환원), character (바탕화면 데코·펫 렌더, 결과 모션) |
+| **호출됨** | 우클릭 메뉴의 '🎰 가챠'(뽑기) · '🎒 아이템'(인벤토리 탭) |
 
 ## Open Questions
 
-- **가챠 풀 확정** — 카테고리별로 노말/레어/특수에 몇 개씩? 시작 시 잠금 해제는 무엇? — **가장 큰 미정 사항**
-- **결과 등급별 카테고리 분포** — 다이어그램의 "6개 카테고리에서 랜덤 출현"은 등급별로 어떻게? 옵션:
-  - (A) 등급 추첨 후 6 카테고리 균등 분포
-  - (B) 등급별로 카테고리 분포가 다름 (예: 특수는 펫·이펙트만)
-  - (C) 카테고리 먼저 추첨 후 그 안에서 등급 결정
-- **`equippedSlots`의 'pet'** — 펫(예: 캐릭터의 동반자) 카테고리는 캐릭터 위에 오버레이? 옆에 별도 표시?
-- **시작 시 보유 (시드)** — 빈 인벤토리로 시작하면 먹이/놀이 패널이 항상 비어있음. 최소 시드 정책 필요
-- **가챠 애니메이션 시간** — 박스 등장·흔들림·열림까지 총 몇 초?
-- **가챠 결과 안내** — 영구 중복 환원 시 안내 메시지 어떻게?
-- **인벤토리 capacity** — 소모형 누적의 상한? (10개? 99개? 무한?)
-- **장착 동기화** — 캐릭터 윈도우의 시각 = 인벤토리의 `equipped` slot. 인벤토리 변경 → 캐릭터 윈도우가 자동 반영 (Zustand selector + 캐릭터 컴포넌트의 오버레이)
+- **데코/펫 풀 확정** — 데코 종류(이모지/PNG 목록·등급), 펫 종류·등급 분포 — **가장 큰 미정 사항**
+- **펫 풀 등급 분포** — 참조 앱은 일반1/희귀4/전설3(8종). 비율과 뽑기 가중치 확정 필요.
+- **중복 환원량** — 10점이 적정한지(데코 30·펫 50 비용 대비).
+- **바탕화면 렌더링 방식** — 캐릭터 캔버스 통합 vs 전용 전체화면 투명창. 후자는 새 윈도우 추가 필요.
+- **데코 좌표 영속화 단위** — 절대 px vs 화면 비율(0~1). 멀티 모니터/해상도 변화 대응.
+- **시작 시드** — 빈 컬렉션 시작 허용 여부.
+- **펫 최대 5마리 초과 시 UX** — 추가 버튼 비활성? 가장 오래된 펫 교체 권유?
+- **가챠 연출 시간** — 박스 등장~열림 총 몇 초?

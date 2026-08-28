@@ -31,15 +31,21 @@
 
 ## 1. 멀티 윈도우 모델
 
-### 왜 단일 윈도우가 아닌가
+> **갱신(현재 코드 기준)**: "기능마다 별 BrowserWindow" 모델은 **우클릭 → 탭형 통합 메뉴 창 1개**로 대체됐다.
+> 이제 윈도우는 ① 캐릭터 윈도우 ② 통합 메뉴 창(`menu.html`, 탭으로 모든 기능) 둘뿐이다.
+> 우클릭은 네이티브 드롭다운 대신 이 메뉴 창을 연다. 자세히는 [`features/context-menu.md`](./features/context-menu.md).
+> 아래 "패널 별창 패턴 / 새 패널 추가 흐름"은 **과거 모델 기록**이며, 현재는 탭 추가 흐름(context-menu.md)을 따른다.
+> **단, §2 SSOT 도메인 패턴은 그대로 유효** — 각 탭은 도메인 Zustand 미러를 그대로 쓴다.
 
-펫이 떠있는 동안 사용자가 To-Do · 가챠 · 운세 · 정보 등 별개 화면을 띄워 본다. 이걸 한 윈도우 안에 패널로 쌓으면:
-- 캐릭터가 항상 떠있어야 해서 transparent + alwaysOnTop인데, 패널이 그 위에 띄워지면 시각적으로 어색
+### 왜 캐릭터를 작은 윈도우로 두는가
+
+펫은 transparent + frameless 한 작은 창으로 둔다(캐릭터 이미지만 보이게).
 - 풀스크린 transparent overlay는 다른 앱 클릭이 통과 안 됨 (`setIgnoreMouseEvents`로 토글하기 복잡)
 
-→ **캐릭터 윈도우(작고 transparent + alwaysOnTop) + 각 패널마다 별 BrowserWindow** 로 분리. 각 윈도우는 OS가 알아서 관리.
+→ **캐릭터 윈도우(작고 transparent)** + 기능 UI는 별도 일반 창(통합 메뉴 창).
+**z-order는 일반 창처럼** — always-on-top을 쓰지 않는다(사용자 요청). 클릭하면 앞으로, 다른 앱 클릭 시 아래로.
 
-### 캐릭터 윈도우의 특수 옵션
+### 캐릭터 윈도우의 옵션
 
 ```ts
 new BrowserWindow({
@@ -48,13 +54,10 @@ new BrowserWindow({
     frame: false,
     resizable: false,
     hasShadow: false,
-    alwaysOnTop: true,
-    focusable: false,         // 펫 클릭이 뒷창 포커스를 안 빼앗음
     fullscreenable: false,    // 사용자가 실수로 풀스크린 X
     skipTaskbar: true,        // 작업표시줄 숨김
 })
-mainWindow.setAlwaysOnTop(true, 'screen-saver')   // 풀스크린 앱 위에도 표시
-mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
+// always-on-top / visibleOnAllWorkspaces / focusable:false 는 쓰지 않는다 — 일반 창 z-order.
 ```
 
 자세한 이유는 [`features/character.md`](./features/character.md) 참고.

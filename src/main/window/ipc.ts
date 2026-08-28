@@ -61,6 +61,22 @@ export const registerWindowIpc = (): void => {
         win.setPosition(Math.round(x), Math.round(y))
     })
 
+    // 캐릭터 크기(petScale) 반영용 — 창 크기를 바꾸되 현재 중심을 고정해 제자리에서 커지게 한다.
+    // resizable:false 창도 프로그램적 setBounds는 동작한다.
+    ipcMain.on('window:setSize', (event, width: number, height: number) => {
+        const win = BrowserWindow.fromWebContents(event.sender)
+        if (!win) {
+            return
+        }
+        const [currentX, currentY] = win.getPosition()
+        const [currentWidth, currentHeight] = win.getSize()
+        const nextWidth = Math.round(width)
+        const nextHeight = Math.round(height)
+        const nextX = Math.round(currentX + (currentWidth - nextWidth) / 2)
+        const nextY = Math.round(currentY + (currentHeight - nextHeight) / 2)
+        win.setBounds({ x: nextX, y: nextY, width: nextWidth, height: nextHeight })
+    })
+
     ipcMain.handle('window:getBounds', (event) => {
         const win = BrowserWindow.fromWebContents(event.sender)
         if (!win) {
