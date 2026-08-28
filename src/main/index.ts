@@ -79,6 +79,16 @@ const createWindow = (): BrowserWindow => {
 // 데코 창 싱글톤 ref — 꾸미기 모드 토글 시 클릭통과를 조작한다.
 let worldWindow: BrowserWindow | null = null
 
+// Windows는 숨겨진 투명 창을 리사이즈한 뒤 처음 표시할 때 새 backing surface를
+// 시스템 기본색(라이트=흰색, 다크=검정)으로 지우는 경우가 있다. 생성 옵션만으로는
+// 그 surface에 색이 다시 적용되지 않으므로, 복원된 데코의 bbox 창을 표시하기 직전에
+// 네이티브 배경을 다시 완전 투명으로 지정한다.
+const keepWorldWindowTransparent = (): void => {
+    if (worldWindow && !worldWindow.isDestroyed()) {
+        worldWindow.setBackgroundColor('#00000000')
+    }
+}
+
 // 캐릭터(펫) 창 싱글톤 ref — 말풍선이 뜰 때 잠깐 최상단으로 끌어올린다.
 let characterWindow: BrowserWindow | null = null
 
@@ -262,8 +272,13 @@ const createWorldWindow = (): BrowserWindow => {
     // 전체화면 투명 오버레이는 평소 숨겨 둔다(일부 Windows에서 투명 합성 실패 시 바탕화면이
     // 통째로 가려지는 문제 방지). 꾸미기 모드이거나 배치된 데코가 있을 때만 표시.
     win.on('ready-to-show', () => {
+        keepWorldWindowTransparent()
         syncWorldWindowVisibility(readWorldState())
     })
+
+    // 재실행 시 persist:world 세션에서 문서를 복원해도 Chromium의 기본 canvas 색이
+    // 네이티브 창 배경으로 노출되지 않게, 문서 로드가 끝난 시점에도 한 번 보강한다.
+    win.webContents.on('did-finish-load', keepWorldWindowTransparent)
 
     if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
         win.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/world.html`)
@@ -435,6 +450,9 @@ app.whenReady().then(() => {
             width: Math.max(1, Math.round(bounds.w)),
             height: Math.max(1, Math.round(bounds.h)),
         })
+        // 앱 재실행의 fixed 모드에서는 이 경로가 월드 창의 첫 표시 지점이다.
+        // setBounds가 만든 새 native surface의 OS 기본색을 showInactive 전에 제거한다.
+        keepWorldWindowTransparent()
         const state = readWorldState()
         if (state.mode !== 'edit' && state.placed.length > 0) {
             if (!worldWindow.isVisible()) {
