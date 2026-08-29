@@ -1,8 +1,5 @@
 import { useEffect, useState } from 'react'
-import {
-    CHARACTER_DISPLAY_NAMES,
-    useSelectedCharacterId,
-} from '@renderer/entities/character'
+import { CHARACTER_DISPLAY_NAMES, useSelectedCharacterId } from '@renderer/entities/character'
 import { getBirthdayCooldown, useProfile, useProfileActions } from '@renderer/entities/profile'
 import {
     PET_SCALE_MAX,
@@ -38,15 +35,15 @@ export const SettingsTab = () => {
         setScaleDraft(petScale)
     }, [petScale])
     // 슬라이더 표시 수치(50~150%)와 실제 배율(PET_SCALE_MIN~MAX, =0.5~0.8)을 분리한다.
-    // 표시 150% = 실제 0.8(최대), 표시 50% = 실제 0.5(최소). 선형 매핑.
+    // 표시 100% = 실제 0.65, 표시 150% = 실제 0.8(최대), 표시 50% = 실제 0.5(최소).
     const DISPLAY_MIN = 50
     const DISPLAY_MAX = 150
+    const clampDisplay = (display: number) => Math.min(DISPLAY_MAX, Math.max(DISPLAY_MIN, display))
     const scaleToDisplay = (scale: number) =>
-        DISPLAY_MIN +
-        ((scale - PET_SCALE_MIN) / (PET_SCALE_MAX - PET_SCALE_MIN)) * (DISPLAY_MAX - DISPLAY_MIN)
+        DISPLAY_MIN + ((scale - PET_SCALE_MIN) / (PET_SCALE_MAX - PET_SCALE_MIN)) * (DISPLAY_MAX - DISPLAY_MIN)
     const displayToScale = (display: number) =>
         PET_SCALE_MIN +
-        ((display - DISPLAY_MIN) / (DISPLAY_MAX - DISPLAY_MIN)) * (PET_SCALE_MAX - PET_SCALE_MIN)
+        ((clampDisplay(display) - DISPLAY_MIN) / (DISPLAY_MAX - DISPLAY_MIN)) * (PET_SCALE_MAX - PET_SCALE_MIN)
 
     // 내 정보(profile SSOT) — 홈 탭과 같은 값을 편집한다.
     const profile = useProfile()
@@ -123,10 +120,10 @@ export const SettingsTab = () => {
                     min={DISPLAY_MIN}
                     max={DISPLAY_MAX}
                     step={10}
-                    value={Math.round(scaleToDisplay(scaleDraft))}
+                    value={Math.round(clampDisplay(scaleToDisplay(scaleDraft)))}
                     onChange={onScaleChange}
                 />
-                <span className='scale-value'>{Math.round(scaleToDisplay(scaleDraft))}%</span>
+                <span className='scale-value'>{Math.round(clampDisplay(scaleToDisplay(scaleDraft)))}%</span>
             </div>
 
             {/* 내 정보 */}
@@ -144,17 +141,11 @@ export const SettingsTab = () => {
                 <ProfileRow
                     label='생일'
                     value={profile.birthday}
-                    onChange={
-                        birthdayCooldown.locked
-                            ? undefined
-                            : (value) => void setField('birthday', value)
-                    }
+                    onChange={birthdayCooldown.locked ? undefined : (value) => void setField('birthday', value)}
                 />
             </div>
             {birthdayCooldown.locked && (
-                <div className='hint'>
-                    생일은 한 달에 한 번만 바꿀 수 있어요 (D-{birthdayCooldown.remainingDays})
-                </div>
+                <div className='hint'>생일은 한 달에 한 번만 바꿀 수 있어요 (D-{birthdayCooldown.remainingDays})</div>
             )}
 
             {/* 앱 정보 / 종료 */}

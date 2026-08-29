@@ -29,6 +29,7 @@ const createWindow = (): BrowserWindow => {
         show: false,
         frame: false,
         transparent: true,
+        backgroundColor: '#00000000',
         resizable: false,
         hasShadow: false,
         // 일반 창 z-order: always-on-top을 쓰지 않는다. 클릭하면 앞으로 나오고
@@ -231,6 +232,7 @@ const createWorldWindow = (): BrowserWindow => {
         show: false,
         frame: false,
         transparent: true,
+        backgroundColor: '#00000000',
         resizable: false,
         movable: false,
         focusable: false,
@@ -315,9 +317,9 @@ app.whenReady().then(() => {
     })
 
     // 운세 영속 데이터 IPC — todo와 같은 패턴. 새 운세가 떴을 때만 점수 보상을 조립한다.
-    // (fortune은 player를 직접 import하지 않고, 보상 금액(단계 기반)만 콜백으로 위임.)
+    // 크리스탈볼에 표시되는 운세 점수(60~100)와 별개로, 실제 지급 포인트는 1~30 랜덤이다.
+    // (fortune은 player를 직접 import하지 않고, pointReward만 콜백으로 위임.)
     const onFortuneRolled = (record: { pointReward: number }) => {
-        // 지급 포인트는 운세 점수(구슬 표시)와 별개인 1~30 랜덤 값.
         applyPlayerEvent({ type: 'fortune', amount: record.pointReward })
     }
     registerFortuneIpc({ onFortuneRolled })
@@ -410,39 +412,36 @@ app.whenReady().then(() => {
     // 고정 모드에서 renderer가 계산한 '데코가 놓인 영역'만큼 월드 오버레이 창을 축소한다.
     // 전체화면 투명 창이 일부 Windows에서 흰색으로 합성돼 바탕화면을 덮는 문제를,
     // 작은 투명 창(캐릭터 창처럼 정상 동작)으로 만들어 회피한다. null이면 전체화면으로 복귀(편집 모드).
-    ipcMain.on(
-        'world:setOverlayBounds',
-        (_event, bounds: { x: number; y: number; w: number; h: number } | null) => {
-            if (!worldWindow || worldWindow.isDestroyed()) {
-                return
-            }
-            const display = screen.getPrimaryDisplay().bounds
-            if (!bounds) {
-                // 편집 모드: 전체화면으로(어디에나 배치). 표시/z-order는 syncWorldWindowVisibility가 처리.
-                worldWindow.setBounds({
-                    x: display.x,
-                    y: display.y,
-                    width: display.width,
-                    height: display.height,
-                })
-                return
-            }
-            // 고정 모드: 데코 영역(bbox)만큼만 리사이즈한 뒤에야 표시한다(전체화면 노출→흰색 방지).
+    ipcMain.on('world:setOverlayBounds', (_event, bounds: { x: number; y: number; w: number; h: number } | null) => {
+        if (!worldWindow || worldWindow.isDestroyed()) {
+            return
+        }
+        const display = screen.getPrimaryDisplay().bounds
+        if (!bounds) {
+            // 편집 모드: 전체화면으로(어디에나 배치). 표시/z-order는 syncWorldWindowVisibility가 처리.
             worldWindow.setBounds({
-                x: display.x + Math.round(bounds.x),
-                y: display.y + Math.round(bounds.y),
-                width: Math.max(1, Math.round(bounds.w)),
-                height: Math.max(1, Math.round(bounds.h)),
+                x: display.x,
+                y: display.y,
+                width: display.width,
+                height: display.height,
             })
-            const state = readWorldState()
-            if (state.mode !== 'edit' && state.placed.length > 0) {
-                if (!worldWindow.isVisible()) {
-                    worldWindow.showInactive()
-                }
-                pinWorldToBottom()
+            return
+        }
+        // 고정 모드: 데코 영역(bbox)만큼만 리사이즈한 뒤에야 표시한다(전체화면 노출→흰색 방지).
+        worldWindow.setBounds({
+            x: display.x + Math.round(bounds.x),
+            y: display.y + Math.round(bounds.y),
+            width: Math.max(1, Math.round(bounds.w)),
+            height: Math.max(1, Math.round(bounds.h)),
+        })
+        const state = readWorldState()
+        if (state.mode !== 'edit' && state.placed.length > 0) {
+            if (!worldWindow.isVisible()) {
+                worldWindow.showInactive()
             }
-        },
-    )
+            pinWorldToBottom()
+        }
+    })
 
     // 앱 시작 시엔 운세를 자동으로 굴리지 않는다 — 시작 잔고를 정확히 100으로 유지하기 위함.
     // (운세 추첨 + 점수 보상은 사용자가 운세 탭을 열 때 FortuneTab에서 roll()로 지급된다. 날짜당 멱등.)

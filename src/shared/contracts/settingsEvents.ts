@@ -7,9 +7,11 @@ export type ThemeId = 'skyblue' | 'green' | 'babypink' | 'brown' | 'light' | 'da
 
 export const THEME_IDS: ThemeId[] = ['skyblue', 'green', 'babypink', 'brown', 'light', 'dark']
 
-// 캐릭터 윈도우 표시 배율. 1.0 = 기본 300px. 범위는 reducer에서 강제(clamp).
+// 캐릭터 윈도우 표시 배율. 설정 UI의 50~150%가 0.5~0.8로 매핑된다.
+// 100%는 중간값 0.65이며, 범위는 reducer/store에서 강제(clamp).
 export const PET_SCALE_MIN = 0.5
 export const PET_SCALE_MAX = 0.8
+export const PET_SCALE_DEFAULT = 0.65
 
 export type SettingsState = {
     theme: ThemeId
@@ -25,6 +27,6 @@ export type SettingsEvent =
 
 export const INITIAL_SETTINGS_STATE: SettingsState = {
     theme: 'skyblue',
-    petScale: 1.0,
+    petScale: PET_SCALE_DEFAULT,
     launchAtLogin: false,
 }

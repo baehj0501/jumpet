@@ -8,7 +8,7 @@ export type FortuneLevel = 1 | 2 | 3 | 4 | 5
 export type FortuneRecord = {
     date: string // 'YYYY-MM-DD' (로컬 기준)
     level: FortuneLevel
-    scoreAwarded: number // 운세 '점수'(구슬 표시용, 60~100). 단계 기반. 재화 지급액과는 별개.
+    scoreAwarded: number // 운세 '점수'(크리스탈볼 표시용, 60~100). 단계 기반. 재화 지급액과는 별개.
     pointReward: number // 실제 지급 포인트(재화). 1~30 랜덤. 본 시점에 player 점수로 가산됨.
     text: string // 운세 메시지
 }

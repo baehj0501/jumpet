@@ -1,5 +1,6 @@
 import {
     PET_SCALE_MAX,
+    PET_SCALE_DEFAULT,
     PET_SCALE_MIN,
     THEME_IDS,
     type SettingsEvent,
@@ -8,16 +9,13 @@ import {
 
 const clampPetScale = (value: number): number => {
     if (!Number.isFinite(value)) {
-        return 1.0
+        return PET_SCALE_DEFAULT
     }
     return Math.min(PET_SCALE_MAX, Math.max(PET_SCALE_MIN, value))
 }
 
 // 설정 reducer. 같은 값이면 동일 참조 반환(불필요 broadcast 방지). 잘못된 입력은 무시/보정한다.
-export const reduceSettingsState = (
-    state: SettingsState,
-    event: SettingsEvent,
-): SettingsState => {
+export const reduceSettingsState = (state: SettingsState, event: SettingsEvent): SettingsState => {
     switch (event.type) {
         case 'setTheme': {
             if (!THEME_IDS.includes(event.theme) || event.theme === state.theme) {

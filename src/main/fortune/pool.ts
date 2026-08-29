@@ -40,7 +40,7 @@ export const LEVEL_DISTRIBUTION: Record<FortuneLevel, number> = {
     1: 0.1,
 }
 
-// 운세 '점수'(구슬 표시용) 단계별 범위 [min, max] (둘 다 포함). 원래대로 60~100.
+// 운세 '점수'(구슬 표시용) 단계별 범위 [min, max] (둘 다 포함). 크리스탈볼에 표시되는 운 점수 60~100.
 // (실제 지급 포인트(재화)는 이 값과 별개로 1~30 랜덤 — fortuneState의 pointReward 참고.)
 export const SCORE_BY_LEVEL: Record<FortuneLevel, [number, number]> = {
     5: [91, 100],
