@@ -138,6 +138,35 @@ const pinWorldToBottom = (): void => {
     }
 }
 
+// Windows의 월드 창은 앱 시작 시 fixed 모드라서 편집 모드가 거치는
+// always-on-top layered-window 합성 경로를 한 번도 거치지 않는다. 그 상태로 숨겨진 창을
+// 바로 일반 z-order에 show하면 DWM이 투명 픽셀을 시스템 배경색으로 합성한다.
+// 창을 보이지 않는 상태(opacity 0)에서 편집 모드와 같은 합성 경로로 먼저 attach한 뒤
+// 일반 z-order로 내리고 표시하면, 최초 배치 후 저장했을 때와 재실행 복원의 동작이 같아진다.
+const showFixedWorldWindow = (): void => {
+    if (!worldWindow || worldWindow.isDestroyed() || worldWindow.isVisible()) {
+        return
+    }
+    if (process.platform !== 'win32') {
+        worldWindow.showInactive()
+        pinWorldToBottom()
+        return
+    }
+
+    worldWindow.setOpacity(0)
+    worldWindow.setAlwaysOnTop(true, 'normal')
+    worldWindow.showInactive()
+    setImmediate(() => {
+        if (!worldWindow || worldWindow.isDestroyed()) {
+            return
+        }
+        if (readWorldState().mode === 'fixed') {
+            pinWorldToBottom()
+        }
+        worldWindow.setOpacity(1)
+    })
+}
+
 // 꾸미기 모드에 따라 데코 창의 상호작용을 토글한다.
 // edit: 클릭/드래그 받음. fixed: 클릭 통과(데스크탑/다른 창 클릭 가능).
 // 전체화면 창이라 포커스를 뺏으면 메뉴 창을 덮으므로 focus()는 호출하지 않는다.
@@ -436,10 +465,7 @@ app.whenReady().then(() => {
         })
         const state = readWorldState()
         if (state.mode !== 'edit' && state.placed.length > 0) {
-            if (!worldWindow.isVisible()) {
-                worldWindow.showInactive()
-            }
-            pinWorldToBottom()
+            showFixedWorldWindow()
         }
     })
 
