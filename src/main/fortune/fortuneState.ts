@@ -54,6 +54,8 @@ export const reduceFortuneState = (
                 date: today,
                 level,
                 scoreAwarded: pickScore(level),
+                // 실제 지급 포인트: 운세 점수와 무관하게 1~30 랜덤.
+                pointReward: 1 + Math.floor(Math.random() * 30),
                 text: pickMessage(level),
             }
             return { today: record }

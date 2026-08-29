@@ -40,11 +40,12 @@ export const LEVEL_DISTRIBUTION: Record<FortuneLevel, number> = {
     1: 0.1,
 }
 
-// 단계별 지급 포인트 범위 [min, max] (둘 다 포함). 운세에 따라 최대 30점.
+// 운세 '점수'(구슬 표시용) 단계별 범위 [min, max] (둘 다 포함). 원래대로 60~100.
+// (실제 지급 포인트(재화)는 이 값과 별개로 1~30 랜덤 — fortuneState의 pointReward 참고.)
 export const SCORE_BY_LEVEL: Record<FortuneLevel, [number, number]> = {
-    5: [26, 30],
-    4: [20, 25],
-    3: [14, 19],
-    2: [8, 13],
-    1: [3, 7],
+    5: [91, 100],
+    4: [81, 90],
+    3: [71, 80],
+    2: [66, 75],
+    1: [60, 70],
 }

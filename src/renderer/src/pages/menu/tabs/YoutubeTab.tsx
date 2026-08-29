@@ -37,7 +37,7 @@ export const YoutubeTab = () => {
             <div className='section-title-1'>유튜브 링크 (선택)</div>
             <input
                 className='fi'
-                placeholder='https://youtube.com/watch?v=...  (비우면 홈)'
+                placeholder='https://youtube.com/watch?v=...'
                 value={url}
                 onChange={(event) => setUrl(event.target.value)}
                 onKeyDown={(event) => {
