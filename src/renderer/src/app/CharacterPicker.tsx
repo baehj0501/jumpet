@@ -1,4 +1,4 @@
-import { type CSSProperties, useState } from 'react'
+import { type CSSProperties, useLayoutEffect, useRef, useState } from 'react'
 import {
     CHARACTER_ASSETS,
     CHARACTER_DISPLAY_NAMES,
@@ -35,6 +35,14 @@ const overlayStyle: CSSProperties = {
     borderRadius: 16,
     boxSizing: 'border-box',
     padding: '12px 10px',
+}
+// 실제 콘텐츠(측정 대상) — 창 높이를 이 높이에 맞춘다. 세로 배치·간격은 여기서 준다.
+const contentWrapStyle: CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 8,
+    width: '100%',
 }
 const titleStyle: CSSProperties = {
     fontSize: 12,
@@ -166,6 +174,19 @@ export const CharacterPicker = () => {
     const [birthDay, setBirthDay] = useState('')
     const [starting, setStarting] = useState(false)
 
+    // 온보딩 창 높이를 콘텐츠에 딱 맞춘다 — 단계(캐릭터 선택/프로필 입력)마다 높이가 달라
+    // 고정값이면 아래 여백이 남거나(선택 단계) 잘리므로(프로필 단계), 콘텐츠 높이를 측정해 맞춘다.
+    const contentRef = useRef<HTMLDivElement>(null)
+    useLayoutEffect(() => {
+        const element = contentRef.current
+        if (!element || !window.api?.setWindowSize) {
+            return
+        }
+        const OVERLAY_VERTICAL_PADDING = 24 // overlayStyle padding(위+아래 12px)
+        const height = Math.ceil(element.getBoundingClientRect().height) + OVERLAY_VERTICAL_PADDING
+        window.api.setWindowSize(300, height)
+    }, [picked])
+
     const handleStart = async () => {
         if (!picked || name.trim() === '' || starting) {
             return
@@ -185,28 +206,35 @@ export const CharacterPicker = () => {
     if (!picked) {
         return (
             <div style={overlayStyle}>
-                <div style={titleStyle}>
-                    함께할 친구를
-                    <br />
-                    골라주세요
-                </div>
-                <div style={gridStyle}>
-                    {CHARACTER_IDS.map((id) => (
-                        <button
-                            type='button'
-                            key={id}
-                            style={cellStyle}
-                            onClick={() => setPicked(id)}
-                        >
-                            <img
-                                src={CHARACTER_ASSETS[id].default}
-                                alt={CHARACTER_DISPLAY_NAMES[id] ?? id}
-                                style={thumbStyle}
-                                draggable={false}
-                            />
-                            <span style={nameStyle}>{CHARACTER_DISPLAY_NAMES[id] ?? id}</span>
-                        </button>
-                    ))}
+                <div
+                    ref={contentRef}
+                    style={contentWrapStyle}
+                >
+                    <div style={titleStyle}>
+                        함께할 친구를
+                        <br />
+                        골라주세요
+                    </div>
+                    <div style={gridStyle}>
+                        {CHARACTER_IDS.map((id) => (
+                            <button
+                                type='button'
+                                key={id}
+                                style={cellStyle}
+                                onClick={() => setPicked(id)}
+                            >
+                                <img
+                                    src={CHARACTER_ASSETS[id].default}
+                                    alt={CHARACTER_DISPLAY_NAMES[id] ?? id}
+                                    style={thumbStyle}
+                                    draggable={false}
+                                />
+                                <span style={nameStyle}>
+                                    {CHARACTER_DISPLAY_NAMES[id] ?? id}
+                                </span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
         )
@@ -216,80 +244,85 @@ export const CharacterPicker = () => {
     const canStart = name.trim() !== '' && !starting
     return (
         <div style={overlayStyle}>
-            <img
-                src={CHARACTER_ASSETS[picked].default}
-                alt={CHARACTER_DISPLAY_NAMES[picked] ?? picked}
-                style={pickedThumbStyle}
-                draggable={false}
-            />
-            <div style={titleStyle}>
-                {CHARACTER_DISPLAY_NAMES[picked] ?? picked}와(과)
-                <br />
-                함께 시작해요!
-            </div>
-            <div style={fieldStyle}>
-                <span style={labelStyle}>내 이름</span>
-                <input
-                    style={inputStyle}
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    placeholder='이름을 입력하세요'
-                    maxLength={MAX_PROFILE_VALUE_LENGTH}
-                    autoFocus
+            <div
+                ref={contentRef}
+                style={contentWrapStyle}
+            >
+                <img
+                    src={CHARACTER_ASSETS[picked].default}
+                    alt={CHARACTER_DISPLAY_NAMES[picked] ?? picked}
+                    style={pickedThumbStyle}
+                    draggable={false}
                 />
-            </div>
-            <div style={fieldStyle}>
-                <span style={labelStyle}>생일</span>
-                <div style={birthdayRowStyle}>
-                    <select
-                        style={selectStyle}
-                        value={birthMonth}
-                        onChange={(event) => setBirthMonth(event.target.value)}
-                    >
-                        <option value=''>월</option>
-                        {MONTHS.map((month) => (
-                            <option
-                                key={month}
-                                value={month}
-                            >
-                                {month}월
-                            </option>
-                        ))}
-                    </select>
-                    <select
-                        style={selectStyle}
-                        value={birthDay}
-                        onChange={(event) => setBirthDay(event.target.value)}
-                    >
-                        <option value=''>일</option>
-                        {DAYS.map((day) => (
-                            <option
-                                key={day}
-                                value={day}
-                            >
-                                {day}일
-                            </option>
-                        ))}
-                    </select>
+                <div style={titleStyle}>
+                    {CHARACTER_DISPLAY_NAMES[picked] ?? picked}와(과)
+                    <br />
+                    함께 시작해요!
                 </div>
-            </div>
-            <div style={buttonsRowStyle}>
-                <button
-                    type='button'
-                    style={backButtonStyle}
-                    onClick={() => setPicked(null)}
-                    disabled={starting}
-                >
-                    뒤로
-                </button>
-                <button
-                    type='button'
-                    style={canStart ? startButtonStyle : startButtonDisabledStyle}
-                    onClick={() => void handleStart()}
-                    disabled={!canStart}
-                >
-                    시작하기
-                </button>
+                <div style={fieldStyle}>
+                    <span style={labelStyle}>내 이름</span>
+                    <input
+                        style={inputStyle}
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
+                        placeholder='이름을 입력하세요'
+                        maxLength={MAX_PROFILE_VALUE_LENGTH}
+                        autoFocus
+                    />
+                </div>
+                <div style={fieldStyle}>
+                    <span style={labelStyle}>생일</span>
+                    <div style={birthdayRowStyle}>
+                        <select
+                            style={selectStyle}
+                            value={birthMonth}
+                            onChange={(event) => setBirthMonth(event.target.value)}
+                        >
+                            <option value=''>월</option>
+                            {MONTHS.map((month) => (
+                                <option
+                                    key={month}
+                                    value={month}
+                                >
+                                    {month}월
+                                </option>
+                            ))}
+                        </select>
+                        <select
+                            style={selectStyle}
+                            value={birthDay}
+                            onChange={(event) => setBirthDay(event.target.value)}
+                        >
+                            <option value=''>일</option>
+                            {DAYS.map((day) => (
+                                <option
+                                    key={day}
+                                    value={day}
+                                >
+                                    {day}일
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+                <div style={buttonsRowStyle}>
+                    <button
+                        type='button'
+                        style={backButtonStyle}
+                        onClick={() => setPicked(null)}
+                        disabled={starting}
+                    >
+                        뒤로
+                    </button>
+                    <button
+                        type='button'
+                        style={canStart ? startButtonStyle : startButtonDisabledStyle}
+                        onClick={() => void handleStart()}
+                        disabled={!canStart}
+                    >
+                        시작하기
+                    </button>
+                </div>
             </div>
         </div>
     )

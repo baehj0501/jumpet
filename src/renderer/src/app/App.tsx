@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useRef, useState } from 'react'
+import { type CSSProperties, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
     CHARACTER_CLICK_FRAMES,
     CHARACTER_WALK_FRAMES,
@@ -420,16 +420,32 @@ export const App = () => {
         if (!window.api?.setWindowSize) {
             return
         }
-        // 온보딩(캐릭터 선택) 중엔 캐릭터 크기 설정(petScale)과 무관하게 고정 크기로 둔다.
-        // 설정이 작으면(예: 0.8) 창이 240px로 줄어 선택지 4종 + 프로필 입력이 다 안 보이고
-        // 스크롤이 생기므로, 온보딩 오버레이가 온전히 보이는 크기로 키운다.
+        // 온보딩(캐릭터 선택) 중엔 창 크기를 CharacterPicker가 콘텐츠 높이에 맞춰 직접 정한다.
+        // 여기서 건드리면 그 측정값을 덮어써 버리므로 관여하지 않는다.
         if (!hasChosenCharacter) {
-            window.api.setWindowSize(300, 440)
             return
         }
         const size = Math.round(BASE_WINDOW_SIZE * petScale)
         window.api.setWindowSize(size, Math.round(size * windowHeightRatio))
     }, [petScale, windowHeightRatio, hasChosenCharacter])
+
+    // 온보딩 완료(캐릭터 선택 확정) 순간, 창이 온보딩 크기 그대로인 채 캐릭터 뷰가 먼저 그려졌다가
+    // 뒤늦게 캐릭터 크기로 리사이즈돼 '입력 창이 캐릭터 모양으로 잘렸다 나타나는' 깜빡임이 보인다.
+    // 그 전환 구간(리사이즈 정착 전)엔 캐릭터 뷰를 잠깐 숨겼다가 부드럽게 나타낸다.
+    const [chosenSettling, setChosenSettling] = useState(false)
+    const previousChosenRef = useRef(hasChosenCharacter)
+    useLayoutEffect(() => {
+        if (previousChosenRef.current === hasChosenCharacter) {
+            return
+        }
+        previousChosenRef.current = hasChosenCharacter
+        if (!hasChosenCharacter) {
+            return
+        }
+        setChosenSettling(true)
+        const timeoutId = setTimeout(() => setChosenSettling(false), 240)
+        return () => clearTimeout(timeoutId)
+    }, [hasChosenCharacter])
 
     // 생일 축하 — 생일 당일이면 축하 멘트 + 보너스 포인트(연 1회, localStorage로 중복 방지).
     const profileForBirthday = useProfile()
@@ -453,7 +469,14 @@ export const App = () => {
     }
 
     return (
-        <>
+        <div
+            style={{
+                width: '100%',
+                height: '100%',
+                opacity: chosenSettling ? 0 : 1,
+                transition: chosenSettling ? 'none' : 'opacity 150ms ease',
+            }}
+        >
             <SpeechBubble
                 text={speech.text}
                 tag={speech.tag}
@@ -504,6 +527,6 @@ export const App = () => {
                     />
                 </div>
             )}
-        </>
+        </div>
     )
 }
