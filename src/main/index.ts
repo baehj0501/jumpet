@@ -232,9 +232,19 @@ const syncWorldWindowVisibility = (state: WorldState): void => {
             worldWindow.showInactive()
         }
         worldWindow.moveTop()
-    } else if (worldWindow.isVisible()) {
-        // 고정 모드: 전체화면 상태로 보이면 흰색이 되므로 숨기고, setOverlayBounds가 bbox로 재표시.
-        worldWindow.hide()
+    } else if (worldWindow.isVisible() && !worldPriming) {
+        // 고정 모드: '전체화면 상태로' 보이면 흰색이 되므로 숨기고, setOverlayBounds가 bbox로 재표시한다.
+        // 단 (1) 프라임 진행 중이면 프라임이 곧 bbox로 축소하므로 건드리지 않고,
+        //    (2) 이미 bbox(작은) 크기로 제대로 떠 있으면 숨기면 안 된다(그대로 두면 데코가 계속 보임).
+        // 이 가드가 없으면, 콜드 스타트에서 setOverlayBounds(프라임)가 ready-to-show보다 먼저 도착해
+        // 창을 전체화면으로 띄운 순간 ready-to-show가 그 창을 hide해 데코가 영영 안 뜨는 레이스가 난다.
+        const display = screen.getPrimaryDisplay().bounds
+        const bounds = worldWindow.getBounds()
+        const isFullscreenSized =
+            bounds.width >= display.width && bounds.height >= display.height
+        if (isFullscreenSized) {
+            worldWindow.hide()
+        }
     }
 }
 
