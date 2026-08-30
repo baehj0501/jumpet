@@ -1,3 +1,5 @@
+// 반드시 최상단 — 어떤 도메인 store 모듈보다 먼저 실행되어야 dev용 userData 경로가 적용된다.
+import './devUserData'
 import { app, shell, BrowserWindow, ipcMain, screen } from 'electron'
 import Store from 'electron-store'
 import { join } from 'node:path'
