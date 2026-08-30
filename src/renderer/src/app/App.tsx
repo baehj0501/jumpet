@@ -420,9 +420,16 @@ export const App = () => {
         if (!window.api?.setWindowSize) {
             return
         }
+        // 온보딩(캐릭터 선택) 중엔 캐릭터 크기 설정(petScale)과 무관하게 고정 크기로 둔다.
+        // 설정이 작으면(예: 0.8) 창이 240px로 줄어 선택지 4종 + 프로필 입력이 다 안 보이고
+        // 스크롤이 생기므로, 온보딩 오버레이가 온전히 보이는 크기로 키운다.
+        if (!hasChosenCharacter) {
+            window.api.setWindowSize(300, 440)
+            return
+        }
         const size = Math.round(BASE_WINDOW_SIZE * petScale)
         window.api.setWindowSize(size, Math.round(size * windowHeightRatio))
-    }, [petScale, windowHeightRatio])
+    }, [petScale, windowHeightRatio, hasChosenCharacter])
 
     // 생일 축하 — 생일 당일이면 축하 멘트 + 보너스 포인트(연 1회, localStorage로 중복 방지).
     const profileForBirthday = useProfile()
