@@ -24,8 +24,25 @@ export const WorldPage = () => {
     const [origin, setOrigin] = useState<{ x: number; y: number } | null>(null)
     // 데코 이미지 로드 후 크기가 확정되면 bbox를 다시 계산하도록 하는 트리거.
     const [loadTick, setLoadTick] = useState(0)
+    // 모드 전환(고정↔편집) 순간, 창 리사이즈(main)와 데코 재배치(renderer)가 프로세스 간 시차로
+    // 어긋나 데코가 잠깐 이동했다 제자리로 오는 지터가 보인다. 전환 직후 잠깐 스테이지를 숨겨(opacity 0)
+    // 그 리플로우를 가리고, 정착되면 부드럽게 다시 보이게 한다. (CSS opacity는 투명 창에서도 정상 동작 —
+    // main의 BrowserWindow.setOpacity는 transparent 창에서 무효라 렌더러 측에서 처리한다.)
+    const [settling, setSettling] = useState(false)
+    const previousModeRef = useRef(mode)
 
     const editing = mode === 'edit'
+
+    // useLayoutEffect로 두어 전환 직후 첫 페인트 '전에' opacity 0을 적용한다(지터 프레임 유출 방지).
+    useLayoutEffect(() => {
+        if (previousModeRef.current === mode) {
+            return
+        }
+        previousModeRef.current = mode
+        setSettling(true)
+        const timeoutId = setTimeout(() => setSettling(false), 260)
+        return () => clearTimeout(timeoutId)
+    }, [mode])
 
     // 배치/모드/이미지로드가 바뀔 때마다 오버레이 창 크기를 갱신한다.
     useLayoutEffect(() => {
@@ -86,7 +103,7 @@ export const WorldPage = () => {
     }
 
     // 고정 모드 + 데코가 있을 때만 창을 축소하므로, 스테이지를 화면 전체 크기로 유지하고 오프셋한다.
-    const stageStyle =
+    const positionStyle =
         !editing && placed.length > 0 && origin
             ? {
                   position: 'absolute' as const,
@@ -95,7 +112,13 @@ export const WorldPage = () => {
                   left: -origin.x,
                   top: -origin.y,
               }
-            : undefined
+            : {}
+    // 전환 중엔 즉시 숨기고(지터 은폐), 정착되면 부드럽게 나타난다.
+    const stageStyle = {
+        ...positionStyle,
+        opacity: settling ? 0 : 1,
+        transition: settling ? 'none' : 'opacity 150ms ease',
+    }
 
     return (
         <div

@@ -177,7 +177,7 @@ export const MenuPage = () => {
                 <button
                     type='button'
                     className='close-btn'
-                    onClick={() => window.close()}
+                    onClick={() => window.api.menu.hide()}
                 >
                     ✕
                 </button>

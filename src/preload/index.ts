@@ -61,6 +61,10 @@ const api = {
         endResize: (): void => {
             ipcRenderer.send('menu:endResize')
         },
+        // 닫기 버튼 — 창을 파괴하지 않고 숨긴다(재오픈 시 스토어 재하이드레이션 깜빡임 방지).
+        hide: (): void => {
+            ipcRenderer.send('menu:hide')
+        },
     },
     // 플레이어 영속 데이터(점수 등) API.
     // main이 SSOT이므로 get/apply는 main을 거치고, onChange로 broadcast를 구독한다.

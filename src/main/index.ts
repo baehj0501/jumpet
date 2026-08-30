@@ -79,6 +79,22 @@ const createWindow = (): BrowserWindow => {
 // 데코 창 싱글톤 ref — 꾸미기 모드 토글 시 클릭통과를 조작한다.
 let worldWindow: BrowserWindow | null = null
 
+// 콜드 스타트 첫 표시(고정 모드) 시 투명 합성을 확립하기 위한 '프라임' 상태.
+// 프라임 중엔 창을 전체화면 투명으로 유지하고, renderer가 보내는 bbox는 최신값만 보관했다가
+// 타이머 종료 시 한 번에 축소한다. (이미지 로드 전후로 bbox가 두 번 오는데, 낡은 값으로
+// 축소되면 데코가 잘리므로 항상 최신값을 쓴다.)
+let worldPriming = false
+let latestWorldOverlayTarget: {
+    x: number
+    y: number
+    width: number
+    height: number
+} | null = null
+// 투명 합성이 이번 세션에서 한 번이라도 확립됐는지. 콜드 스타트에서만 프라임(전체화면+aot)을 타고,
+// 편집 모드 진입 등으로 이미 투명이 확립된 뒤엔 재표시를 곧장 bbox로 한다.
+// (편집→고정 전환 시 창이 잠깐 hide됐다 다시 보일 때 프라임을 잘못 타 데코가 창 위로 올라오는 것을 방지.)
+let worldTransparencyPrimed = false
+
 // 캐릭터(펫) 창 싱글톤 ref — 말풍선이 뜰 때 잠깐 최상단으로 끌어올린다.
 let characterWindow: BrowserWindow | null = null
 
@@ -149,6 +165,8 @@ const setWorldEditable = (editable: boolean): void => {
         // 편집 진입을 여기서 원자적으로 완성한다(창 크기/표시/클릭수신/최상위를 한 번에).
         // 창 축소(고정 모드) 리라이트 이후, 편집 진입 시 반드시 전체화면 + 상호작용 상태가 되도록
         // sync 타이밍에 의존하지 않고 직접 설정한다. (패키지 빌드에서 클릭이 안 먹던 문제 방지.)
+        // 전체화면 + 표시로 투명 합성이 확립되므로, 이후 고정 모드 재표시는 프라임 없이 곧장 bbox로 한다.
+        worldTransparencyPrimed = true
         const display = screen.getPrimaryDisplay().bounds
         worldWindow.setBounds({
             x: display.x,
@@ -246,6 +264,11 @@ const createWorldWindow = (): BrowserWindow => {
             contextIsolation: true,
             nodeIntegration: false,
             partition: 'persist:world',
+            // 이 창은 포커스를 받지 않는(showInactive/focusable:false) 클릭통과 창이라, 패키지 빌드에서
+            // 백그라운드 스로틀링이 걸리면 렌더러의 레이아웃/이미지 로드/타이머가 지연돼 데코 영역(bbox)을
+            // 늦게 계산·전송한다. 그 결과 콜드 스타트에서 데코가 표시되지 않는(창이 엉뚱한 크기로 굳는)
+            // 문제가 생기므로, 캐릭터 창처럼 스로틀링을 끈다.
+            backgroundThrottling: false,
         },
     })
 
@@ -427,16 +450,56 @@ app.whenReady().then(() => {
             })
             return
         }
-        // 고정 모드: 데코 영역(bbox)만큼만 리사이즈한 뒤에야 표시한다(전체화면 노출→흰색 방지).
-        worldWindow.setBounds({
+        const target = {
             x: display.x + Math.round(bounds.x),
             y: display.y + Math.round(bounds.y),
             width: Math.max(1, Math.round(bounds.w)),
             height: Math.max(1, Math.round(bounds.h)),
-        })
+        }
+        latestWorldOverlayTarget = target
         const state = readWorldState()
-        if (state.mode !== 'edit' && state.placed.length > 0) {
-            if (!worldWindow.isVisible()) {
+        const shouldShow = state.mode !== 'edit' && state.placed.length > 0
+        // 프라임 진행 중이면 지금 축소하지 않는다 — 최신 target만 보관했다가 타이머가 마무리한다.
+        if (worldPriming) {
+            return
+        }
+        const wasHidden = !worldWindow.isVisible()
+        // 콜드 스타트(앱 재실행) 첫 표시: bbox 크기로 곧장 표시하면 이 Windows에서 투명 합성이
+        // 실패해 데코 뒤가 흰 박스로 굳는다. 편집 모드에서 정상 동작하는 조건과 동일하게,
+        // 먼저 '전체화면 + always-on-top'으로 투명하게 표시해 DWM 투명 합성을 확립한 뒤
+        // 축소·표시한다. 이미지 로드로 bbox가 뒤늦게 바뀌어도 항상 '최신' target으로 축소한다.
+        // (창은 클릭 통과 상태라 잠깐 전체화면이어도 무해.)
+        // 단 이 프라임은 '진짜 콜드 스타트'에서만 탄다. 편집 모드로 이미 투명이 확립된 뒤
+        // (편집→고정 전환 시 창이 잠깐 hide됐다 재표시되는 경우 등)엔 프라임을 타면 전체화면+aot로
+        // 데코가 창 위로 올라오므로, 그때는 아래의 곧장-표시 경로로 간다.
+        if (shouldShow && wasHidden && !worldTransparencyPrimed && process.platform !== 'darwin') {
+            worldPriming = true
+            worldWindow.setBounds({
+                x: display.x,
+                y: display.y,
+                width: display.width,
+                height: display.height,
+            })
+            worldWindow.setAlwaysOnTop(true)
+            worldWindow.showInactive()
+            setTimeout(() => {
+                worldPriming = false
+                // 프라임 완료 = 이번 세션에서 투명 합성 확립. 이후 재표시는 프라임 없이 곧장 bbox로.
+                worldTransparencyPrimed = true
+                if (!worldWindow || worldWindow.isDestroyed()) {
+                    return
+                }
+                if (latestWorldOverlayTarget) {
+                    worldWindow.setBounds(latestWorldOverlayTarget)
+                }
+                pinWorldToBottom()
+            }, 120)
+            return
+        }
+        // 고정 모드(같은 세션): 이미 투명하게 그려진 창을 재사용하므로 bbox로 바로 축소·표시.
+        worldWindow.setBounds(target)
+        if (shouldShow) {
+            if (wasHidden) {
                 worldWindow.showInactive()
             }
             pinWorldToBottom()

@@ -73,6 +73,13 @@ export const registerMenuResizeIpc = (): void => {
     ipcMain.on('menu:endResize', () => {
         menuResizeOrigin = null
     })
+    // 닫기 버튼 → 창을 파괴하지 않고 숨긴다. 재오픈은 openMenuPanel이 show()로 되살린다.
+    // (창을 매번 파괴/재생성하면 렌더러 스토어가 다시 하이드레이션되며 할일 등 탭 내용이
+    //  잠깐 비었다 채워지는 깜빡임이 생긴다. 숨기면 상태·타이머가 그대로 유지된다.)
+    ipcMain.on('menu:hide', (event) => {
+        const win = BrowserWindow.fromWebContents(event.sender)
+        win?.hide()
+    })
 }
 
 // 꾸미기 모드 중에는 전체화면 데코 창 위로 메뉴를 띄워 메뉴 클릭이 가려지지 않게 한다.
@@ -97,6 +104,10 @@ export const openMenuPanel = () => {
     if (menuWindow && !menuWindow.isDestroyed()) {
         if (menuWindow.isMinimized()) {
             menuWindow.restore()
+        }
+        // 닫기(=hide)로 숨겨져 있던 창을 다시 보여준다 — 스토어/타이머는 그대로 유지된다.
+        if (!menuWindow.isVisible()) {
+            menuWindow.show()
         }
         menuWindow.focus()
         return

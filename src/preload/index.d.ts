@@ -54,6 +54,7 @@ declare global {
                 startResize: (edge: string, mouseX: number, mouseY: number) => void
                 resizeTo: (mouseX: number, mouseY: number) => void
                 endResize: () => void
+                hide: () => void
             }
             player: {
                 get: () => Promise<PlayerState>
